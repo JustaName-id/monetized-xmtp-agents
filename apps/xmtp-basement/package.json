@@ -1,5 +1,5 @@
 {
-  "name": "@base-batch-messaging/xmtp-basement",
+  "name": "@xmtpbasement/xmtp-basement",
   "version": "0.0.1",
   "private": true,
   "dependencies": {

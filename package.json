@@ -1,31 +1,46 @@
 {
-  "name": "@base-batch-messaging/source",
+  "name": "@xmtpbasement/source",
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {},
   "private": true,
   "dependencies": {
+    "@coinbase/cdp-sdk": "^1.10.0",
+    "@coinbase/onchainkit": "^0.38.13",
+    "@justaname.id/sdk": "^0.2.192",
+    "@justweb3/widget": "^0.0.131",
+    "@types/cors": "^2.8.18",
+    "@xmtp/node-sdk": "^2.0.9",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
     "next": "~15.2.4",
+    "pino-pretty": "^13.0.0",
     "react": "19.0.0",
-    "react-dom": "19.0.0"
+    "react-dom": "19.0.0",
+    "uint8arrays": "^5.1.0"
   },
   "devDependencies": {
     "@eslint/compat": "^1.1.1",
     "@eslint/eslintrc": "^2.1.1",
     "@eslint/js": "^9.8.0",
     "@next/eslint-plugin-next": "^15.2.4",
+    "@nx/esbuild": "21.1.2",
     "@nx/eslint": "21.1.2",
     "@nx/eslint-plugin": "21.1.2",
     "@nx/js": "21.1.2",
     "@nx/next": "21.1.2",
+    "@nx/node": "21.1.2",
     "@nx/workspace": "21.1.2",
     "@swc-node/register": "~1.9.1",
     "@swc/cli": "~0.6.0",
     "@swc/core": "~1.5.7",
     "@swc/helpers": "~0.5.11",
+    "@types/express": "^4.17.21",
+    "@types/node": "~18.16.9",
     "@types/react": "19.0.0",
     "@types/react-dom": "19.0.0",
     "autoprefixer": "10.4.13",
+    "esbuild": "^0.19.2",
     "eslint": "^9.8.0",
     "eslint-config-next": "^15.2.4",
     "eslint-config-prettier": "^10.0.0",
@@ -33,6 +48,7 @@
     "eslint-plugin-jsx-a11y": "6.10.1",
     "eslint-plugin-react": "7.35.0",
     "eslint-plugin-react-hooks": "5.0.0",
+    "jsonc-eslint-parser": "^2.1.0",
     "nx": "21.1.2",
     "postcss": "8.4.38",
     "prettier": "^2.6.2",
@@ -42,6 +58,9 @@
     "typescript-eslint": "^8.19.0"
   },
   "workspaces": [
-    "apps/*"
+    "apps/*",
+    "agents/*",
+    "libs/*",
+    "xmtp-helpers"
   ]
 }

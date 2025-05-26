@@ -1,4 +1,5 @@
 import './global.css';
+import {Providers} from "@/app/providers";
 
 export const metadata = {
   title: 'Welcome to ',
@@ -12,7 +13,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className="bg-background dark">
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }
