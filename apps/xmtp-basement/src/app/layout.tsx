@@ -1,5 +1,6 @@
+import { Providers } from "@/app/providers";
 import './global.css';
-import {Providers} from "@/app/providers";
+import Layout from "@/layout";
 
 export const metadata = {
   title: 'Welcome to ',
@@ -12,9 +13,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className="bg-background dark">
-        <Providers>{children}</Providers>
+    <html lang="en" suppressHydrationWarning>
+      <body className="bg-bg">
+        <Providers>
+          <Layout>
+            {children}
+          </Layout>
+        </Providers>
       </body>
     </html>
   );
