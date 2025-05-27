@@ -2,14 +2,14 @@ import { z } from 'zod';
 
 const CLIENT_ENV = {
 
-  ensDomain: process.env.NEXT_PUBLIC_ENS_DOMAIN,
+  xmtpAgentEnsDomain: process.env.NEXT_PUBLIC_XMTP_AGENT_ENS_DOMAIN,
   onchainClientApiKey: process.env.NEXT_PUBLIC_ONCHAINKIT_CLIENT_API_KEY,
   onchainProjectName: process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME,
   onchainWalletConfig: process.env.NEXT_PUBLIC_ONCHAINKIT_WALLET_CONFIG,
 };
 
 export const clientEnvSchema = z.object({
-  ensDomain: z.string(),
+  xmtpAgentEnsDomain: z.string(),
   onchainClientApiKey: z.string(),
   onchainProjectName: z.string(),
   onchainWalletConfig: z.enum(["smartWalletOnly","all"]),

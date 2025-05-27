@@ -4,13 +4,13 @@ import { useEnsSubnames } from '@justaname.id/react'
 
 export const getAgents = () => {
   return justanameInstance().subnames.getSubnamesByEnsDomain({
-    ensDomain: clientEnv.ensDomain,
+    ensDomain: clientEnv.xmtpAgentEnsDomain,
   })
 }
 
 export const useAgents = () => {
   return useEnsSubnames({
-    ensDomain: clientEnv.ensDomain,
+    ensDomain: clientEnv.xmtpAgentEnsDomain,
     isClaimed: true
   })
 }

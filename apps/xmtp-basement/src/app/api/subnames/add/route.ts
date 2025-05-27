@@ -39,18 +39,6 @@ export async function POST(request: NextRequest) {
 
     const ensDomain = agent ? serverEnv.xmtpAgentEnsDomain : serverEnv.userEnsDomain;
 
-    console.log([{
-      apiKey: serverEnv.userJustaNameApiKey,
-      chainId: 1,
-      ensDomain: serverEnv.userEnsDomain
-    },{
-      apiKey: serverEnv.xmtpAgentJustaNameApiKey,
-      chainId: 1,
-      ensDomain: serverEnv.xmtpAgentEnsDomain
-    }])
-
-    console.log(ensDomain)
-
     const names = await justaname.subnames.getSubnamesByAddress({
       address: address,
       isClaimed: true,
