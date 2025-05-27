@@ -14,7 +14,7 @@ export const Agent: React.FC<AgentProps> = ({ subname }) => {
   return (
     <div className="p-5 rounded-lg bg-bg border-border border-[1px] gap-5 flex flex-row items-center">
       <Avatar className="w-16 h-16 rounded-full" >
-        <AvatarImage src={""} />
+        <AvatarImage src={"https://i.pravatar.cc/300?img=1"} />
       </Avatar>
       <div className="flex flex-col gap-1.5 justify-between">
         <div className="flex flex-row justify-between items-center">
@@ -29,7 +29,7 @@ export const Agent: React.FC<AgentProps> = ({ subname }) => {
         </p>
         <div className="flex flex-row gap-1.5 items-center">
           {tags.map((tag) => (
-            <Badge variant="default">
+            <Badge key={tag} variant="default">
               {tag}
             </Badge>
           ))}

@@ -34,7 +34,7 @@ export default function Agents({ initialData }: ClientSideDataProps) {
   // };
 
   return (
-    <div className="grid grid-cols-2 gap-x-2.5 gap-y-2.5">
+    <div className="grid grid-cols-2 max-md:grid-cols-1 gap-x-2.5 gap-y-2.5">
       {
         initialData.data.map(item => (
           <React.Fragment key={item.ens}>

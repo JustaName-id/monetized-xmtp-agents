@@ -12,7 +12,6 @@ export const MessageCard: React.FC<MessageCardProps> = ({ message, isSender }) =
             <div className={`flex px-3 py-3 rounded-md ${isSender ? "bg-primary rounded-br-none" : "bg-secondary rounded-bl-none"}`}>
                 <p className={`text-sm ${isSender ? "text-primary-foreground" : "text-base-foreground"}`}>{message}</p>
             </div>
-
         </div>
     )
 }

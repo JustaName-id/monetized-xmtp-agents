@@ -8,9 +8,7 @@ import { Button } from '@/components/ui/button';
 
 
 export function ModeToggle() {
-    const { setTheme, theme } = useTheme()
-
-    console.log(theme)
+    const { setTheme } = useTheme()
 
     return (
         <DropdownMenu>
@@ -22,13 +20,13 @@ export function ModeToggle() {
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className='bg-bg'>
-                <DropdownMenuItem onClick={() => setTheme("light")}>
+                <DropdownMenuItem className='cursor-pointer hover:bg-secondary' onClick={() => setTheme("light")}>
                     Light
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setTheme("dark")}>
+                <DropdownMenuItem className='cursor-pointer hover:bg-secondary' onClick={() => setTheme("dark")}>
                     Dark
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setTheme("system")}>
+                <DropdownMenuItem className='cursor-pointer hover:bg-secondary' onClick={() => setTheme("system")}>
                     System
                 </DropdownMenuItem>
             </DropdownMenuContent>
