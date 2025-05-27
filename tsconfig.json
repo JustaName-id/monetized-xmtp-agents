@@ -13,9 +13,6 @@
       "path": "./libs/xmtp-extended-client"
     },
     {
-      "path": "./apps/agent-identity"
-    },
-    {
       "path": "./libs/xmtp-helpers"
     }
   ]

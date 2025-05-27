@@ -3,7 +3,10 @@ declare namespace NodeJS {
     NODE_ENV: 'development' | 'production' | 'test';
 
     // Server-only variable
-
+    XMTP_AGENT_ENS_DOMAIN: string;
+    XMTP_AGENT_JUSTANAME_API_KEY: string;
+    USER_ENS_DOMAIN: string;
+    USER_JUSTANAME_API_KEY: string;
 
     // Client-only variable
 

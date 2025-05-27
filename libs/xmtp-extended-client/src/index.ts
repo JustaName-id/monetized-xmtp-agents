@@ -1,7 +1,11 @@
 import { Client, Conversation, Dm, Group, Signer, ClientOptions } from '@xmtp/node-sdk';
 import type { ContentTypeId } from '@xmtp/content-type-primitives'
-import {JustaName} from "@justaname.id/sdk";
+import {
+  JustaName,
+  SubnameResponse,
+} from "@justaname.id/sdk";
 import { getAddress } from 'viem'
+import axios from "axios";
 /**
  * BasedClient extends the XMTP Client with additional functionality
  */
@@ -13,14 +17,37 @@ export class BasedClient extends Client {
    * @param options - Optional configuration for the client
    * @returns A new BasedClient instance
    */
+
+  subname: string | undefined;
+  fees=0;
+  description: string | undefined;
+  tags: string[] = [];
+  spender: string | undefined ;
+  hubUrl: string | undefined;
+
+
   static override async create(
     signer: Signer,
-    options?: ClientOptions & { username?: string, fees?: number, description?: string, tags?: string[], spender?:number  }
+    options?: ClientOptions & {
+      username?: string,
+      fees?: number,
+      description?: string,
+      tags?: string[],
+      spender?:string,
+      hubUrl?: string,
+    }
   ): Promise<BasedClient> {
     // Call the original create method
     const client = await Client.create(signer, options);
 
-    if(!options?.username || !client.accountIdentifier?.identifier ){
+    const hubUrl = options?.hubUrl || "https://xmtp-agent-hub.vercel.app/api";
+    const spender = options?.spender || client.accountIdentifier?.identifier;
+    const fees = options?.fees || 0;
+    const description = options?.description;
+    const tags = options?.tags || [];
+    const username = options?.username || "";
+
+    if(!username || !client.accountIdentifier?.identifier ){
       return client as unknown as BasedClient;
     }
 
@@ -30,21 +57,8 @@ export class BasedClient extends Client {
       "Client address is not defined"
     )
 
-    const ensDomain = "justadev.eth";
-    const justanameInstance = JustaName.init({
-      ensDomains: [{
-        apiKey: "",
-        chainId: 1,
-        ensDomain
-      }],
-    })
+    const justanameInstance = JustaName.init()
 
-    const subnames = await justanameInstance.subnames.getSubnamesByAddress({
-      address: clientAddress,
-    });
-
-
-    const registrySubname = subnames.subnames.find((_subname) => _subname.ens.endsWith(ensDomain))
     const challenge = justanameInstance.siwe.requestChallenge({
       origin:"http://localhost",
       domain:"localhost:3000",
@@ -56,11 +70,15 @@ export class BasedClient extends Client {
 
     const text = {} as Record<string, string>
 
-    if(options.description) text["description"] = options.description
-    if(options.tags) text["xmtp_tags"] = options.tags.join(",")
-    if(options.fees) text["xmtp_fees"] = options.fees.toString()
-    if(options.spender){
-      text["xmtp_spender"] = options.spender.toString()
+    if(description) text["description"] = description
+    if(tags.length === 0){
+      text["xmtp_tags"] = ""
+    }else{
+      text["xmtp_tags"] = tags.join(",")
+    }
+    if(fees) text["xmtp_fees"] = fees.toString()
+    if(spender){
+      text["xmtp_spender"] = spender
     }else{
       text["xmtp_spender"] = clientAddress
     }
@@ -70,11 +88,37 @@ export class BasedClient extends Client {
       byte.toString(16).padStart(2, '0')
     ).join('');
 
+    // let agentSubnames: SubnameGetAllByAddressResponse | undefined;
+    // try {
+    //   agentSubnames = await justanameInstance.subnames.getSubnamesByAddress({
+    //     address: clientAddress
+    //   })
+    // }catch (e){
+    //   agentSubnames = undefined;
+    // }
+    //
+    //
+    // if(agentSubnames && agentSubnames?.subnames.length > 0){
+    //   const address = subnameExists.records.coins.find((coin) => coin.id===60)
+    //   if(address && address.value !==clientAddress){
+    //     throw new Error("Username taken! Please try another one")
+    //   }
+    // }
+
+    const subnames = await justanameInstance.subnames.getSubnamesByAddress({
+      address: clientAddress,
+    });
+
+
+    const registrySubname = subnames.subnames.find((_subname) => _subname.ens.startsWith(username))
+
+    let ensDomain = ''
     if(registrySubname) {
+      ensDomain = registrySubname.ens.split(".").slice(1).join(".")
       await justanameInstance.subnames.updateSubname({
         addresses: [{coinType: '60', address: clientAddress}],
-        ensDomain: ensDomain,
-        username: options.username,
+        ensDomain,
+        username: username,
         text: text,
       }, {
         xMessage: challenge.challenge,
@@ -82,23 +126,35 @@ export class BasedClient extends Client {
         xAddress: clientAddress
       })
     }
-    else{
-      await justanameInstance.subnames.addSubname({
-        addresses: [{coinType: '60', address: clientAddress}],
-        ensDomain: ensDomain,
-        username: options.username,
-        text: text,
-      }, {
-        xMessage: challenge.challenge,
-        xSignature: signatureHex,
-        xAddress: clientAddress
-      })
+    else {
+      try{
+        const newSubname = await axios.post<SubnameResponse>(hubUrl+"/subnames/add", {
+          username,
+          address: clientAddress,
+          signature: signatureHex,
+          message: challenge.challenge,
+          text,
+          agent: true
+        })
+        ensDomain = newSubname.data.ens.split(".").slice(1).join(".")
+      }catch (e){
+        console.log(e)
+        throw new Error("Failed to register subname")
+      }
+
     }
 
 
-    console.log(`Subname Registered: ${options.username}.${ensDomain}`)
-    // Cast the client to BasedClient
-    return client as unknown as BasedClient;
+    const baseClient = client as unknown as BasedClient
+
+    const subname = username + "." + ensDomain;
+    baseClient.subname =subname
+    baseClient.fees = options?.fees || 0
+    baseClient.description = options?.description
+    baseClient.tags = options?.tags || []
+    baseClient.spender = spender
+    baseClient.hubUrl = hubUrl
+    return baseClient;
   }
 
   /**
@@ -121,7 +177,12 @@ export class BasedClient extends Client {
       // TODO: Implement pre-send functionality
 
       // Call the original send method
-      return originalSend(content, contentType);
+      const messageId = await originalSend(content, contentType);
+
+      // Placeholder for post-send functionality
+      console.log('After sending message');
+
+      return messageId
     };
 
     return conversation;

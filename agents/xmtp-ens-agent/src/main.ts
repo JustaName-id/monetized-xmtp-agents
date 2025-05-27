@@ -25,9 +25,12 @@ async function main() {
     dbEncryptionKey,
     env: XMTP_ENV as XmtpEnv,
     username: "xmtp-ens-agent",
-    fees: 0.01,
-    description:"This is a GM Agent"
+    fees: 0.02,
+    description:"This is a GM Agent",
+    tags: ["GM Agent", "ENS Agent", "ENS"],
+    hubUrl: "http://localhost:3000/api"
   });
+
   void logAgentDetails(client);
 
   console.log("✓ Syncing conversations...");

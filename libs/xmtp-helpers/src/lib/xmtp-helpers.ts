@@ -6,6 +6,7 @@ import { fromString, toString } from "uint8arrays";
 import { createWalletClient, http, toBytes } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { sepolia } from "viem/chains";
+import {BasedClient} from "@xmtpbasement/xmtp-extended-client";
 
 interface User {
   key: `0x${string}`;
@@ -77,10 +78,10 @@ export const getDbPath = (description = "xmtp") => {
 };
 
 export const logAgentDetails = async (
-  clients: Client | Client[],
+  clients: (Client | BasedClient) | (Client | BasedClient)[]
 ): Promise<void> => {
   const clientsByAddress = Array.isArray(clients)
-    ? clients.reduce<Record<string, Client[]>>((acc, client) => {
+    ? clients.reduce<Record<string, (Client | BasedClient)[]>>((acc, client) => {
       const address = client.accountIdentifier?.identifier ?? "";
       acc[address] = acc[address] ?? [];
       acc[address].push(client);
@@ -93,6 +94,11 @@ export const logAgentDetails = async (
   for (const [address, clientGroup] of Object.entries(clientsByAddress)) {
     const firstClient = clientGroup[0];
     const inboxId = firstClient.inboxId;
+    let subname: string | undefined;
+    if ('subname' in firstClient && firstClient.subname) {
+      subname = firstClient.subname;
+    }
+
     const environments = clientGroup
       .map((c) => c.options?.env ?? "dev")
       .join(", ");
@@ -111,7 +117,7 @@ export const logAgentDetails = async (
 
     console.log(`
     ✓ XMTP Client:
-    • Address: ${address}
+    • Address: ${address} ${subname ? `\n    • Subname: ${subname}` : ""}
     • Conversations: ${conversations.length}
     • InboxId: ${inboxId}
     • Networks: ${environments}

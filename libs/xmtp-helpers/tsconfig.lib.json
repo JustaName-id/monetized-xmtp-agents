@@ -13,5 +13,9 @@
     "isolatedModules": false
   },
   "include": ["src/**/*.ts"],
-  "references": []
+  "references": [
+    {
+      "path": "../xmtp-extended-client/tsconfig.lib.json"
+    }
+  ]
 }

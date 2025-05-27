@@ -4,6 +4,9 @@
   "include": [],
   "references": [
     {
+      "path": "../xmtp-extended-client"
+    },
+    {
       "path": "./tsconfig.lib.json"
     }
   ]
