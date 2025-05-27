@@ -1,7 +1,7 @@
 "use client";
 
-import {SubnameGetAllByDomainChainIdResponse} from "@justaname.id/sdk";
-import {Agent} from "@/components/Agent";
+import { SubnameGetAllByDomainChainIdResponse } from "@justaname.id/sdk";
+import { Agent } from "@/components/Agent";
 import React from 'react';
 
 interface ClientSideDataProps {
@@ -34,9 +34,7 @@ export default function Agents({ initialData }: ClientSideDataProps) {
   // };
 
   return (
-    <div className="my-8">
-      <h2 className="text-2xl font-bold mb-4">Data Items</h2>
-
+    <div className="grid grid-cols-2 gap-x-2.5 gap-y-2.5">
       {
         initialData.data.map(item => (
           <React.Fragment key={item.ens}>

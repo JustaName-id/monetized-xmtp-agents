@@ -17,7 +17,30 @@ module.exports = {
     //     ...createGlobPatternsForDependencies(__dirname)
   ],
   theme: {
-    extend: {},
+    extend: {
+      borderRadius: {
+        lg: '8px',
+      },
+      colors: {
+        bg: 'var(--bg)',
+        border: 'var(--border)',
+        primary: 'var(--primary)',
+        'primary-foreground': 'var(--primary-foreground)',
+        blue: 'var(--blue)',
+        muted: 'var(--muted)',
+        secondary: 'var(--secondary)',
+        sidebar: {
+          DEFAULT: 'hsl(var(--sidebar-background))',
+          foreground: 'hsl(var(--sidebar-foreground))',
+          primary: 'hsl(var(--sidebar-primary))',
+          'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
+          accent: 'hsl(var(--sidebar-accent))',
+          'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
+          border: 'hsl(var(--sidebar-border))',
+          ring: 'hsl(var(--sidebar-ring))',
+        },
+      },
+    },
   },
   plugins: [],
 };
