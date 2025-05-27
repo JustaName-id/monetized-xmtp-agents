@@ -20,6 +20,7 @@ module.exports = {
     extend: {
       borderRadius: {
         lg: '8px',
+        default: '6px',
       },
       colors: {
         bg: 'var(--bg)',
@@ -29,6 +30,9 @@ module.exports = {
         blue: 'var(--blue)',
         muted: 'var(--muted)',
         secondary: 'var(--secondary)',
+        destructive: 'var(--destructive)',
+        'destructive-foreground': 'var(--destructive-foreground)',
+        'base-sidebar-foreground': 'var(--base-sidebar-foreground)',
         sidebar: {
           DEFAULT: 'hsl(var(--sidebar-background))',
           foreground: 'hsl(var(--sidebar-foreground))',
@@ -39,6 +43,20 @@ module.exports = {
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))',
         },
+      },
+      keyframes: {
+        'accordion-down': {
+          from: { height: '0' },
+          to: { height: 'var(--radix-accordion-content-height)' },
+        },
+        'accordion-up': {
+          from: { height: 'var(--radix-accordion-content-height)' },
+          to: { height: '0' },
+        },
+      },
+      animation: {
+        'accordion-down': 'accordion-down 0.2s ease-out',
+        'accordion-up': 'accordion-up 0.2s ease-out',
       },
     },
   },

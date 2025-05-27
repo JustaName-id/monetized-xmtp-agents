@@ -45,11 +45,14 @@ svg {
   :root {
     --bg: #ffffff;
     --primary: #18181b;
-    --primary-foreground: #FAFAFA;
+    --primary-foreground: #fafafa;
     --blue: #2775ca;
     --muted: #71717a;
     --secondary: #f4f4f5;
     --border: #e4e4e7;
+    --base-sidebar-foreground: #3f3f46;
+    --destructive: #dc2626;
+    --destructive-foreground: #fef2f2;
 
     /* sidebar */
     --sidebar-background: 0 0% 98%;
@@ -65,11 +68,14 @@ svg {
   .dark {
     --bg: #09090b;
     --primary: #fafafa;
-    --primary-foreground: #18181B;
+    --primary-foreground: #18181b;
     --blue: #2775ca;
     --muted: #a1a1aa;
     --secondary: #27272a;
     --border: #27272a;
+    --base-sidebar-foreground: #f4f4f5;
+    --destructive: #7f1d1d;
+    --destructive-foreground: #fef2f2;
 
     /* sidebar */
     --sidebar-background: 240 5.9% 10%;

@@ -1,4 +1,5 @@
 'use client'
+import { AgentSelector } from "@/components/AgentSelector";
 import Connect from "@/components/Connect";
 import { ModeToggle } from "@/components/ModeToggle";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -9,7 +10,10 @@ export const Navbar = () => {
     return (
         <div className="flex flex-row justify-between items-center px-5 py-2.5">
             {account.address ?
-                <SidebarTrigger />
+                <div className="flex flex-row gap-2.5 items-center">
+                    <SidebarTrigger />
+                    <AgentSelector />
+                </div>
                 :
                 <h2 className="text-2xl font-normal leading-[133%]">XMTPAgentHub</h2>
             }

@@ -1,5 +1,5 @@
 import { UsdcIcon } from "@/lib/icons";
-import { Avatar } from "./ui/avatar";
+import { Avatar, AvatarImage } from "./ui/avatar";
 import { Badge } from "./ui/badge";
 
 export interface AgentProps {
@@ -13,7 +13,9 @@ export const Agent: React.FC<AgentProps> = ({ subname }) => {
   const tags = ["Defi", "Trading", "Swap"]
   return (
     <div className="p-5 rounded-lg bg-bg border-border border-[1px] gap-5 flex flex-row items-center">
-      <Avatar className="w-16 h-16 rounded-full" />
+      <Avatar className="w-16 h-16 rounded-full" >
+        <AvatarImage src={""} />
+      </Avatar>
       <div className="flex flex-col gap-1.5 justify-between">
         <div className="flex flex-row justify-between items-center">
           <h3 className="text-base font-semibold text-primary leading-[100%]">{subname}</h3>

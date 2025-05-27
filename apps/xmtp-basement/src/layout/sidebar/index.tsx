@@ -1,51 +1,43 @@
-import { Calendar, Home, Inbox, Search, Settings } from "lucide-react"
 
+import { ChatCard } from "@/components/sidebar/ChatCard"
 import {
     Sidebar,
     SidebarContent,
     SidebarGroup,
     SidebarGroupContent,
     SidebarGroupLabel,
+    SidebarHeader,
     SidebarMenu,
     SidebarMenuButton,
-    SidebarMenuItem,
+    SidebarMenuItem
 } from "@/components/ui/sidebar"
+import { ExploreIcon, PenIcon, ProfileIcon } from "@/lib/icons"
 
-// Menu items.
 const items = [
     {
-        title: "Home",
-        url: "#",
-        icon: Home,
+        title: "New Chat",
+        url: "/chat/new",
+        icon: PenIcon,
     },
     {
-        title: "Inbox",
-        url: "#",
-        icon: Inbox,
+        title: "My Agents",
+        url: "/my-agents",
+        icon: ProfileIcon,
     },
     {
-        title: "Calendar",
-        url: "#",
-        icon: Calendar,
+        title: "Explore Agents",
+        url: "/",
+        icon: ExploreIcon,
     },
-    {
-        title: "Search",
-        url: "#",
-        icon: Search,
-    },
-    {
-        title: "Settings",
-        url: "#",
-        icon: Settings,
-    },
+
 ]
 
 export function AppSidebar() {
     return (
         <Sidebar>
+            <SidebarHeader>XMTP Agents</SidebarHeader>
             <SidebarContent>
                 <SidebarGroup>
-                    <SidebarGroupLabel>Application</SidebarGroupLabel>
                     <SidebarGroupContent>
                         <SidebarMenu>
                             {items.map((item) => (
@@ -59,6 +51,15 @@ export function AppSidebar() {
                                 </SidebarMenuItem>
                             ))}
                         </SidebarMenu>
+                    </SidebarGroupContent>
+                </SidebarGroup>
+                {/* Chats */}
+                <SidebarGroup>
+                    <SidebarGroupLabel>Today</SidebarGroupLabel>
+                    <SidebarGroupContent className="flex flex-col gap-2">
+                        {[1, 2, 3].map((item) => (
+                            <ChatCard key={item} id={`${item}`} subname={`Agent ${item}`} description={`Agent ${item} description`} avatar={`https://i.pravatar.cc/300?img=${item}`} />
+                        ))}
                     </SidebarGroupContent>
                 </SidebarGroup>
             </SidebarContent>
