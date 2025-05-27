@@ -19,6 +19,8 @@ module.exports = {
   theme: {
     extend: {
       borderRadius: {
+        sm: '2px',
+        md: '4px',
         lg: '8px',
         default: '6px',
       },
@@ -30,6 +32,7 @@ module.exports = {
         blue: 'var(--blue)',
         muted: 'var(--muted)',
         secondary: 'var(--secondary)',
+        'base-foreground': 'var(--base-foreground)',
         destructive: 'var(--destructive)',
         'destructive-foreground': 'var(--destructive-foreground)',
         'base-sidebar-foreground': 'var(--base-sidebar-foreground)',

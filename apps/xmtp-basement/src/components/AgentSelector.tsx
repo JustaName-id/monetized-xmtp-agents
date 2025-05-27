@@ -11,10 +11,10 @@ export const AgentSelector: React.FC = () => {
                 </Avatar>
                 <p className="text-xs font-semibold text-base-sidebar-foreground leading-[100%]">{"Agent.eth"}</p>
             </DropdownMenuTrigger>
-            <DropdownMenuContent>
+            <DropdownMenuContent className="min-w-[250px]">
                 <DropdownMenuGroup>
                     {[1, 2, 3].map((item) => (
-                        <DropdownMenuItem key={item} className="flex flex-row items-center gap-2 py-2 px-2.5">
+                        <DropdownMenuItem key={item} className="flex flex-row items-center gap-2 py-2 px-2.5 cursor-pointer hover:bg-secondary">
                             <Avatar className="w-6 h-6 rounded-full">
                                 <AvatarImage src={"https://i.pravatar.cc/300?img=1"} />
                             </Avatar>

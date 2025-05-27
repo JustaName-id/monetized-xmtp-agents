@@ -33,7 +33,7 @@ export const MyAgentCard: React.FC<AgentProps> = ({ subname, avatar, price, desc
                                 <h3 className="text-base font-semibold text-primary leading-[100%]">{subname}</h3>
                                 <div className="flex flex-row gap-[5px] items-center ">
                                     <UsdcIcon />
-                                    <p className="text-xs font-bold text-blue leading-[150%]">{`${price}USDC/MSG`}</p>
+                                    <p className="text-xs font-bold text-blue leading-[150%]">{`${price} USDC/MSG`}</p>
                                 </div>
                             </div>
                             <p className="text-xs text-muted font-normal leading-[133%] line-clamp-2">

@@ -1,22 +1,15 @@
-
-
 import Agents from '@/components/Agents';
 import { getAgents } from "@/query/agents";
 
-// This function runs on the server during SSR
 export async function generateMetadata() {
-  // You can use this to set dynamic metadata based on fetched data
   return {
-    title: 'Data Dashboard',
-    description: 'Server-side rendered data with client-side updates',
+    title: 'XMTP Agent Hub',
+    description: 'Welcome to your XMTP agent hub!',
   };
 }
 
-// Server Component for initial data fetching
 export default async function Index() {
-  // Fetch initial data on the server
   const initialData = await getAgents();
-
 
   return (
     <div>
