@@ -54,7 +54,6 @@ export function Providers(props: {
           }}>
             <OnchainKitProvider
               apiKey={clientEnv.onchainClientApiKey}
-              // @ts-ignore
               chain={baseSepolia}
               config={{
                 appearance: {

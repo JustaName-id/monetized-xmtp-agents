@@ -1,7 +1,10 @@
 "use client";
 
 import { useXMTP } from "@/context/XMTPContext";
+import { useLocalVariables } from "@/hooks/use-local";
 import { CursorInputIcon, WalletIcon } from "@/lib/icons";
+import { clientEnv } from "@/utils/config/clientEnv";
+import { createEOASigner } from "@/utils/helpers/createSigner";
 import {
   Address,
   Avatar,
@@ -16,13 +19,12 @@ import {
   WalletDropdownDisconnect,
   WalletDropdownLink,
 } from "@coinbase/onchainkit/wallet";
-import { useEffect } from "react";
+import { useAccountSubnames } from '@justaname.id/react';
+import { useEffect, useMemo } from "react";
 import { hexToUint8Array } from "uint8array-extras";
 import { useAccount, useConnect, useSignMessage } from 'wagmi';
 import { ClaimDialog } from "./ClaimDialog";
 import { Button } from "./ui";
-import { createEOASigner } from "@/utils/helpers/createSigner";
-import { useLocalVariables } from "@/hooks/use-local";
 
 
 export default function Connect() {
@@ -30,6 +32,10 @@ export default function Connect() {
   const { connectors, connect } = useConnect();
   const { initialize } = useXMTP();
   const { signMessageAsync } = useSignMessage();
+  const { accountSubnames } = useAccountSubnames();
+
+  const claimedSubname = useMemo(() => accountSubnames.filter((sub) => sub.ens.includes(clientEnv.userEnsDomain)), [accountSubnames]);
+
 
   const {
     encryptionKey,
@@ -58,7 +64,11 @@ export default function Connect() {
             <Wallet>
               <ConnectWallet className="py-2 px-4 bg-secondary hover:bg-secondary/50 active:bg-secondary/50">
                 <WalletIcon />
-                <Name className="text-muted" />
+                {claimedSubname.length > 0 ?
+                  <p className="text-muted font-semibold text-base">{claimedSubname[0].ens}</p>
+                  :
+                  <Name className="text-muted" />
+                }
               </ConnectWallet>
               <WalletDropdown>
                 <Identity className="px-4 pt-3 pb-2" hasCopyAddressOnClick>
@@ -75,13 +85,15 @@ export default function Connect() {
                 >
                   Wallet
                 </WalletDropdownLink>
-                <ClaimDialog
-                  trigger={
-                    <div className="flex flex-row cursor-pointer bg-bg hover:bg-secondary items-center gap-2 px-4 py-3">
-                      <CursorInputIcon width={16} height={16} />
-                      <p className="text-primary font-normal">Claim Subname</p>
-                    </div>
-                  } />
+                {claimedSubname.length == 0 &&
+                  <ClaimDialog
+                    trigger={
+                      <div className="flex flex-row cursor-pointer bg-bg hover:bg-secondary items-center gap-2 px-4 py-3">
+                        <CursorInputIcon width={16} height={16} />
+                        <p className="text-primary font-normal">Claim Subname</p>
+                      </div>
+                    } />
+                }
                 <WalletDropdownDisconnect />
               </WalletDropdown>
             </Wallet>)

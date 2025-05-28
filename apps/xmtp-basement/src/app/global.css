@@ -60,6 +60,17 @@ svg {
   fill: var(--primary) !important;
 }
 
+.ock-bg-alternate {
+  background-color: var(--bg) !important;
+  color: var(--primary) !important;
+  &:hover {
+    background-color: var(--bg) !important;
+  }
+  &:active {
+    background-color: var(--bg) !important;
+  }
+}
+
 @layer base {
   :root {
     --bg: #ffffff;
