@@ -6,7 +6,6 @@ const CLIENT_ENV = {
   onchainProjectName: process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME,
   onchainWalletConfig: process.env.NEXT_PUBLIC_ONCHAINKIT_WALLET_CONFIG,
   userEnsDomain: process.env.NEXT_PUBLIC_USER_ENS_DOMAIN,
-  websiteUrl: process.env.NEXT_PUBLIC_WEBSITE_URL,
 };
 
 export const clientEnvSchema = z.object({
@@ -15,7 +14,6 @@ export const clientEnvSchema = z.object({
   onchainProjectName: z.string(),
   onchainWalletConfig: z.enum(['smartWalletOnly', 'all']),
   userEnsDomain: z.string(),
-  websiteUrl: z.string(),
 });
 
 export type ClientEnv = z.infer<typeof clientEnvSchema>;
