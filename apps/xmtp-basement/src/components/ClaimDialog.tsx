@@ -3,6 +3,8 @@ import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogH
 import { useAddSubname, useIsSubnameAvailable } from "@justaname.id/react";
 import { clientEnv } from "@/utils/config/clientEnv";
 import { LoadingIcon } from "@/lib/icons";
+import { useAccount, useSwitchChain } from "wagmi";
+import { mainnet } from "wagmi/chains";
 
 interface ClaimDialogProps {
     trigger: React.ReactNode
@@ -15,16 +17,33 @@ export const ClaimDialog = ({ trigger }: ClaimDialogProps) => {
         username: subname,
         enabled: !!subname && subname.length > 2,
         ensDomain: clientEnv.userEnsDomain,
-        chainId: 1,
+        chainId: mainnet.id,
     });
+    const { chain } = useAccount();
+    const { switchChain, isPending: isSwitchChainPending } = useSwitchChain();
 
-    const handleClaim = () => {
-        addSubname({
-            username: subname,
-            ensDomain: clientEnv.userEnsDomain,
-            chainId: 1,
-        });
+    const handleClaim = async () => {
+        if (chain?.id !== mainnet.id) {
+            switchChain({ chainId: mainnet.id }, {
+                onSuccess: () => {
+                    addSubname({
+                        username: subname,
+                        ensDomain: clientEnv.userEnsDomain,
+                        chainId: mainnet.id,
+                    });
+                }
+            });
+        } else {
+            addSubname({
+                username: subname,
+                ensDomain: clientEnv.userEnsDomain,
+                chainId: mainnet.id,
+            });
+        }
     }
+
+    const isClaiming = isAddSubnamePending || isSwitchChainPending;
+    const canClaim = isSubnameAvailable && !isSubnameAvailablePending && !isClaiming;
 
     return (
         <Dialog>
@@ -40,7 +59,7 @@ export const ClaimDialog = ({ trigger }: ClaimDialogProps) => {
                 </DialogHeader>
                 <DialogFooter className="flex flex-row items-center justify-between gap-2">
                     <Input placeholder="Subname" value={subname} onChange={(e) => setSubname(e.target.value)} rightElement={<p className="text-sm text-primary font-bold">{clientEnv.userEnsDomain}</p>} />
-                    {isAddSubnamePending ? <LoadingIcon width={10} height={10} /> : <Button disabled={!isSubnameAvailable || isSubnameAvailablePending} onClick={handleClaim} variant={"default"}>Claim</Button>}
+                    {isClaiming ? <LoadingIcon width={10} height={10} /> : <Button disabled={!canClaim} onClick={handleClaim} variant={"default"}>Claim</Button>}
                 </DialogFooter>
             </DialogContent>
         </Dialog>
