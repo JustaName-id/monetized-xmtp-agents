@@ -2280,6 +2280,11 @@
   dependencies:
     "@lit-labs/ssr-dom-shim" "^1.2.0"
 
+"@mantine/hooks@^8.0.2":
+  version "8.0.2"
+  resolved "https://registry.yarnpkg.com/@mantine/hooks/-/hooks-8.0.2.tgz#a5b72c8d61a5b3d2567f9e56593756fa5cd156e8"
+  integrity sha512-0jpEdC0KIAZ54D5kd9rJudrEm6vkvnrL9yYHnkuNbxokXSzDdYA/wpHnKR5WW+u6fW4JF6A6A7gN1vXKeC9MSw==
+
 "@metamask/eth-json-rpc-provider@^1.0.0":
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/@metamask/eth-json-rpc-provider/-/eth-json-rpc-provider-1.0.1.tgz#3fd5316c767847f4ca107518b611b15396a5a32c"
@@ -6129,6 +6134,18 @@
   dependencies:
     arch "^3.0.0"
 
+"@xmtp/browser-sdk@^2.0.13":
+  version "2.0.13"
+  resolved "https://registry.yarnpkg.com/@xmtp/browser-sdk/-/browser-sdk-2.0.13.tgz#27f65b4436d75722072a8b7215c08599d727ae98"
+  integrity sha512-S81IGmOV8kXVJzSfgllgsGG+0mclm4MdhxZhPr/hd8grQhf5QBr9bnRZbbm69Bhi64Oget+o6DSIpSfSnvF14A==
+  dependencies:
+    "@xmtp/content-type-group-updated" "^2.0.2"
+    "@xmtp/content-type-primitives" "^2.0.2"
+    "@xmtp/content-type-text" "^2.0.2"
+    "@xmtp/proto" "^3.78.0"
+    "@xmtp/wasm-bindings" "1.1.7"
+    uuid "^11.1.0"
+
 "@xmtp/content-type-group-updated@^2.0.2":
   version "2.0.2"
   resolved "https://registry.yarnpkg.com/@xmtp/content-type-group-updated/-/content-type-group-updated-2.0.2.tgz#b664fd096a14245c3164bd35a5db77240de6c7d4"
@@ -6176,6 +6193,11 @@
     protobufjs "^7.0.0"
     rxjs "^7.8.0"
     undici "^5.8.1"
+
+"@xmtp/wasm-bindings@1.1.7":
+  version "1.1.7"
+  resolved "https://registry.yarnpkg.com/@xmtp/wasm-bindings/-/wasm-bindings-1.1.7.tgz#3cc5244fa97d3abf4600caef0505b4660e9349a8"
+  integrity sha512-/HkRWHCEhHHuoWnoXFtTzYRSEIPkOvxGJlVvMVMgmdVgd4DTavf3llbVfyC2r1BC7xVfjXSpJzNLnKVExIGIKA==
 
 "@xtuc/ieee754@^1.2.0":
   version "1.2.0"
@@ -14916,6 +14938,11 @@ utils-merge@1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/utils-merge/-/utils-merge-1.0.1.tgz#9f95710f50a267947b2ccc124741c1028427e713"
   integrity sha512-pMZTvIkT1d+TFGvDOqodOclx0QWkkgi6Tdoa8gC8ffGAAqz9pzPTZWAybbsHHoED/ztMtkv/VoYTYyShUn81hA==
+
+uuid@^11.1.0:
+  version "11.1.0"
+  resolved "https://registry.yarnpkg.com/uuid/-/uuid-11.1.0.tgz#9549028be1753bb934fc96e2bca09bb4105ae912"
+  integrity sha512-0/A9rDy9P7cJ+8w1c9WD9V//9Wj15Ce2MPz8Ri6032usz+NfePxx5AcN3bN+r6ZL6jEo066/yNYB3tn4pQEx+A==
 
 uuid@^8.3.2:
   version "8.3.2"

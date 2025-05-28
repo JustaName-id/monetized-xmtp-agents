@@ -1,26 +1,57 @@
 "use client";
 
+import { useXMTP } from "@/context/XMTPContext";
+import { CursorInputIcon, WalletIcon } from "@/lib/icons";
+import {
+  Address,
+  Avatar,
+  EthBalance,
+  Identity,
+  Name,
+} from "@coinbase/onchainkit/identity";
 import {
   ConnectWallet,
   Wallet,
   WalletDropdown,
-  WalletDropdownLink,
   WalletDropdownDisconnect,
+  WalletDropdownLink,
 } from "@coinbase/onchainkit/wallet";
-import {
-  Address,
-  Avatar,
-  Name,
-  Identity,
-  EthBalance,
-} from "@coinbase/onchainkit/identity";
-import { useAccount, useConnect } from 'wagmi';
+import { useEffect } from "react";
+import { hexToUint8Array } from "uint8array-extras";
+import { useAccount, useConnect, useSignMessage } from 'wagmi';
+import { ClaimDialog } from "./ClaimDialog";
 import { Button } from "./ui";
-import { WalletIcon } from "@/lib/icons";
+import { createEOASigner } from "@/utils/helpers/createSigner";
+import { useLocalVariables } from "@/hooks/use-local";
+
 
 export default function Connect() {
   const account = useAccount();
   const { connectors, connect } = useConnect();
+  const { initialize, client } = useXMTP();
+  const { signMessageAsync } = useSignMessage();
+
+  console.log('client', client);
+
+  const {
+    encryptionKey,
+  } = useLocalVariables();
+
+  useEffect(() => {
+    if (!account.address) {
+      return;
+    }
+    void initialize({
+      dbEncryptionKey: encryptionKey
+        ? hexToUint8Array(encryptionKey)
+        : undefined,
+      env: "dev",
+      loggingLevel: "debug",
+      signer: createEOASigner(account.address, (message: string) =>
+        signMessageAsync({ message }),
+      ),
+    });
+  }, [account.address, signMessageAsync]);
   return (
     <div className="flex flex-col bg-background font-sans">
       <div className="flex justify-end">
@@ -46,6 +77,13 @@ export default function Connect() {
                 >
                   Wallet
                 </WalletDropdownLink>
+                <ClaimDialog
+                  trigger={
+                    <div className="flex flex-row cursor-pointer bg-bg hover:bg-secondary items-center gap-2 px-4 py-3">
+                      <CursorInputIcon width={16} height={16} />
+                      <p className="text-primary font-normal">Claim Subname</p>
+                    </div>
+                  } />
                 <WalletDropdownDisconnect />
               </WalletDropdown>
             </Wallet>)

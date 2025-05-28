@@ -1,3 +1,4 @@
+import { ClaimDialog } from "../ClaimDialog"
 import { Button } from "../ui"
 
 export const ClaimIdentity = () => {
@@ -7,7 +8,11 @@ export const ClaimIdentity = () => {
                 <p className="text-muted font-normal text-xl leading-[100%]">Claim your Identity</p>
                 <p className="text-muted font-normal text-base leading-[150%]">Lorem ipsum dolor sit amet consectetur. Nisi nisl at volutpat maecenas ornare feugiat pharetra. Sed odio tellus maecenas porta elementum. </p>
             </div>
-            <Button variant="default" onClick={() => { }}>Claim Identity</Button>
+            <ClaimDialog
+                trigger={
+                    <Button variant="default" onClick={() => { }}>Claim Identity</Button>
+                }
+            />
         </div>
     )
 }
