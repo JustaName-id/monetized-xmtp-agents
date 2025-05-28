@@ -11,7 +11,6 @@ export interface AgentProps {
 export const Agent: React.FC<AgentProps> = ({ subname }) => {
 
   const {
-    avatar,
     description,
     fees,
     tags,

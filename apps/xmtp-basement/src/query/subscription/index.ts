@@ -7,7 +7,8 @@ import {
 } from "wagmi";
 import { Address, Hex, parseUnits } from "viem";
 import { useMutation } from "@tanstack/react-query";
-import { spendPermissionManagerAddress } from "@/lib/abi/SpendPermissionManager";
+import {spendPermissionManagerAddress} from "@xmtpbasement/spend-permission";
+import axios from 'axios'
 
 interface SpendPermission {
   account: Address;
@@ -22,8 +23,9 @@ interface SpendPermission {
 }
 
 interface SubscriptionResult {
-  signature: Hex;
-  spendPermission: SpendPermission;
+  status: "success" | "failure";
+  transactionHash: string;
+  transactionUrl: string;
 }
 
 export function useSubscription() {
@@ -34,7 +36,8 @@ export function useSubscription() {
   const connectors = useConnectors();
 
   return useMutation({
-    mutationFn: async (spenderAddress: Address): Promise<SubscriptionResult> => {
+    mutationFn: async (variables: { spenderAddress: Address; fees: string }): Promise<SubscriptionResult> => {
+      const { spenderAddress, fees } = variables;
       let accountAddress = account?.address;
 
       if (!accountAddress) {
@@ -48,8 +51,8 @@ export function useSubscription() {
         account: accountAddress,
         spender: spenderAddress,
         token: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" as Address, // ETH
-        allowance: parseUnits("0.01", 18),
-        period: 86400, // seconds in a day
+        allowance: parseUnits(fees, 18),
+        period: 1, // seconds in a day
         start: Math.ceil(Date.now() / 1000), // unix timestamp
         end: Math.ceil(Date.now() / 1000) + 7 * 86400, // 7 days from now
         salt: BigInt(0),
@@ -58,7 +61,7 @@ export function useSubscription() {
 
       const signature = await signTypedDataAsync({
         domain: {
-          name: "Spend Permission Manager",
+          name: "Extended Spend Permission Manager",
           version: "1",
           chainId: chainId,
           verifyingContract: spendPermissionManagerAddress,
@@ -80,7 +83,20 @@ export function useSubscription() {
         message: spendPermission,
       });
 
-      return { signature, spendPermission };
+
+      const replacer = (key: string, value: any) => {
+        if (typeof value === "bigint") {
+          return value.toString();
+        }
+        return value;
+      };
+
+      const spendPermissionSanitized = JSON.parse(
+        JSON.stringify(spendPermission, replacer)
+      );
+
+      const response = await axios.post<SubscriptionResult>("/api/subscribe", { spendPermission: spendPermissionSanitized, signature });
+      return response.data
     },
   });
 }
