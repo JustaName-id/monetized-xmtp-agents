@@ -1,7 +1,7 @@
 "use client";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { base, baseSepolia } from "wagmi/chains";
+import { base, baseSepolia, mainnet } from "wagmi/chains";
 import { http, cookieStorage, createConfig, createStorage } from "wagmi";
 import { coinbaseWallet } from "wagmi/connectors";
 import { OnchainKitProvider } from "@coinbase/onchainkit";
@@ -15,7 +15,7 @@ import { ThemeProvider } from "next-themes";
 import { XMTPProvider } from "@/context/XMTPContext";
 
 const config = createConfig({
-  chains: [baseSepolia],
+  chains: [baseSepolia, mainnet],
   connectors: [
     coinbaseWallet({
       appName: clientEnv.onchainProjectName,
@@ -30,6 +30,7 @@ const config = createConfig({
   ssr: true,
   transports: {
     [baseSepolia.id]: http(""),
+    [mainnet.id]: http(""),
   },
 });
 
@@ -54,7 +55,7 @@ export function Providers(props: {
             <OnchainKitProvider
               apiKey={clientEnv.onchainClientApiKey}
               // @ts-ignore
-              chain={base}
+              chain={baseSepolia}
               config={{
                 appearance: {
                   mode: "auto",

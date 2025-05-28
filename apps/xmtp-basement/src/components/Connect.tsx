@@ -28,10 +28,8 @@ import { useLocalVariables } from "@/hooks/use-local";
 export default function Connect() {
   const account = useAccount();
   const { connectors, connect } = useConnect();
-  const { initialize, client } = useXMTP();
+  const { initialize } = useXMTP();
   const { signMessageAsync } = useSignMessage();
-
-  console.log('client', client);
 
   const {
     encryptionKey,
