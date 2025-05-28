@@ -30,7 +30,7 @@ export default function Index() {
         <div className="wrapper h-full">
             <div className="container flex flex-col h-full justify-between">
                 <AgentCard {...dummyAgent} />
-                {!isWalletConnected ? <ConnectWallet /> : isSubnameClaimed ? <ClaimIdentity /> : isSubscribed ? <MessageTextField amountSpent={12.46} /> : <Subscribe />}
+                {!isWalletConnected ? <ConnectWallet /> : !isSubnameClaimed ? <ClaimIdentity /> : isSubscribed ? <MessageTextField amountSpent={12.46} /> : <Subscribe />}
             </div>
         </div>
     );

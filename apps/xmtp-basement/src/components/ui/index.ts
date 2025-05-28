@@ -2,6 +2,7 @@ export * from './accordion';
 export * from './avatar';
 export * from './badge';
 export * from './button';
+export * from './dialog';
 export * from './dropdownMenu';
 export * from './input';
 export * from './separator';

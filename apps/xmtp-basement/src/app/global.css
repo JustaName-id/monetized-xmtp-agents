@@ -41,6 +41,25 @@ svg {
   width: 100%;
 }
 
+.ock-text-foreground {
+  color: var(--primary) !important;
+}
+
+.ock-bg-default {
+  background-color: var(--bg) !important;
+  &:hover {
+    background-color: var(--secondary) !important;
+  }
+}
+
+.ock-border-default {
+  border: none !important;
+}
+
+.ock-icon-color-foreground {
+  fill: var(--primary) !important;
+}
+
 @layer base {
   :root {
     --bg: #ffffff;

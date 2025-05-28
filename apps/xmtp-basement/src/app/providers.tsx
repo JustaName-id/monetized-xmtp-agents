@@ -12,6 +12,7 @@ import { clientEnv } from "@/utils/config/clientEnv";
 import "@justweb3/widget/styles.css";
 import '@coinbase/onchainkit/styles.css';
 import { ThemeProvider } from "next-themes";
+import { XMTPProvider } from "@/context/XMTPContext";
 
 const config = createConfig({
   chains: [baseSepolia],
@@ -61,7 +62,9 @@ export function Providers(props: {
                 },
               }}
             >
-              {props.children}
+              <XMTPProvider>
+                {props.children}
+              </XMTPProvider>
             </OnchainKitProvider>
           </JustWeb3Provider>
         </QueryClientProvider>

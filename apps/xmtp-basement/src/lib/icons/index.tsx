@@ -69,3 +69,17 @@ export const SendIcon = () => {
         </svg>
     )
 }
+
+export const CursorInputIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => {
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" {...props}>
+            <path d="M3.33325 2.66666H3.99992C4.53035 2.66666 5.03906 2.87738 5.41413 3.25245C5.78921 3.62752 5.99992 4.13623 5.99992 4.66666M5.99992 4.66666C5.99992 4.13623 6.21063 3.62752 6.5857 3.25245C6.96078 2.87738 7.46949 2.66666 7.99992 2.66666H8.66659M5.99992 4.66666V11.3333M8.66659 13.3333H7.99992C7.46949 13.3333 6.96078 13.1226 6.5857 12.7475C6.21063 12.3725 5.99992 11.8638 5.99992 11.3333M5.99992 11.3333C5.99992 11.8638 5.78921 12.3725 5.41413 12.7475C5.03906 13.1226 4.53035 13.3333 3.99992 13.3333H3.33325M3.33325 10.6667H2.66659C2.31296 10.6667 1.97382 10.5262 1.72378 10.2761C1.47373 10.0261 1.33325 9.68695 1.33325 9.33333V6.66666C1.33325 6.31304 1.47373 5.9739 1.72378 5.72386C1.97382 5.47381 2.31296 5.33333 2.66659 5.33333H3.33325M8.66659 5.33333H13.3333C13.6869 5.33333 14.026 5.47381 14.2761 5.72386C14.5261 5.9739 14.6666 6.31304 14.6666 6.66666V9.33333C14.6666 9.68695 14.5261 10.0261 14.2761 10.2761C14.026 10.5262 13.6869 10.6667 13.3333 10.6667H8.66659" stroke="var(--primary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+    )
+}
+
+export const LoadingIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => {
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`animate-spin ${props.className}`}><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
+    )
+}
