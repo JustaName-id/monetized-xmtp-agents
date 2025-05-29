@@ -24,7 +24,7 @@ export const ConnectXmtp = () => {
                 ? hexToUint8Array(encryptionKey)
                 : undefined,
             env: "dev",
-            loggingLevel: "trace",
+            loggingLevel: "debug",
             signer: createEOASigner(account.address, (message: string) =>
                 signMessageAsync({ message }),
             ),

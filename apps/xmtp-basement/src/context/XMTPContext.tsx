@@ -71,25 +71,19 @@ export const XMTPProvider: React.FC<XMTPProviderProps> = ({
             loggingLevel,
             signer,
         }: InitializeClientOptions) => {
-            // only initialize a client if one doesn't already exist
             if (!client) {
-                // if the client is already initializing, don't do anything
                 if (initializingRef.current) {
                     return undefined;
                 }
 
-                // flag the client as initializing
                 initializingRef.current = true;
 
-                // reset error state
                 setError(null);
-                // reset initializing state
                 setInitializing(true);
 
                 let xmtpClient: Client;
 
                 try {
-                    // create a new XMTP client
                     xmtpClient = await Client.create(signer, {
                         env,
                         loggingLevel,
