@@ -1,17 +1,19 @@
 "use client"
-import {AgentCard} from "@/components/newChat/AgentCard";
-import {ConnectWallet} from "@/components/newChat/ConnectWallet";
-import {ClaimIdentity} from "@/components/newChat/ClaimIdentity";
-import {Subscribe} from "@/components/newChat/Subscribe";
-import {MessageTextField} from "@/components/MessageTextField";
-import {useAccount} from "wagmi";
-import {useAccountSubnames} from "@justaname.id/react";
-import {useAgent} from "@/query/agents";
-import {useMemo} from "react";
-import {useAgentDetails} from "@/hooks/use-agent-details";
-import {ConnectXmtp} from "@/components/newChat/ConnectXmtp";
-import {useXMTP} from "@/context/XMTPContext";
-import {clientEnv} from "@/utils/config/clientEnv";
+import { AgentCard } from "@/components/newChat/AgentCard";
+import { ConnectWallet } from "@/components/newChat/ConnectWallet";
+import { ClaimIdentity } from "@/components/newChat/ClaimIdentity";
+import { Subscribe } from "@/components/newChat/Subscribe";
+import { MessageTextField } from "@/components/MessageTextField";
+import { useAccount } from "wagmi";
+import { useAccountSubnames } from "@justaname.id/react";
+import { useAgent } from "@/query/agents";
+import { useMemo } from "react";
+import { useAgentDetails } from "@/hooks/use-agent-details";
+import { ConnectXmtp } from "@/components/newChat/ConnectXmtp";
+import { useXMTP } from "@/context/XMTPContext";
+import { clientEnv } from "@/utils/config/clientEnv";
+import { useConversations } from "@/hooks/xmtp";
+import { useRouter } from "next/navigation";
 
 export interface NewChatProps {
   agentName: string
@@ -19,12 +21,13 @@ export interface NewChatProps {
 
 export const NewChat: React.FC<NewChatProps> = ({
   agentName
-                                                }) => {
+}) => {
   const { subname } = useAgent(agentName)
   const { description, tags, avatar, spender, fees } = useAgentDetails(subname);
   const account = useAccount();
   const { accountSubnames } = useAccountSubnames();
   const { client } = useXMTP();
+  const router = useRouter();
 
   const isWalletConnected = useMemo(() => account.isConnected, [account.isConnected]);
   const isSubnameClaimed = useMemo(() => !!accountSubnames.find(
@@ -32,8 +35,23 @@ export const NewChat: React.FC<NewChatProps> = ({
   ), [accountSubnames]);
   const isXmtpConnected = useMemo(() => !!client, [client]);
   const isSubscribed = useMemo(() => {
-      return false;
+    return false;
   }, []);
+
+  const { newGroupWithIdentifiers, loading, syncAll } = useConversations()
+
+  const handleNewMessage = async (message: string) => {
+    if (loading) {
+      return;
+    }
+    const group = await newGroupWithIdentifiers([{
+      identifier: subname?.sanitizedRecords.ethAddress.value ?? '',
+      identifierKind: "Ethereum"
+    }]);
+    await group.send(message);
+    await syncAll();
+    router.push(`/chat/${group.id}`);
+  }
 
   return (
     <div className="wrapper h-full">
@@ -48,7 +66,7 @@ export const NewChat: React.FC<NewChatProps> = ({
                 <Subscribe spender={spender} fees={fees} /> :
                 !isXmtpConnected ?
                   <ConnectXmtp /> :
-                  <MessageTextField amountSpent={12.46} />
+                  <MessageTextField onNewMessage={handleNewMessage} />
         }
       </div>
     </div>

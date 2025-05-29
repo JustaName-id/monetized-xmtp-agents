@@ -8,7 +8,8 @@ import {
     useRef,
     useState,
 } from "react";
-
+import { useSwitchChain } from "wagmi";
+import { baseSepolia, mainnet } from "wagmi/chains";
 export type ContentTypes =
     | string
     | GroupUpdated
@@ -58,6 +59,7 @@ export const XMTPProvider: React.FC<XMTPProviderProps> = ({
     const [client, setClient] = useState<Client | undefined>(
         initialClient,
     );
+    const { switchChainAsync } = useSwitchChain();
 
     const [initializing, setInitializing] = useState(false);
     const [error, setError] = useState<Error | null>(null);
@@ -84,6 +86,7 @@ export const XMTPProvider: React.FC<XMTPProviderProps> = ({
                 let xmtpClient: Client;
 
                 try {
+                    void switchChainAsync({ chainId: mainnet.id });
                     xmtpClient = await Client.create(signer, {
                         env,
                         loggingLevel,
@@ -91,6 +94,7 @@ export const XMTPProvider: React.FC<XMTPProviderProps> = ({
                         codecs: [],
                     });
                     setClient(xmtpClient);
+                    void switchChainAsync({ chainId: baseSepolia.id });
                 } catch (e) {
                     setClient(undefined);
                     setError(e as Error);

@@ -12,7 +12,7 @@ export interface ChatCardProps {
 export const ChatCard: React.FC<ChatCardProps> = ({ id, subname, description, avatar }) => {
 
     return (
-        <Link href={`/chat/${id}`} className="p-2.5 flex flex-col gap-0.5 rounded-default bg-bg cursor-pointer">
+        <Link href={`/chat/${id}`} className="p-2.5 flex flex-col gap-0.5 rounded-default bg-background cursor-pointer">
             <div className="flex flex-row gap-2 items-center">
                 <Avatar className="w-[14px] h-[14px] rounded-full" >
                     <AvatarImage src={avatar} />

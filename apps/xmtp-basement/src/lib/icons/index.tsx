@@ -83,3 +83,19 @@ export const LoadingIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => {
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`animate-spin ${props.className}`}><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
     )
 }
+
+export const LogoutIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => {
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" {...props}>
+            <path d="M6 14H3.33333C2.97971 14 2.64057 13.8595 2.39052 13.6095C2.14048 13.3594 2 13.0203 2 12.6667V3.33333C2 2.97971 2.14048 2.64057 2.39052 2.39052C2.64057 2.14048 2.97971 2 3.33333 2H6M10.6667 11.3333L14 8M14 8L10.6667 4.66667M14 8H6" stroke="var(--popover-foreground)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+    )
+}
+
+export const CreditCardIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => {
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" {...props}>
+            <path d="M1.33325 6.66667H14.6666M2.66659 3.33334H13.3333C14.0696 3.33334 14.6666 3.93029 14.6666 4.66667V11.3333C14.6666 12.0697 14.0696 12.6667 13.3333 12.6667H2.66659C1.93021 12.6667 1.33325 12.0697 1.33325 11.3333V4.66667C1.33325 3.93029 1.93021 3.33334 2.66659 3.33334Z" stroke="var(--popover-foreground)" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+    )
+}
