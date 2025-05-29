@@ -64,7 +64,6 @@ export async function POST(request: NextRequest) {
 async function transactSmartWallet(spendRequest: SpendRequest, signature: Address) {
   const spenderBundlerClient = await getSpenderBundlerClient();
 
-  console.log(spendRequest, signature)
   const userOpHash = await spenderBundlerClient.sendUserOperation({
     calls: [
       {

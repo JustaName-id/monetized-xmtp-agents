@@ -60,7 +60,9 @@ export interface SpendRequest {
 }
 
 export const spendPermissionManagerAddress =
-  "0x15a9bf3748cac915b62515ca1370ef6575a5123f" as Address;
+  "0xf85210B21cC50302F477BA56686d2019dC9b67Ad" as Address;
+// export const spendPermissionManagerAddress =
+//   "0x15a9bf3748cac915b62515ca1370ef6575a5123f" as Address;
 
 export const spendPermissionManagerAbi = [
   {

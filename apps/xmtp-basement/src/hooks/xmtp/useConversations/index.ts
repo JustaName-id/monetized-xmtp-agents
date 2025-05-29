@@ -13,14 +13,16 @@ export const useConversations = () => {
   const [syncing, setSyncing] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>([]);
 
-  if (!client) {
-    throw new Error('XMTP client not initialized');
-  }
+
 
   const list = async (
     options?: SafeListConversationsOptions,
-    syncFromNetwork: boolean = false
+    syncFromNetwork = false
   ) => {
+    if (!client) {
+      throw new Error("XMTP client is not initialized");
+    }
+
     if (syncFromNetwork) {
       await sync();
     }
@@ -37,6 +39,10 @@ export const useConversations = () => {
   };
 
   const sync = async () => {
+    if (!client) {
+      throw new Error("XMTP client is not initialized");
+    }
+
     setSyncing(true);
 
     try {
@@ -47,6 +53,10 @@ export const useConversations = () => {
   };
 
   const syncAll = async () => {
+    if (!client) {
+      throw new Error("XMTP client is not initialized");
+    }
+
     setSyncing(true);
 
     try {
@@ -57,6 +67,10 @@ export const useConversations = () => {
   };
 
   const getConversationById = async (conversationId: string) => {
+    if (!client) {
+      throw new Error("XMTP client is not initialized");
+    }
+
     setLoading(true);
 
     try {
@@ -70,6 +84,10 @@ export const useConversations = () => {
   };
 
   const getMessageById = async (messageId: string) => {
+    if (!client) {
+      throw new Error("XMTP client is not initialized");
+    }
+
     setLoading(true);
 
     try {
@@ -84,6 +102,10 @@ export const useConversations = () => {
     inboxIds: string[],
     options?: SafeCreateGroupOptions
   ) => {
+    if (!client) {
+      throw new Error("XMTP client is not initialized");
+    }
+
     setLoading(true);
 
     try {
@@ -101,6 +123,10 @@ export const useConversations = () => {
     identifiers: Identifier[],
     options?: SafeCreateGroupOptions
   ) => {
+    if (!client) {
+      throw new Error("XMTP client is not initialized");
+    }
+
     setLoading(true);
 
     try {
@@ -115,6 +141,10 @@ export const useConversations = () => {
   };
 
   const newDm = async (inboxId: string) => {
+    if (!client) {
+      throw new Error("XMTP client is not initialized");
+    }
+
     setLoading(true);
 
     try {
@@ -126,6 +156,10 @@ export const useConversations = () => {
   };
 
   const newDmWithIdentifier = async (identifier: Identifier) => {
+    if (!client) {
+      throw new Error("XMTP client is not initialized");
+    }
+
     setLoading(true);
 
     try {
@@ -139,6 +173,10 @@ export const useConversations = () => {
   };
 
   const stream = async () => {
+    if (!client) {
+      throw new Error("XMTP client is not initialized");
+    }
+
     const onConversation = (
       error: Error | null,
       conversation: Conversation | undefined

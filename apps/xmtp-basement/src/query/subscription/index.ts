@@ -45,7 +45,7 @@ export function useSubscription() {
         spender: spenderAddress,
         token: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" as Address, // ETH
         allowance: parseUnits(fees, 18),
-        period: 1, // seconds in a day
+        period: 86400, // seconds in a day
         start: Math.ceil(Date.now() / 1000), // unix timestamp
         end: Math.ceil(Date.now() / 1000) + 7 * 86400, // 7 days from now
         salt: BigInt(0),
@@ -54,7 +54,8 @@ export function useSubscription() {
 
       const signature = await signTypedDataAsync({
         domain: {
-          name: "Extended Spend Permission Manager",
+          // name: "Extended Spend Permission Manager",
+          name: "Spend Permission Manager",
           version: "1",
           chainId: baseSepolia.id,
           verifyingContract: spendPermissionManagerAddress,

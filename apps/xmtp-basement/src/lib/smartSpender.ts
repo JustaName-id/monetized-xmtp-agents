@@ -15,6 +15,9 @@ export const publicClient = createPublicClient({
   transport: http(),
 });
 
+export const paymasterClient = createPaymasterClient({
+  transport: http(serverEnv.basePaymasterUrl),
+});
 
 export async function getSpenderBundlerClient(): Promise<BundlerClient> {
 
@@ -27,9 +30,7 @@ export async function getSpenderBundlerClient(): Promise<BundlerClient> {
     owners: [spenderAccountOwner],
   });
 
-  const paymasterClient = createPaymasterClient({
-    transport: http(serverEnv.basePaymasterUrl),
-  });
+
 
   const spenderBundlerClient = createBundlerClient({
     account: spenderAccount,
