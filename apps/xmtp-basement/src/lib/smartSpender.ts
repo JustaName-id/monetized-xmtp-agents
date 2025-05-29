@@ -8,31 +8,34 @@ import {
 } from "viem/account-abstraction";
 
 import { type BundlerClient } from "viem/account-abstraction";
+import {serverEnv} from "@/utils/config/serverEnv";
+
+export const publicClient = createPublicClient({
+  chain: baseSepolia,
+  transport: http(),
+});
+
 
 export async function getSpenderBundlerClient(): Promise<BundlerClient> {
-  const client = createPublicClient({
-    chain: baseSepolia,
-    transport: http(),
-  });
 
   const spenderAccountOwner = privateKeyToAccount(
     process.env.SPENDER_PRIVATE_KEY! as Hex
   );
 
   const spenderAccount = await toCoinbaseSmartAccount({
-    client,
+    client: publicClient,
     owners: [spenderAccountOwner],
   });
 
   const paymasterClient = createPaymasterClient({
-    transport: http(process.env.BASE_SEPOLIA_PAYMASTER_URL),
+    transport: http(serverEnv.basePaymasterUrl),
   });
 
   const spenderBundlerClient = createBundlerClient({
     account: spenderAccount,
-    client,
+    client: publicClient,
     paymaster: paymasterClient,
-    transport: http(process.env.BASE_SEPOLIA_PAYMASTER_URL),
+    transport: http(serverEnv.basePaymasterUrl),
   });
 
   return spenderBundlerClient;

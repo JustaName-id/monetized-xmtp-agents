@@ -22,7 +22,7 @@ export const Subscribe: React.FC<SubscribeProps> = ({
                 <p className="text-muted font-normal text-base leading-[150%]">Lorem ipsum dolor sit amet consectetur. Nisi nisl at volutpat maecenas ornare feugiat pharetra. Sed odio tellus maecenas porta elementum. </p>
             </div>
             <div className="flex flex-col gap-1.5 items-end">
-                <Button variant="default" onClick={() => {
+                <Button variant="default" className={"w-full"} onClick={() => {
                   mutateAsync({
                     spenderAddress: spender as Address,
                     fees: fees
@@ -31,7 +31,7 @@ export const Subscribe: React.FC<SubscribeProps> = ({
                 }}>Subscribe</Button>
                 <div className="flex flex-row gap-[5px] items-center">
                     <UsdcIcon width={14} height={14} />
-                    <p className="text-blue font-bold text-xs leading-[133%]">{`${0.04} USDC/MSG`}</p>
+                    <p className="text-blue-600 font-bold text-xs leading-[133%] whitespace-nowrap">{`${0.04} USDC/MSG`}</p>
                 </div>
             </div>
         </div>

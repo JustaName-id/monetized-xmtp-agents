@@ -6,9 +6,7 @@ import { CursorInputIcon, WalletIcon } from "@/lib/icons";
 import { clientEnv } from "@/utils/config/clientEnv";
 import { createEOASigner } from "@/utils/helpers/createSigner";
 import {
-  Address,
-  Avatar,
-  EthBalance,
+  Address, EthBalance,
   Identity,
   Name,
 } from "@coinbase/onchainkit/identity";
@@ -24,7 +22,10 @@ import { useEffect, useMemo } from "react";
 import { hexToUint8Array } from "uint8array-extras";
 import { useAccount, useConnect, useSignMessage } from 'wagmi';
 import { ClaimDialog } from "./ClaimDialog";
-import { Button } from "./ui";
+import {
+  Avatar,
+  Button,
+} from "./ui";
 
 
 export default function Connect() {
@@ -34,8 +35,9 @@ export default function Connect() {
   const { signMessageAsync } = useSignMessage();
   const { accountSubnames } = useAccountSubnames();
 
-  const claimedSubname = useMemo(() => accountSubnames.filter((sub) => sub.ens.includes(clientEnv.userEnsDomain)), [accountSubnames]);
-
+  const claimedSubname = useMemo(() =>
+    accountSubnames.find(subname => subname.ens.endsWith(clientEnv.userEnsDomain))
+    , [accountSubnames]);
 
   const {
     encryptionKey,
@@ -55,7 +57,9 @@ export default function Connect() {
         signMessageAsync({ message }),
       ),
     });
-  }, [account.address, signMessageAsync]);
+  }, [account.address, encryptionKey, initialize, signMessageAsync]);
+
+
   return (
     <div className="flex flex-col bg-background font-sans">
       <div className="flex justify-end">
@@ -64,8 +68,8 @@ export default function Connect() {
             <Wallet>
               <ConnectWallet className="py-2 px-4 bg-secondary hover:bg-secondary/50 active:bg-secondary/50">
                 <WalletIcon />
-                {claimedSubname.length > 0 ?
-                  <p className="text-muted font-semibold text-base">{claimedSubname[0].ens}</p>
+                {claimedSubname ?
+                  <p className="text-muted font-semibold text-base">{claimedSubname.ens}</p>
                   :
                   <Name className="text-muted" />
                 }
@@ -73,7 +77,7 @@ export default function Connect() {
               <WalletDropdown>
                 <Identity className="px-4 pt-3 pb-2" hasCopyAddressOnClick>
                   <Avatar />
-                  <Name />
+                  <Name  />
                   <Address />
                   <EthBalance />
                 </Identity>
@@ -85,7 +89,7 @@ export default function Connect() {
                 >
                   Wallet
                 </WalletDropdownLink>
-                {claimedSubname.length == 0 &&
+                {!claimedSubname &&
                   <ClaimDialog
                     trigger={
                       <div className="flex flex-row cursor-pointer bg-bg hover:bg-secondary items-center gap-2 px-4 py-3">

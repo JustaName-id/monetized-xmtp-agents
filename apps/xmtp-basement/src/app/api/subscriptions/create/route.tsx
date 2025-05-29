@@ -1,17 +1,43 @@
 import { NextRequest, NextResponse } from "next/server";
 import {spendPermissionManagerAbi, spendPermissionManagerAddress} from '@xmtpbasement/spend-permission';
 import {getSpenderBundlerClient} from "@/lib/smartSpender";
-
+import {db} from "@/db/drizzle";
+import {approvalEventsTable, spendPermissionsTable} from "@/db/schema";
+import {SpendPermission} from "@/types";
+import { v4 as uuid } from 'uuid';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { spendPermission, signature } = body;
+    const { spendPermission, signature }: {
+      spendPermission:SpendPermission,
+      signature: string,
+    } = body;
 
+    console.log(spendPermission)
     const { success, transactionHash } = await transactSmartWallet(
       spendPermission,
       signature
     );
+
+    const spendPermissionUUID = uuid();
+
+    await db.insert(spendPermissionsTable).values({
+      ...spendPermission,
+      id: spendPermissionUUID,
+      start: new Date(spendPermission.start * 1000),
+      salt: spendPermission.salt.toString(),
+      end: new Date(spendPermission.end * 1000),
+      allowance: spendPermission.allowance.toString(),
+    })
+
+    const approvalEventUUID = uuid();
+
+    await db.insert(approvalEventsTable).values({
+      id: approvalEventUUID,
+      permissionId: spendPermissionUUID,
+      transactionHash: transactionHash,
+    })
 
     return NextResponse.json({
       status: success ? "success" : "failure",

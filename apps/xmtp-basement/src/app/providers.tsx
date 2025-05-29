@@ -1,7 +1,7 @@
 "use client";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { base, baseSepolia, mainnet } from "wagmi/chains";
+import { baseSepolia, mainnet } from "wagmi/chains";
 import { http, cookieStorage, createConfig, createStorage } from "wagmi";
 import { coinbaseWallet } from "wagmi/connectors";
 import { OnchainKitProvider } from "@coinbase/onchainkit";

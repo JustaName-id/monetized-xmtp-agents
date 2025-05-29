@@ -1,26 +1,17 @@
 import {
   useAccount,
-  useChainId,
   useConnect,
   useConnectors,
-  useSignTypedData,
+  useSignTypedData, useSwitchChain,
 } from "wagmi";
 import { Address, Hex, parseUnits } from "viem";
 import { useMutation } from "@tanstack/react-query";
 import {spendPermissionManagerAddress} from "@xmtpbasement/spend-permission";
 import axios from 'axios'
+import {SpendPermission} from "@/types";
+import {baseSepolia} from "wagmi/chains";
 
-interface SpendPermission {
-  account: Address;
-  spender: Address;
-  token: Address;
-  allowance: bigint;
-  period: number;
-  start: number;
-  end: number;
-  salt: bigint;
-  extraData: Hex;
-}
+
 
 interface SubscriptionResult {
   status: "success" | "failure";
@@ -30,8 +21,9 @@ interface SubscriptionResult {
 
 export function useSubscription() {
   const { signTypedDataAsync } = useSignTypedData();
+  const { switchChain } = useSwitchChain();
+
   const account = useAccount();
-  const chainId = useChainId();
   const { connectAsync } = useConnect();
   const connectors = useConnectors();
 
@@ -47,6 +39,7 @@ export function useSubscription() {
         accountAddress = requestAccounts.accounts[0];
       }
 
+      switchChain({ chainId: baseSepolia.id });
       const spendPermission: SpendPermission = {
         account: accountAddress,
         spender: spenderAddress,
@@ -63,7 +56,7 @@ export function useSubscription() {
         domain: {
           name: "Extended Spend Permission Manager",
           version: "1",
-          chainId: chainId,
+          chainId: baseSepolia.id,
           verifyingContract: spendPermissionManagerAddress,
         },
         types: {
@@ -95,7 +88,7 @@ export function useSubscription() {
         JSON.stringify(spendPermission, replacer)
       );
 
-      const response = await axios.post<SubscriptionResult>("/api/subscribe", { spendPermission: spendPermissionSanitized, signature });
+      const response = await axios.post<SubscriptionResult>("/api/subscriptions/create", { spendPermission: spendPermissionSanitized, signature });
       return response.data
     },
   });

@@ -2038,4 +2038,4 @@ export const spendPermissionManagerAbi = [
     "name": "ZeroValue",
     "inputs": []
   }
-]
+] as const

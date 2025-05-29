@@ -1,8 +1,7 @@
-import { pgTable, varchar, numeric, timestamp, boolean, text, integer, index } from 'drizzle-orm/pg-core';
+import { pgTable, varchar, numeric, timestamp, text, integer, index, uuid } from 'drizzle-orm/pg-core';
 
-export const spendPermissions = pgTable('spend_permissions', {
-  hash: varchar('hash', { length: 66 }).primaryKey(),
-
+export const spendPermissionsTable = pgTable('spend_permissions', {
+  id: uuid("id").primaryKey(),
   account: varchar('account', { length: 42 }).notNull(),
   spender: varchar('spender', { length: 42 }).notNull(),
   token: varchar('token', { length: 42 }).notNull(),
@@ -13,11 +12,6 @@ export const spendPermissions = pgTable('spend_permissions', {
   salt: numeric('salt', { precision: 78 }).notNull(),
   extraData: text('extra_data'),
 
-  isApproved: boolean('is_approved').default(false).notNull(),
-  isRevoked: boolean('is_revoked').default(false).notNull(),
-  approvedAt: timestamp('approved_at', { mode: 'date' }),
-  revokedAt: timestamp('revoked_at', { mode: 'date' }),
-
   createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow().notNull(),
 }, (table) => ({
@@ -25,35 +19,32 @@ export const spendPermissions = pgTable('spend_permissions', {
   spenderIdx: index('spender_idx').on(table.spender),
   tokenIdx: index('token_idx').on(table.token),
   accountSpenderIdx: index('account_spender_idx').on(table.account, table.spender),
-  isActiveIdx: index('is_active_idx').on(table.isApproved, table.isRevoked),
 }));
 
-export const approvalEvents = pgTable('approval_events', {
-  id: varchar('id', { length: 66 }).primaryKey(),
-  permissionHash: varchar('permission_hash', { length: 66 }).notNull().references(() => spendPermissions.hash),
+export const approvalEventsTable = pgTable('approval_events', {
+  id: uuid("id").primaryKey(),
+  permissionId: uuid("permission_id").notNull().references(() => spendPermissionsTable.id),
   transactionHash: varchar('transaction_hash', { length: 66 }).notNull(),
 
   createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
-}, (table) => ({
-  permissionHashIdx: index('approval_permission_hash_idx').on(table.permissionHash),
-}));
+  updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow().notNull(),
+});
 
-export const revocationEvents = pgTable('revocation_events', {
-  id: varchar('id', { length: 66 }).primaryKey(),
-  permissionHash: varchar('permission_hash', { length: 66 }).notNull().references(() => spendPermissions.hash),
+export const revocationEventsTable = pgTable('revocation_events', {
+  id: uuid("id").primaryKey(),
+  permissionId: uuid("permission_id").notNull().references(() => spendPermissionsTable.id),
   transactionHash: varchar('transaction_hash', { length: 66 }).notNull(),
 
   createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
-}, (table) => ({
-  permissionHashIdx: index('revocation_permission_hash_idx').on(table.permissionHash),
-}));
+  updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow().notNull(),
+});
 
-export const spendEvents = pgTable('spend_events', {
-  id: varchar('id', { length: 66 }).primaryKey(),
-  permissionHash: varchar('permission_hash', { length: 66 }).notNull().references(() => spendPermissions.hash),
-  transactionHash: varchar('transaction_hash', { length: 66 }).notNull(),
+export const spendEventsTable = pgTable('spend_events', {
+  id: uuid("id").primaryKey(),
+  permissionId: uuid("permission_id").notNull().references(() => spendPermissionsTable.id),
+  transactionHash: varchar('transaction_hash', {length: 66}).notNull(),
   value: numeric('value', { precision: 78 }).notNull(),
-  createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
-}, (table) => ({
-  permissionHashIdx: index('spend_permission_hash_idx').on(table.permissionHash),
-}));
+
+  createdAt: timestamp('created_at', {mode: 'date'}).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', {mode: 'date'}).defaultNow().notNull(),
+})
