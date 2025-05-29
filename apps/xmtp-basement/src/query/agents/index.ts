@@ -1,6 +1,6 @@
 import {justanameInstance} from "@/utils/justaname";
 import {clientEnv} from "@/utils/config/clientEnv";
-import { useEnsSubnames } from '@justaname.id/react'
+import { useEnsSubnames, useSubname } from '@justaname.id/react'
 
 export const getAgents = () => {
   return justanameInstance().subnames.getSubnamesByEnsDomain({
@@ -13,4 +13,16 @@ export const useAgents = () => {
     ensDomain: clientEnv.xmtpAgentEnsDomain,
     isClaimed: true
   })
+}
+
+
+export const useAgent = (name: string) => {
+  const { subname } = useSubname({
+    subname: name,
+    chainId: 1
+  })
+
+  return {
+    subname
+  }
 }

@@ -3,8 +3,8 @@ import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogH
 import { useAddSubname, useIsSubnameAvailable } from "@justaname.id/react";
 import { clientEnv } from "@/utils/config/clientEnv";
 import { LoadingIcon } from "@/lib/icons";
-import { useAccount, useSwitchChain } from "wagmi";
-import { mainnet } from "wagmi/chains";
+import { useSwitchChain } from "wagmi";
+import { mainnet} from "wagmi/chains";
 
 interface ClaimDialogProps {
     trigger: React.ReactNode
@@ -19,27 +19,16 @@ export const ClaimDialog = ({ trigger }: ClaimDialogProps) => {
         ensDomain: clientEnv.userEnsDomain,
         chainId: mainnet.id,
     });
-    const { chain } = useAccount();
-    const { switchChain, isPending: isSwitchChainPending } = useSwitchChain();
+    const { switchChainAsync, isPending: isSwitchChainPending } = useSwitchChain();
 
     const handleClaim = async () => {
-        if (chain?.id !== mainnet.id) {
-            switchChain({ chainId: mainnet.id }, {
-                onSuccess: () => {
-                    addSubname({
-                        username: subname,
-                        ensDomain: clientEnv.userEnsDomain,
-                        chainId: mainnet.id,
-                    });
-                }
-            });
-        } else {
-            addSubname({
-                username: subname,
-                ensDomain: clientEnv.userEnsDomain,
-                chainId: mainnet.id,
-            });
-        }
+      await switchChainAsync({ chainId: mainnet.id })
+      await  addSubname({
+        username: subname,
+        ensDomain: clientEnv.userEnsDomain,
+        chainId: mainnet.id,
+      });
+
     }
 
     const isClaiming = isAddSubnamePending || isSwitchChainPending;

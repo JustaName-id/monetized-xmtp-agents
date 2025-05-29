@@ -5,6 +5,7 @@ const SERVER_ENV = {
   userEnsDomain: process.env.USER_ENS_DOMAIN,
   xmtpAgentJustaNameApiKey: process.env.XMTP_AGENT_JUSTANAME_API_KEY,
   userJustaNameApiKey: process.env.USER_JUSTANAME_API_KEY,
+  basePaymasterUrl: process.env.BASE_PAYMASTER_URL
 }
 
 export const serverEnvSchema = z.object({
@@ -12,6 +13,7 @@ export const serverEnvSchema = z.object({
   userEnsDomain: z.string(),
   xmtpAgentJustaNameApiKey: z.string(),
   userJustaNameApiKey: z.string(),
+  basePaymasterUrl: z.string()
 });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;

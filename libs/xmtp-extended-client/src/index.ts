@@ -22,7 +22,6 @@ export class BasedClient extends Client {
   fees=0;
   description: string | undefined;
   tags: string[] = [];
-  spender: string | undefined ;
   hubUrl: string | undefined;
 
 
@@ -33,7 +32,6 @@ export class BasedClient extends Client {
       fees?: number,
       description?: string,
       tags?: string[],
-      spender?:string,
       hubUrl?: string,
     }
   ): Promise<BasedClient> {
@@ -41,7 +39,6 @@ export class BasedClient extends Client {
     const client = await Client.create(signer, options);
 
     const hubUrl = options?.hubUrl || "https://xmtp-agent-hub.vercel.app/api";
-    const spender = options?.spender || client.accountIdentifier?.identifier;
     const fees = options?.fees || 0;
     const description = options?.description;
     const tags = options?.tags || [];
@@ -77,11 +74,8 @@ export class BasedClient extends Client {
       text["xmtp_tags"] = tags.join(",")
     }
     if(fees) text["xmtp_fees"] = fees.toString()
-    if(spender){
-      text["xmtp_spender"] = spender
-    }else{
-      text["xmtp_spender"] = clientAddress
-    }
+
+
 
     const signatureUint8Array = await signer.signMessage(challenge.challenge);
     const signatureHex = "0x"+Array.from(signatureUint8Array, (byte) =>
@@ -152,7 +146,6 @@ export class BasedClient extends Client {
     baseClient.fees = options?.fees || 0
     baseClient.description = options?.description
     baseClient.tags = options?.tags || []
-    baseClient.spender = spender
     baseClient.hubUrl = hubUrl
     return baseClient;
   }

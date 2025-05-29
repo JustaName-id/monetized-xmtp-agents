@@ -11,7 +11,6 @@ export interface AgentProps {
 export const Agent: React.FC<AgentProps> = ({ subname }) => {
 
   const {
-    avatar,
     description,
     fees,
     tags,
@@ -20,7 +19,7 @@ export const Agent: React.FC<AgentProps> = ({ subname }) => {
   return (
     <div className="p-5 rounded-lg bg-bg border-border border-[1px] gap-5 flex flex-row items-center">
       <Avatar className="w-16 h-16 rounded-full" >
-        <AvatarImage src={avatar} />
+        <AvatarImage src={""} />
       </Avatar>
       <div className="flex flex-col gap-1.5 justify-between">
         <div className="flex flex-row justify-between items-center">

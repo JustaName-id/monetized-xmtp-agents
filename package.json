@@ -10,6 +10,7 @@
     "@justaname.id/sdk": "^0.2.192",
     "@justweb3/widget": "^0.0.131",
     "@mantine/hooks": "^8.0.2",
+    "@neondatabase/serverless": "^1.0.0",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-avatar": "^1.1.10",
     "@radix-ui/react-dialog": "^1.1.14",
@@ -21,6 +22,7 @@
     "@xmtp/browser-sdk": "^2.0.13",
     "@xmtp/node-sdk": "^2.0.9",
     "cors": "^2.8.5",
+    "drizzle-orm": "^0.43.1",
     "ethers": "^6.14.1",
     "express": "^4.21.2",
     "lucide-react": "^0.511.0",
@@ -30,7 +32,8 @@
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "siwe": "^3.0.0",
-    "uint8arrays": "^5.1.0"
+    "uint8arrays": "^5.1.0",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@eslint/compat": "^1.1.1",
@@ -53,6 +56,7 @@
     "@types/react": "19.0.0",
     "@types/react-dom": "19.0.0",
     "autoprefixer": "10.4.13",
+    "drizzle-kit": "^0.31.1",
     "esbuild": "^0.19.2",
     "eslint": "^9.8.0",
     "eslint-config-next": "^15.2.4",

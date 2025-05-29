@@ -1,40 +1,35 @@
 import {
   useAccount,
-  useChainId,
   useConnect,
   useConnectors,
-  useSignTypedData,
+  useSignTypedData, useSwitchChain,
 } from "wagmi";
 import { Address, Hex, parseUnits } from "viem";
 import { useMutation } from "@tanstack/react-query";
-import { spendPermissionManagerAddress } from "@/lib/abi/SpendPermissionManager";
+import {spendPermissionManagerAddress} from "@xmtpbasement/spend-permission";
+import axios from 'axios'
+import {SpendPermission} from "@/types";
+import {baseSepolia} from "wagmi/chains";
 
-interface SpendPermission {
-  account: Address;
-  spender: Address;
-  token: Address;
-  allowance: bigint;
-  period: number;
-  start: number;
-  end: number;
-  salt: bigint;
-  extraData: Hex;
-}
+
 
 interface SubscriptionResult {
-  signature: Hex;
-  spendPermission: SpendPermission;
+  status: "success" | "failure";
+  transactionHash: string;
+  transactionUrl: string;
 }
 
 export function useSubscription() {
   const { signTypedDataAsync } = useSignTypedData();
+  const { switchChain } = useSwitchChain();
+
   const account = useAccount();
-  const chainId = useChainId();
   const { connectAsync } = useConnect();
   const connectors = useConnectors();
 
   return useMutation({
-    mutationFn: async (spenderAddress: Address): Promise<SubscriptionResult> => {
+    mutationFn: async (variables: { spenderAddress: Address; fees: string }): Promise<SubscriptionResult> => {
+      const { spenderAddress, fees } = variables;
       let accountAddress = account?.address;
 
       if (!accountAddress) {
@@ -44,12 +39,13 @@ export function useSubscription() {
         accountAddress = requestAccounts.accounts[0];
       }
 
+      switchChain({ chainId: baseSepolia.id });
       const spendPermission: SpendPermission = {
         account: accountAddress,
         spender: spenderAddress,
         token: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" as Address, // ETH
-        allowance: parseUnits("0.01", 18),
-        period: 86400, // seconds in a day
+        allowance: parseUnits(fees, 18),
+        period: 1, // seconds in a day
         start: Math.ceil(Date.now() / 1000), // unix timestamp
         end: Math.ceil(Date.now() / 1000) + 7 * 86400, // 7 days from now
         salt: BigInt(0),
@@ -58,9 +54,9 @@ export function useSubscription() {
 
       const signature = await signTypedDataAsync({
         domain: {
-          name: "Spend Permission Manager",
+          name: "Extended Spend Permission Manager",
           version: "1",
-          chainId: chainId,
+          chainId: baseSepolia.id,
           verifyingContract: spendPermissionManagerAddress,
         },
         types: {
@@ -80,7 +76,20 @@ export function useSubscription() {
         message: spendPermission,
       });
 
-      return { signature, spendPermission };
+
+      const replacer = (key: string, value: any) => {
+        if (typeof value === "bigint") {
+          return value.toString();
+        }
+        return value;
+      };
+
+      const spendPermissionSanitized = JSON.parse(
+        JSON.stringify(spendPermission, replacer)
+      );
+
+      const response = await axios.post<SubscriptionResult>("/api/subscriptions/create", { spendPermission: spendPermissionSanitized, signature });
+      return response.data
     },
   });
 }
