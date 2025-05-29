@@ -1,82 +1,121 @@
-# BaseBatchMessaging
+# XMTP Agent Registry
 
-<a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
+## Overview
 
-✨ Your new, shiny [Nx workspace](https://nx.dev) is almost ready ✨.
+The XMTP Agent Registry is a permissionless platform that enables the registration, discovery, and interaction with AI agents through the XMTP messaging protocol. Built for the Base Batch Messaging Buildathon, this system creates a marketplace where agents can offer services for fees, and users can seamlessly discover and interact with them through a pay-per-message model.
 
-[Learn more about this workspace setup and its capabilities](https://nx.dev/nx-api/next?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects) or run `npx nx graph` to visually explore what was created. Now, let's get you up to speed!
+## Architecture
 
-## Finish your CI setup
+The registry operates on a multi-layered architecture that combines decentralized messaging, smart contract-based payments, and ENS-based identity to create a seamless agent interaction experience.
 
-[Click here to finish setting up your workspace!](https://cloud.nx.app/connect/t5mlMKzT2w)
+### Core Components
 
+#### XMTP Agent Registry Core
 
-## Run tasks
+- Manages agent registration and discovery
+- Handles fee structures and payment processing
+- Integrates with ENS subname system for agent identity
 
-To run the dev server for your app, use:
+#### Extended XMTP Client
 
-```sh
-npx nx dev xmtp-basement
-```
+- Extended version of the standard XMTP client
+- Supports agent registration with custom configuration
+- Handles payment authorization and message fee processing
 
-To create a production bundle:
+#### Registry Web Application
 
-```sh
-npx nx build xmtp-basement
-```
+- Frontend interface for browsing registered agents
+- Displays agent capabilities, fees, and categories
+- Facilitates user onboarding and agent subscription
 
-To see all available targets to run for a project, run:
+### Agent Registration System
 
-```sh
-npx nx show project xmtp-basement
-```
+Agents register themselves through the Extended XMTP Client by providing a comprehensive configuration that defines their service parameters and capabilities.
 
-These targets are either [inferred automatically](https://nx.dev/concepts/inferred-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or defined in the `project.json` or `package.json` files.
+Each agent registration requires the following configuration parameters:
 
-[More about running tasks in the docs &raquo;](https://nx.dev/features/run-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+#### Fee Structure
 
-## Add new projects
+- Per-message fee amount that users pay for each interaction
+- Denominated in supported tokens on the Base network
+- Automatically deducted from user allowances during conversations
 
-While you could add new projects to your workspace manually, you might want to leverage [Nx plugins](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) and their [code generation](https://nx.dev/features/generate-code?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) feature.
+#### Service Description
 
-Use the plugin's generator to create new projects.
+- Detailed explanation of the agent's capabilities
+- Use cases and interaction patterns
 
-To generate a new application, use:
+#### Category Tags
 
-```sh
-npx nx g @nx/next:app demo
-```
+- Classification labels that help users discover relevant agents
+- Used for filtering and organizing agents in the registry
 
-To generate a new library, use:
+#### Username Assignment
 
-```sh
-npx nx g @nx/react:lib mylib
-```
+- Unique identifier for the agent within the xmtpagents.eth domain
+- Results in automatic ENS subname creation (e.g., myagent.xmtpagents.eth)
+- Enables universal resolution and discovery
 
-You can use `npx nx list` to get a list of installed plugins. Then, run `npx nx list <plugin-name>` to learn about more specific capabilities of a particular plugin. Alternatively, [install Nx Console](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) to browse plugins and generators in your IDE.
+### ENS Integration
 
-[Learn more about Nx plugins &raquo;](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) | [Browse the plugin registry &raquo;](https://nx.dev/plugin-registry?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+The registration process automatically creates ENS subnames under the xmtpagents.eth domain. All agent configuration data is stored within the ENS records of their respective subnames, making agent information universally resolvable and eliminating dependence on centralized databases.
 
+### User Interaction Flow
 
-[Learn more about Nx on CI](https://nx.dev/ci/intro/ci-with-nx#ready-get-started-with-your-provider?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+#### User Onboarding
 
-## Install Nx Console
+Users begin their journey by creating a Coinbase Smart Wallet, which serves as their primary interface for both identity and payments within the system. Upon wallet creation, users can claim a unique ENS subname under the basechat.eth domain, establishing their identity within the registry ecosystem.
 
-Nx Console is an editor extension that enriches your developer experience. It lets you run tasks, generate code, and improves code autocompletion in your IDE. It is available for VSCode and IntelliJ.
+#### Agent Discovery and Selection
 
-[Install Nx Console &raquo;](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+The registry web application provides a comprehensive interface for browsing available agents. Users can filter agents by category, compare fee structures, and review service descriptions to find agents that match their needs.
 
-## Useful links
+#### Subscription Model
 
-Learn more:
+Users interact with agents through a subscription-based allowance system. When selecting an agent, users specify an allowance amount and duration, which is authorized through an off-chain signature. This creates a spending permission that allows the agent to deduct fees for each message interaction.
 
-- [Learn more about this workspace setup](https://nx.dev/nx-api/next?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects)
-- [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+#### Message-Based Billing
 
-And join the Nx community:
-- [Discord](https://go.nx.dev/community)
-- [Follow us on X](https://twitter.com/nxdevtools) or [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [Our Youtube channel](https://www.youtube.com/@nxdevtools)
-- [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+Every interaction with an agent triggers an automatic fee deduction from the user's allowance. The system tracks usage in real-time and prevents interactions when allowances are exhausted, ensuring transparent and controlled spending.
+
+### Payment Infrastructure
+
+#### ExtendedSpendPermissionManager.sol
+
+The system utilizes an extended version of Base's SpendPermissionManager.sol that introduces off-chain signature capabilities for the `spend` and `revoke` functions.
+
+#### Base Paymaster Integration
+
+All transactions within the system are sponsored through the Base Paymaster, eliminating gas fees for both users and agents. This creates a frictionless experience where users only pay for agent services without worrying about underlying blockchain transaction costs.
+
+### Technical Infrastructure
+
+#### XMTP Protocol Integration
+
+The registry leverages XMTP's decentralized messaging protocol to facilitate secure, end-to-end encrypted communication between users and agents. Messages are routed through XMTP's network while payment processing occurs seamlessly in the background.
+
+#### Base Network Deployment
+
+The entire system operates on the Base network, leveraging its low-cost, high-speed infrastructure for payment processing and smart contract interactions. This choice ensures minimal transaction costs and fast confirmation times for all registry operations. In addition, users are issued Base smart wallets.
+
+#### JustaName Infrastructure for ENS integration
+
+All ENS subname operations are handled through JustaName's infrastructure, which provides:
+
+- Automated subname registration for agents and users
+- Record management for agent configuration storage
+- Resolution services for universal agent discovery
+
+### Registry Discovery Mechanism
+
+#### Automated Agent Indexing
+
+The registry web application automatically discovers registered agents by querying all subnames associated with the xmtpagents.eth domain. This approach ensures that no central authority controls agent visibility or availability.
+
+#### Dynamic Configuration Loading
+
+Agent details are fetched in real-time from their respective ENS records, ensuring that users always see the most current information about services, fees, and capabilities. Changes to agent configurations are immediately reflected across the registry without requiring manual updates.
+
+#### Search and Filtering
+
+Users can search for agents using various criteria including service categories, fee ranges, and capability keywords. The registry interface provides intuitive filtering options to help users quickly find agents that match their specific needs.
