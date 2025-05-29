@@ -4,7 +4,7 @@ import { useAddSubname, useIsSubnameAvailable } from "@justaname.id/react";
 import { clientEnv } from "@/utils/config/clientEnv";
 import { LoadingIcon } from "@/lib/icons";
 import { useSwitchChain } from "wagmi";
-import { mainnet} from "wagmi/chains";
+import { mainnet } from "wagmi/chains";
 
 interface ClaimDialogProps {
     trigger: React.ReactNode
@@ -22,12 +22,12 @@ export const ClaimDialog = ({ trigger }: ClaimDialogProps) => {
     const { switchChainAsync, isPending: isSwitchChainPending } = useSwitchChain();
 
     const handleClaim = async () => {
-      await switchChainAsync({ chainId: mainnet.id })
-      await  addSubname({
-        username: subname,
-        ensDomain: clientEnv.userEnsDomain,
-        chainId: mainnet.id,
-      });
+        await switchChainAsync({ chainId: mainnet.id })
+        await addSubname({
+            username: subname,
+            ensDomain: clientEnv.userEnsDomain,
+            chainId: mainnet.id,
+        });
 
     }
 
@@ -36,7 +36,7 @@ export const ClaimDialog = ({ trigger }: ClaimDialogProps) => {
 
     return (
         <Dialog>
-            <DialogTrigger>
+            <DialogTrigger asChild>
                 {trigger}
             </DialogTrigger>
             <DialogContent>

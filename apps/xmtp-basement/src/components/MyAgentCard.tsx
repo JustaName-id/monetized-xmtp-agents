@@ -20,7 +20,7 @@ export const MyAgentCard: React.FC<AgentProps> = ({ subname, avatar, price, desc
         console.log('unsubscribe')
     }
     return (
-        <Accordion type="single" collapsible className="p-5 rounded-lg bg-bg border-border border-[1px] ">
+        <Accordion type="single" collapsible className="p-5 rounded-lg bg-background border-border border-[1px] ">
             <AccordionItem value="item-1" >
                 <AccordionTrigger className="gap-5 flex flex-row items-center justify-between">
                     <div className="flex flex-row gap-5 items-center flex-1">
@@ -33,15 +33,15 @@ export const MyAgentCard: React.FC<AgentProps> = ({ subname, avatar, price, desc
                                 <h3 className="text-base font-semibold text-primary leading-[100%]">{subname}</h3>
                                 <div className="flex flex-row gap-[5px] items-center ">
                                     <UsdcIcon />
-                                    <p className="text-xs font-bold text-blue leading-[150%]">{`${price} USDC/MSG`}</p>
+                                    <p className="text-xs font-bold text-base-blue leading-[150%]">{`${price} USDC/MSG`}</p>
                                 </div>
                             </div>
-                            <p className="text-xs text-muted font-normal leading-[133%] line-clamp-2">
+                            <p className="text-xs text-muted-foreground font-normal leading-[133%] line-clamp-2">
                                 {description}
                             </p>
                             <div className="flex flex-row gap-1.5 items-center">
                                 {tags.map((tag) => (
-                                    <Badge variant="default">
+                                    <Badge key={tag} variant="default">
                                         {tag}
                                     </Badge>
                                 ))}
@@ -53,8 +53,8 @@ export const MyAgentCard: React.FC<AgentProps> = ({ subname, avatar, price, desc
                     <div className="flex flex-row gap-[5px] items-center">
                         <UsdcIcon width={24} height={24} />
                         <div className="flex flex-col gap-0.5">
-                            <p className="text-xs font-bold text-blue leading-[100%]">{`${consumption} USDC`}</p>
-                            <p className="text-xs font-bold text-blue leading-[100%]">SPENT</p>
+                            <p className="text-xs font-bold text-base-blue leading-[100%]">{`${consumption} USDC`}</p>
+                            <p className="text-xs font-bold text-base-blue leading-[100%]">SPENT</p>
                         </div>
                     </div>
                     <Button variant="destructive" onClick={onUnsubscribe}>Unsubscribe</Button>

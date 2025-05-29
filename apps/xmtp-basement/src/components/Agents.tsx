@@ -3,7 +3,7 @@
 import { SubnameGetAllByDomainChainIdResponse } from "@justaname.id/sdk";
 import { Agent } from "@/components/Agent";
 import React from 'react';
-import {clientEnv} from "@/utils/config/clientEnv";
+import { clientEnv } from "@/utils/config/clientEnv";
 
 interface ClientSideDataProps {
   initialData: SubnameGetAllByDomainChainIdResponse;
@@ -37,7 +37,7 @@ export default function Agents({ initialData }: ClientSideDataProps) {
   return (
     <div className="grid grid-cols-2 max-md:grid-cols-1 gap-x-2.5 gap-y-2.5">
       {initialData.data.map((subname) => {
-        if(subname.ens === clientEnv.xmtpAgentEnsDomain) return null
+        if (subname.ens === clientEnv.xmtpAgentEnsDomain) return null
         return (<React.Fragment key={subname.ens}>
           <Agent subname={subname} />
         </React.Fragment>);

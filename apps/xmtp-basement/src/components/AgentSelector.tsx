@@ -5,7 +5,7 @@ export const AgentSelector: React.FC = () => {
 
     return (
         <DropdownMenu>
-            <DropdownMenuTrigger showArrow className="h-8 p-2 flex flex-row items-center gap-2 rounded-default bg-bg">
+            <DropdownMenuTrigger showArrow className="h-8 p-2 flex flex-row items-center gap-2 rounded-default bg-background">
                 <Avatar className="w-6 h-6 rounded-full">
                     <AvatarImage src={"https://i.pravatar.cc/300?img=1"} />
                 </Avatar>
