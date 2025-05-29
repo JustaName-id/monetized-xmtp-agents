@@ -1,24 +1,51 @@
 import { NextRequest, NextResponse } from "next/server";
-import {spendPermissionManagerAbi, spendPermissionManagerAddress} from '@xmtpbasement/spend-permission';
+import {
+  spendPermissionManagerAbi,
+  spendPermissionManagerAddress,
+  SubscriptionsResponse
+} from '@xmtpbasement/spend-permission';
 import {publicClient} from "@/lib/smartSpender";
 import {db} from "@/db/drizzle";
 import {spendPermissionsTable} from "@/db/schema";
-import {eq} from "drizzle-orm";
+import {and, eq} from "drizzle-orm";
+import {justanameInstance} from "@/utils/justaname";
+import {serverEnv} from "@/utils/config/serverEnv";
+import { parseUnits} from "viem";
 
 export async function GET(request: NextRequest) {
   try {
-    const address = request?.nextUrl?.searchParams.get('address')
+    const account = request?.nextUrl?.searchParams.get('account')
+    const spender = request?.nextUrl?.searchParams.get('spender')
+    const fees = request?.nextUrl?.searchParams.get('fees')
+    const isValid = request?.nextUrl?.searchParams.get('isValid')
 
-    if(!address){
-      return NextResponse.json({ message: "Address is required" }, { status: 400 });
-    }
 
-    const spendPermissions = await db.select().from(spendPermissionsTable).where(
-      eq(spendPermissionsTable.account, address)
-    )
+    const spendPermissions = await db
+      .select()
+      .from(spendPermissionsTable)
+      .where(
+        account || spender || fees
+          ? and(
+              account ? eq(spendPermissionsTable.account, account.toLowerCase()) : undefined,
+              spender ? eq(spendPermissionsTable.spender, spender.toLowerCase()) : undefined,
+              fees ? eq(spendPermissionsTable.allowance, fees) : undefined
+            )
+          : undefined
+      );
 
     const results = await publicClient.multicall({
       contracts: spendPermissions.map((spendPermission) => {
+        console.log({
+          account: spendPermission.account,
+          spender: spendPermission.spender,
+          token: spendPermission.token,
+          allowance: spendPermission.allowance,
+          period: spendPermission.period,
+          start: Math.floor((new Date(spendPermission.start)).getTime() / 1000) ,
+          end: Math.floor((new Date(spendPermission.end)).getTime() / 1000),
+          salt: spendPermission.salt,
+          extraData: spendPermission.extraData,
+        })
         return {
           abi: spendPermissionManagerAbi,
           functionName: "isValid",
@@ -29,8 +56,8 @@ export async function GET(request: NextRequest) {
             token: spendPermission.token,
             allowance: spendPermission.allowance,
             period: spendPermission.period,
-            start: spendPermission.start,
-            end: spendPermission.end,
+            start: Math.floor((new Date(spendPermission.start)).getTime() / 1000) ,
+            end: Math.floor((new Date(spendPermission.end)).getTime() / 1000),
             salt: spendPermission.salt,
             extraData: spendPermission.extraData,
           }],
@@ -38,16 +65,58 @@ export async function GET(request: NextRequest) {
       })
     })
 
-    console.log(results)
+
     const validationResults = results.map((result, index) => ({
       spendPermission: spendPermissions[index],
-      isValid: result.status === 'success' ? result.result : false,
+      isValid: result.status === 'success' ? Boolean(result.result) : false,
       error: result.status === 'failure' ? result.error : null,
     }));
 
-    console.log(validationResults)
+    let extraCheck = await Promise.all(
+      validationResults.map(async (result) => {
 
-    return NextResponse.json(validationResults);
+        if (!result.isValid || result.error) {
+          return result;
+        }
+        const spenderAddress = result.spendPermission.spender
+        const subnames = await justanameInstance().subnames.getSubnamesByAddress({
+          address: spenderAddress
+        })
+
+        const subname = subnames.subnames.find(subname => subname.ens.endsWith(serverEnv.xmtpAgentEnsDomain))
+
+        if (subname) {
+
+          const xmtpFees = subname.records.texts.find(record => record.key === 'xmtp_fees')
+
+          if (xmtpFees && result.spendPermission.allowance === parseUnits(xmtpFees.value, 18).toString()) {
+            return {
+              ...result,
+              isValid: true
+            }
+          }
+        }
+
+        return {
+          ...result,
+          isValid: false
+        }
+      })
+    )
+
+    if(isValid==="true"){
+      extraCheck = extraCheck.filter(({isValid}) => isValid)
+    }
+
+    if(isValid==="false"){
+      extraCheck = extraCheck.filter(({isValid}) => !isValid)
+    }
+
+
+    const response: SubscriptionsResponse = {
+      subscriptions: extraCheck
+    }
+    return NextResponse.json(response);
   } catch (error) {
     console.error(error);
     return NextResponse.json({}, { status: 500 });

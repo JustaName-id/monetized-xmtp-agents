@@ -1,7 +1,66 @@
-import { Address } from "viem";
+import {Address, Hex} from "viem";
+
+
+export interface SubscriptionsResponse {
+  subscriptions: {
+    spendPermission: SpendPermissionResponse;
+    isValid: boolean;
+    error: Error | null;
+  }[]
+}
+
+export interface SpendPermissionResponse {
+  account: string;
+  spender: string;
+  token: string;
+  allowance: string;
+  period: number;
+  start: Date;
+  end: Date;
+  salt: string;
+  extraData: string | null;
+}
+
+export interface SpendRequestResponse {
+  account: string;
+  spender: string;
+  token: string;
+  allowance: string;
+  period: number;
+  start: Date;
+  end: Date;
+  salt: string;
+  extraData: string | null;
+  value: string;
+}
+
+export interface SpendPermission {
+  account: Address;
+  spender: Address;
+  token: Address;
+  allowance: bigint;
+  period: number;
+  start: number;
+  end: number;
+  salt: bigint;
+  extraData: Hex;
+}
+
+export interface SpendRequest {
+  account: Address;
+  spender: Address;
+  token: Address;
+  allowance: bigint;
+  period: number;
+  start: number;
+  end: number;
+  salt: bigint;
+  extraData: Hex;
+  value: bigint;
+}
 
 export const spendPermissionManagerAddress =
-  "0x6528139D4529374865849dc8aD755f9d5dB34c70" as Address;
+  "0x15a9bf3748cac915b62515ca1370ef6575a5123f" as Address;
 
 export const spendPermissionManagerAbi = [
   {

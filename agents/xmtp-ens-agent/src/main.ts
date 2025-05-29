@@ -3,9 +3,9 @@ import {
   getEncryptionKeyFromHex,
   logAgentDetails,
   validateEnvironment,
-} from "@xmtpbasement/xmtp-helpers";
-import { type XmtpEnv } from "@xmtp/node-sdk";
-import {BasedClient} from "@xmtpbasement/xmtp-extended-client";
+} from '@xmtpbasement/xmtp-helpers';
+import { IdentifierKind, type XmtpEnv } from '@xmtp/node-sdk';
+import { BasedClient } from '@xmtpbasement/xmtp-extended-client';
 
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db
@@ -39,6 +39,23 @@ async function main() {
   console.log("Waiting for messages...");
   const stream = await client.conversations.streamAllMessages();
 
+
+  const dmWithIdentifier = await client.conversations.newDmWithIdentifier({
+    identifier: "0xfb50cde9c04B52FAfC614eF45C50C33Ae34A37A3",
+    identifierKind: IdentifierKind.Ethereum
+  })
+
+  console.log(dmWithIdentifier)
+
+  const a  = await dmWithIdentifier.sendWithFees("hey", "0xfb50cde9c04B52FAfC614eF45C50C33Ae34A37A3")
+  console.log(a)
+  // if(existingId){
+  //   inboxId = existingId
+  // } else{
+  //   inboxId = await client.conversations.newGroup([inboxId])
+  // }
+  //
+
   for await (const message of stream) {
     if (
       message?.senderInboxId.toLowerCase() === client.inboxId.toLowerCase() ||
@@ -59,9 +76,10 @@ async function main() {
     const inboxState = await client.preferences.inboxStateFromInboxIds([
       message.senderInboxId,
     ]);
+
     const addressFromInboxId = inboxState[0].identifiers[0].identifier;
     console.log(`Sending "gm" response to ${addressFromInboxId}...`);
-    await conversation.send("gm");
+    await conversation.sendWithFees(`gm`, addressFromInboxId);
 
     console.log("Waiting for messages...");
   }

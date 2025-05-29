@@ -2,44 +2,53 @@ import { NextRequest, NextResponse } from "next/server";
 import {spendPermissionManagerAbi, spendPermissionManagerAddress} from '@xmtpbasement/spend-permission';
 import {getSpenderBundlerClient} from "@/lib/smartSpender";
 import {db} from "@/db/drizzle";
-import {approvalEventsTable, spendPermissionsTable} from "@/db/schema";
-import {SpendPermission} from "@/types";
+import { spendEventsTable, spendPermissionsTable} from "@/db/schema";
+import { SpendRequest} from "@/types";
 import { v4 as uuid } from 'uuid';
 import {Address} from "viem";
+import {and, eq} from "drizzle-orm";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { spendPermission, signature }: {
-      spendPermission:SpendPermission,
+    const { spendRequest, signature }: {
+      spendRequest:SpendRequest,
       signature: Address,
     } = body;
 
+
+    console.log(body)
+    const spendPermissionEntities = await db
+      .select()
+      .from(spendPermissionsTable)
+      .where(
+       and(
+         eq(spendPermissionsTable.account, spendRequest.account.toLowerCase()),
+         eq(spendPermissionsTable.spender, spendRequest.spender.toLowerCase()),
+         eq(spendPermissionsTable.allowance, spendRequest.allowance.toString())
+       ),
+    )
+
+    if(spendPermissionEntities.length ===0){
+      return NextResponse.json({ message: "Subscription not found" }, { status: 400 });
+    }
+    const spendPermissionEntity = spendPermissionEntities[0]
+
     const { success, transactionHash } = await transactSmartWallet(
-      spendPermission,
+      spendRequest,
       signature
     );
 
-    const spendPermissionUUID = uuid();
+    const permissionEventUUID = uuid();
 
-    await db.insert(spendPermissionsTable).values({
-      ...spendPermission,
-      account: spendPermission.account.toLowerCase(),
-      spender: spendPermission.spender.toLowerCase(),
-      id: spendPermissionUUID,
-      start: new Date(spendPermission.start * 1000),
-      salt: spendPermission.salt.toString(),
-      end: new Date(spendPermission.end * 1000),
-      allowance: spendPermission.allowance.toString(),
-    })
-
-    const approvalEventUUID = uuid();
-
-    await db.insert(approvalEventsTable).values({
-      id: approvalEventUUID,
-      permissionId: spendPermissionUUID,
-      transactionHash: transactionHash,
-    })
+    if(success){
+      await db.insert(spendEventsTable).values({
+        id: permissionEventUUID,
+        permissionId: spendPermissionEntity.id,
+        transactionHash: transactionHash,
+        value: spendRequest.value.toString()
+      })
+    }
 
     return NextResponse.json({
       status: success ? "success" : "failure",
@@ -52,16 +61,17 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function transactSmartWallet(spendPermission: SpendPermission, signature: Address) {
+async function transactSmartWallet(spendRequest: SpendRequest, signature: Address) {
   const spenderBundlerClient = await getSpenderBundlerClient();
 
+  console.log(spendRequest, signature)
   const userOpHash = await spenderBundlerClient.sendUserOperation({
     calls: [
       {
         abi: spendPermissionManagerAbi,
-        functionName: "approveWithSignature",
+        functionName: "spendWithSignature",
         to: spendPermissionManagerAddress,
-        args: [spendPermission, signature],
+        args: [spendRequest, signature],
       }
     ],
   });

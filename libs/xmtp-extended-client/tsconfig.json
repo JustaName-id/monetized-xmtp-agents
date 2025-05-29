@@ -4,6 +4,9 @@
   "include": [],
   "references": [
     {
+      "path": "../spend-permission"
+    },
+    {
       "path": "./tsconfig.lib.json"
     }
   ]

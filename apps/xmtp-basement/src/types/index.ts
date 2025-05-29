@@ -11,3 +11,16 @@ export interface SpendPermission {
   salt: bigint;
   extraData: Hex;
 }
+
+export interface SpendRequest {
+  account: Address;
+  spender: Address;
+  token: Address;
+  allowance: bigint;
+  period: number;
+  start: number;
+  end: number;
+  salt: bigint;
+  extraData: Hex;
+  value: bigint;
+}
