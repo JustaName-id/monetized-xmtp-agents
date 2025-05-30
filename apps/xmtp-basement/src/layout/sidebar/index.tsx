@@ -1,4 +1,4 @@
-
+'use client'
 import { ChatCard } from "@/components/sidebar/ChatCard"
 import {
     Sidebar,
@@ -11,7 +11,8 @@ import {
     SidebarMenuButton,
     SidebarMenuItem
 } from "@/components/ui/sidebar"
-import { ExploreIcon, PenIcon, ProfileIcon } from "@/lib/icons"
+import { useConversations } from "@/hooks/xmtp/useConversations";
+import { ExploreIcon, LoadingIcon, PenIcon, ProfileIcon } from "@/lib/icons"
 
 const items = [
     {
@@ -29,10 +30,10 @@ const items = [
         url: "/",
         icon: ExploreIcon,
     },
-
 ]
 
 export function AppSidebar() {
+    const { agentConversations, loading } = useConversations();
     return (
         <Sidebar>
             <SidebarHeader>XMTP Agents</SidebarHeader>
@@ -57,9 +58,15 @@ export function AppSidebar() {
                 <SidebarGroup>
                     <SidebarGroupLabel>Today</SidebarGroupLabel>
                     <SidebarGroupContent className="flex flex-col gap-2">
-                        {[1, 2, 3].map((item) => (
-                            <ChatCard key={item} id={`${item}`} subname={`Agent ${item}`} description={`Agent ${item} description`} avatar={`https://i.pravatar.cc/300?img=${item}`} />
-                        ))}
+                        {loading ? (
+                            <div className="flex justify-center items-center h-full">
+                                <LoadingIcon />
+                            </div>
+                        ) : (
+                            agentConversations.map((conversation) => (
+                                <ChatCard key={conversation.id} conversation={conversation} />
+                            ))
+                        )}
                     </SidebarGroupContent>
                 </SidebarGroup>
             </SidebarContent>

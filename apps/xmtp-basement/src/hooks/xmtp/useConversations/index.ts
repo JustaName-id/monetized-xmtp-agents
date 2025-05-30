@@ -1,21 +1,113 @@
 import { useXMTP } from '@/context/XMTPContext';
+import { clientEnv } from '@/utils/config/clientEnv';
+import { usePrimaryName } from '@justaname.id/react';
 import type {
-  Conversation,
+  Conversation as OriginalConversation,
   Identifier,
   SafeCreateGroupOptions,
   SafeListConversationsOptions,
 } from '@xmtp/browser-sdk';
-import { useState } from 'react';
+import { SortDirection } from '@xmtp/browser-sdk';
+import { useEffect, useState } from 'react';
+import { useAccount } from 'wagmi';
+
+export type AgentConversation = OriginalConversation & {
+  peerAddress: string;
+  primaryName?: string | null;
+  lastMessageTimestamp: number;
+};
 
 export const useConversations = () => {
   const { client } = useXMTP();
+  const { address } = useAccount();
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
-  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const { getPrimaryName } = usePrimaryName();
+  const [conversations, setConversations] = useState<OriginalConversation[]>(
+    []
+  );
+  const [agentConversations, setAgentConversations] = useState<
+    AgentConversation[]
+  >([]);
+
+  useEffect(() => {
+    const fetchAgentConversations = async () => {
+      if (
+        !address ||
+        !clientEnv.userEnsDomain ||
+        !client ||
+        conversations.length === 0
+      ) {
+        return;
+      }
+
+      const conversationChecks = conversations.map(async (conversation) => {
+        try {
+          const members = await conversation.members();
+          const peerMember = members.find(
+            (member) => member.accountIdentifiers[0].identifier !== address
+          );
+          if (!peerMember) {
+            return null;
+          }
+          const peerAddress = peerMember.accountIdentifiers[0].identifier;
+          const primaryName = await getPrimaryName({
+            address: peerAddress as `0x${string}`,
+            chainId: 1,
+          });
+          const isAgent = primaryName?.endsWith(clientEnv.userEnsDomain);
+
+          if (isAgent) {
+            const messages = await conversation.messages({
+              direction: SortDirection.Descending,
+              limit: 1n,
+            });
+            const lastMessageTimestamp =
+              messages.length > 0
+                ? Number(messages[0].sentAtNs) / 1_000_000
+                : conversation.createdAt?.getTime() ?? 0;
+
+            return {
+              ...conversation,
+              peerAddress,
+              primaryName,
+              lastMessageTimestamp,
+            } as AgentConversation;
+          }
+          return null;
+        } catch (error) {
+          console.error('Error processing conversation:', error);
+          return null;
+        }
+      });
+
+      const results = await Promise.all(conversationChecks);
+      const filteredAgentConversations = results.filter(
+        (c) => c !== null
+      ) as AgentConversation[];
+
+      const sortedConversations = [...filteredAgentConversations].sort(
+        (a, b) => {
+          return (b.lastMessageTimestamp || 0) - (a.lastMessageTimestamp || 0);
+        }
+      );
+      setAgentConversations(sortedConversations);
+    };
+
+    void fetchAgentConversations();
+  }, [
+    client,
+    conversations,
+    address,
+    clientEnv.userEnsDomain,
+    getPrimaryName,
+    conversations.length,
+  ]);
 
   if (!client) {
     return {
       conversations: [],
+      agentConversations: [],
       getConversationById: async () => undefined,
       getMessageById: async () => undefined,
       list: async () => [],
@@ -147,7 +239,7 @@ export const useConversations = () => {
   const stream = async () => {
     const onConversation = (
       error: Error | null,
-      conversation: Conversation | undefined
+      conversation: OriginalConversation | undefined
     ) => {
       if (conversation) {
         const shouldAdd =
@@ -168,6 +260,7 @@ export const useConversations = () => {
 
   return {
     conversations,
+    agentConversations,
     getConversationById,
     getMessageById,
     list,
