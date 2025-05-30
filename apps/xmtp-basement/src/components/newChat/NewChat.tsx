@@ -44,13 +44,13 @@ export const NewChat: React.FC<NewChatProps> = ({
     if (loading) {
       return;
     }
-    const group = await newGroupWithIdentifiers([{
+    const group = await newGroupWithIdentifiers?.([{
       identifier: subname?.sanitizedRecords.ethAddress.value ?? '',
       identifierKind: "Ethereum"
     }]);
-    await group.send(message);
-    await syncAll();
-    router.push(`/chat/${group.id}`);
+    await group?.send(message);
+    await syncAll?.();
+    router.push(`/chat/${group?.id}`);
   }
 
   return (
@@ -63,7 +63,7 @@ export const NewChat: React.FC<NewChatProps> = ({
             !isSubnameClaimed ?
               <ClaimIdentity /> :
               !isSubscribed ?
-                <Subscribe spender={spender} fees={fees} /> :
+                <Subscribe spender={spender} fees={fees} agentName={agentName} avatar={avatar} /> :
                 !isXmtpConnected ?
                   <ConnectXmtp /> :
                   <MessageTextField onNewMessage={handleNewMessage} />
