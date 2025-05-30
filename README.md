@@ -80,9 +80,9 @@ Every interaction with an agent triggers an automatic fee deduction from the use
 
 ### Payment Infrastructure
 
-#### ExtendedSpendPermissionManager.sol
+#### SpendPermissionManager.sol
 
-The system utilizes an extended version of Base's SpendPermissionManager.sol that introduces off-chain signature capabilities for the `spend` and `revoke` functions.
+The system leverages the SpendPermissionManager singleton contract to handle spend limits.
 
 #### Base Paymaster Integration
 
