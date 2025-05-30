@@ -1,14 +1,13 @@
-import { createPublicClient, Hex, http } from "viem";
+import {createPublicClient, Hex, http} from "viem";
 import { baseSepolia } from "viem/chains";
-import { privateKeyToAccount } from "viem/accounts";
 import {
   createBundlerClient,
   createPaymasterClient,
-  toCoinbaseSmartAccount,
+  toCoinbaseSmartAccount
 } from "viem/account-abstraction";
-
-import { type BundlerClient } from "viem/account-abstraction";
 import {serverEnv} from "@/utils/config/serverEnv";
+import { privateKeyToAccount } from 'viem/accounts';
+import type { BundlerClient } from "viem/account-abstraction";
 
 export const publicClient = createPublicClient({
   chain: baseSepolia,
@@ -18,6 +17,7 @@ export const publicClient = createPublicClient({
 export const paymasterClient = createPaymasterClient({
   transport: http(serverEnv.basePaymasterUrl),
 });
+
 
 export async function getSpenderBundlerClient(): Promise<BundlerClient> {
 
@@ -29,8 +29,6 @@ export async function getSpenderBundlerClient(): Promise<BundlerClient> {
     client: publicClient,
     owners: [spenderAccountOwner],
   });
-
-
 
   const spenderBundlerClient = createBundlerClient({
     account: spenderAccount,

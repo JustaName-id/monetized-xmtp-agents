@@ -3,10 +3,12 @@ import fs from "node:fs";
 import path from "node:path";
 import { IdentifierKind, type Client, type Signer } from "@xmtp/node-sdk";
 import { fromString, toString } from "uint8arrays";
-import { createWalletClient, http, toBytes } from "viem";
+import {createPublicClient, createWalletClient, http, toBytes} from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { sepolia } from "viem/chains";
 import {BasedClient} from "@xmtpbasement/xmtp-extended-client";
+import {base} from "wagmi/chains";
+import {toCoinbaseSmartAccount} from "viem/account-abstraction";
 
 interface User {
   key: `0x${string}`;
@@ -27,22 +29,34 @@ export const createUser = (key: string): User => {
   };
 };
 
-export const createSigner = (key: string): Signer => {
-  const sanitizedKey = key.startsWith("0x") ? key : `0x${key}`;
-  const user = createUser(sanitizedKey);
+export const createSigner = async (key: string): Promise<Signer> => {
+  const sanitizedKey = (key.startsWith("0x") ? key : `0x${key}`) as `0x${string}`;
+
+  const publicClient = createPublicClient({
+    chain: base,
+    transport: http(),
+  });
+
+  const spenderAccount = await toCoinbaseSmartAccount({
+    client: publicClient,
+    owners: [privateKeyToAccount(sanitizedKey)],
+  });
   return {
-    type: "EOA",
+    type: "SCW",
     getIdentifier: () => ({
       identifierKind: IdentifierKind.Ethereum,
-      identifier: user.account.address.toLowerCase(),
+      identifier: spenderAccount.address.toLowerCase(),
     }),
     signMessage: async (message: string) => {
-      const signature = await user.wallet.signMessage({
+      console.log("signing message: ", message, " with key: ", sanitizedKey)
+      const signature = await spenderAccount.signMessage({
         message,
-        account: user.account,
       });
+
+      console.log("signature: ", signature)
       return toBytes(signature);
     },
+    getChainId: () => BigInt(base.id),
   };
 };
 

@@ -71,8 +71,7 @@ export default function Connect() {
 
   return (
     <div className="flex flex-col bg-background font-sans">
-      <div className="flex justify-end">
-        <div className="wallet-container">
+      <div className="flex justify-end h-full">
           {account?.address ?
             <DropdownMenu>
               <DropdownMenuTrigger className="h-10 py-2 px-2 flex flex-row items-center gap-2 rounded-default bg-secondary">
@@ -143,11 +142,10 @@ export default function Connect() {
             :
             <Button variant={"default"} onClick={() => connect({
               connector: connectors[0]
-            })}>
+            })} className={"h-full"}>
               Connect Wallet
             </Button>
           }
-        </div>
       </div>
     </div>
   );

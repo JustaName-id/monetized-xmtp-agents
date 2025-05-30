@@ -43,18 +43,17 @@ export function useSubscription() {
       const spendPermission: SpendPermission = {
         account: accountAddress,
         spender: spenderAddress,
-        token: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" as Address, // ETH
-        allowance: parseUnits(fees, 18),
-        period: 86400, // seconds in a day
-        start: Math.ceil(Date.now() / 1000), // unix timestamp
-        end: Math.ceil(Date.now() / 1000) + 7 * 86400, // 7 days from now
+        token: "0x036CbD53842c5426634e7929541eC2318f3dCF7e" as Address, // ETH
+        allowance: parseUnits(fees, 6),
+        period: 86400,
+        start: Math.ceil(Date.now() / 1000),
+        end: Math.ceil(Date.now() / 1000) + 7 * 86400,
         salt: BigInt(0),
         extraData: "0x" as Hex,
       };
 
       const signature = await signTypedDataAsync({
         domain: {
-          // name: "Extended Spend Permission Manager",
           name: "Spend Permission Manager",
           version: "1",
           chainId: baseSepolia.id,

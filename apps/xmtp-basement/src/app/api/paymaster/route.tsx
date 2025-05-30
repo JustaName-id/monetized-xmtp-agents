@@ -1,110 +1,131 @@
-import {paymasterClient, publicClient} from "@/lib/smartSpender";
-import { UserOperation } from "viem/account-abstraction";
-import { entryPoint06Address } from "viem/account-abstraction";
-import {
-  Address,
-  BlockTag,
-  Hex,
-  decodeAbiParameters,
-  decodeFunctionData,
-} from "viem";
-import { baseSepolia } from "viem/chains";
-import {
-  coinbaseSmartWalletAbi,
-  coinbaseSmartWalletProxyBytecode,
-  coinbaseSmartWalletV1Implementation,
-  erc1967ProxyImplementationSlot,
-} from "@/lib/abi/CoinbaseSmartWallet";
+// import { paymasterClient, getSpenderBundlerClient} from "@/lib/smartSpender";
+import {serverEnv} from "@/utils/config/serverEnv";
+import axios from "axios";
 
 export async function POST(r: Request) {
-  const req = await r.json();
-  const method = req.method;
-  const [userOp, entrypoint, chainId] = req.params;
-
-  const sponsorable = await willSponsor({
-    chainId: parseInt(chainId),
-    entrypoint,
-    userOp,
-  });
-  if (!sponsorable) {
-    return Response.json({ error: "Not a sponsorable operation" });
-  }
-
-  if (method === "pm_getPaymasterStubData") {
-    const result = await paymasterClient.getPaymasterStubData({
-      callData: userOp.callData,
-      chainId: chainId,
-      entryPointAddress: entrypoint,
-      nonce: userOp.nonce,
-      sender: userOp.sender,
-    });
-    return Response.json({ result });
-  } else if (method === "pm_getPaymasterData") {
-    const result = await paymasterClient.getPaymasterData({
-      callData: userOp.callData,
-      chainId: chainId,
-      entryPointAddress: entrypoint,
-      nonce: userOp.nonce,
-      sender: userOp.sender,
-    });
-    return Response.json({ result });
-  }
-  return Response.json({ error: "Method not found" });
-}
-
-export async function willSponsor({
-                                    chainId,
-                                    entrypoint,
-                                    userOp,
-                                  }: { chainId: number; entrypoint: string; userOp: UserOperation<'0.6'> }) {
-  // check chain id
-  if (chainId !== baseSepolia.id) return false;
-  // check entrypoint
-  // not strictly needed given below check on implementation address, but leaving as example
-  if (entrypoint.toLowerCase() !== entryPoint06Address.toLowerCase())
-    return false;
-
   try {
-    // check the userOp.sender is a proxy with the expected bytecode
-    const code = await publicClient.getBytecode({ address: userOp.sender });
-    if (code != coinbaseSmartWalletProxyBytecode) return false;
+    const req = await r.json();
+    const method = req.method;
+    // const [userOp, entryPointAddress, chainId] = req.params;
 
-    // check that userOp.sender proxies to expected implementation
-    const implementation = await publicClient.request<{
-      Parameters: [Address, Hex, BlockTag];
-      ReturnType: Hex;
-    }>({
-      method: "eth_getStorageAt",
-      params: [userOp.sender, erc1967ProxyImplementationSlot, "latest"],
-    });
-    const implementationAddress = decodeAbiParameters(
-      [{ type: "address" }],
-      implementation,
-    )[0];
-    if (implementationAddress != coinbaseSmartWalletV1Implementation)
-      return false;
+    //
+    // console.log('=== PAYMASTER REQUEST ===');
+    // console.log('Method:', method);
+    // console.log('Params:', req.params);
+    // const spenderBundler = await getSpenderBundlerClient()
+    // if(method==="eth_sendUserOperation") {
+    //   const result = await spenderBundler.sendUserOperation({
+    //     callData: userOp.callData,
+    //     entryPointAddress: entryPointAddress,
+    //     nonce: userOp.nonce,
+    //     sender: userOp.sender,
+    //     maxFeePerGas: userOp.maxFeePerGas,
+    //     maxPriorityFeePerGas: userOp.maxPriorityFeePerGas,
+    //     callGasLimit: userOp.callGasLimit,
+    //     verificationGasLimit: userOp.verificationGasLimit,
+    //     preVerificationGas: userOp.preVerificationGas,
+    //     signature: userOp.signature,
+    //     paymasterAndData: userOp.paymasterAndData,
+    //   })
+    //
+    //   console.log('✅ Send User Op:', result);
+    //   return Response.json({ result });
+    //
+    // }
+    //
+    // if(method === 'eth_getUserOperationReceipt'){
+    //   const result = await spenderBundler.waitForUserOperationReceipt({
+    //     hash: userOp,
+    //   })
+    //
+    //
+    //   return Response.json({ result });
+    // }
+    //
+    // if(method === 'eth_estimateUserOperationGas'){
+    //
+    //   const result = await spenderBundler.request({
+    //     method: 'eth_estimateUserOperationGas',
+    //     params: [
+    //       {
+    //         sender: userOp.sender,
+    //         nonce: userOp.nonce,
+    //         callData: userOp.callData,
+    //         callGasLimit: userOp.callGasLimit,
+    //         verificationGasLimit: userOp.verificationGasLimit,
+    //         preVerificationGas: userOp.preVerificationGas,
+    //         maxFeePerGas: userOp.maxFeePerGas,
+    //         maxPriorityFeePerGas: userOp.maxPriorityFeePerGas,
+    //         signature: userOp.signature || '0x',
+    //         initCode: userOp.initCode || '0x',
+    //         paymasterAndData: '0x'
+    //       },
+    //       entryPointAddress
+    //     ]
+    //   });
+    //   console.log('✅ Gas Estimated stub result:', result);
+    //
+    //   return Response.json({ result });
+    // }
+    //
+    // if (method === "pm_getPaymasterStubData") {
+    //   const result = await paymasterClient.getPaymasterStubData({
+    //     callData: userOp.callData,
+    //     chainId: chainId,
+    //     entryPointAddress: entryPointAddress,
+    //     nonce: userOp.nonce,
+    //     sender: userOp.sender,
+    //     maxFeePerGas: userOp.maxFeePerGas,
+    //     maxPriorityFeePerGas: userOp.maxPriorityFeePerGas,
+    //     callGasLimit: userOp.callGasLimit,
+    //     verificationGasLimit: userOp.verificationGasLimit,
+    //     preVerificationGas: userOp.preVerificationGas,
+    //   });
+    //
+    //   console.log('✅ Paymaster stub result:', result);
+    //   return Response.json({ result });
+    //
+    // }
+    //
+    // if (method === "pm_getPaymasterData") {
+    //   const result = await paymasterClient.getPaymasterData({
+    //     callData: userOp.callData,
+    //     chainId: chainId,
+    //     entryPointAddress: entryPointAddress,
+    //     nonce: userOp.nonce,
+    //     sender: userOp.sender,
+    //     maxFeePerGas: userOp.maxFeePerGas,
+    //     maxPriorityFeePerGas: userOp.maxPriorityFeePerGas,
+    //     callGasLimit: userOp.callGasLimit,
+    //     verificationGasLimit: userOp.verificationGasLimit,
+    //     preVerificationGas: userOp.preVerificationGas,
+    //   });
+    //
+    //   console.log('✅ Paymaster data result:', result);
+    //   return Response.json({ result });
+    // }
 
-    // check that userOp.callData is making a call we want to sponsor
-    const calldata = decodeFunctionData({
-      abi: coinbaseSmartWalletAbi,
-      data: userOp.callData,
-    });
 
-    // keys.coinbase.com always uses executeBatch
-    if (calldata.functionName !== "executeBatch") return false;
-    if (!calldata.args || calldata.args.length == 0) return false;
+    console.log({
+      method,
+      params: req.params,
+      jsonrpc: '2.0',
+      id:1
+    })
+    const result = await axios.post(serverEnv.basePaymasterUrl, {
+      method,
+      params: req.params,
+      jsonrpc: '2.0',
+      id:1
+    })
+    return Response.json(result.data);
+  } catch (error) {
+    console.error('=== PAYMASTER ERROR ===');
+    console.error('Error:', error);
 
-    const calls = calldata.args[0] as {
-      target: Address;
-      value: bigint;
-      data: Hex;
-    }[];
-    // modify if want to allow batch calls to your contract
-    if (calls.length > 2) return false;
-
-    return true;
-  } catch (e) {
-    console.error(`willSponsor check failed: ${e}`);
-    return false;
+    return Response.json({
+      error: error instanceof Error ? error.message : 'Unknown error',
+      details: error instanceof Error ? error.stack : undefined
+    }, { status: 500 });
   }
-  }
+}

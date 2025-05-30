@@ -6,6 +6,7 @@
   "private": true,
   "dependencies": {
     "@coinbase/cdp-sdk": "^1.10.0",
+    "@coinbase/coinbase-sdk": "^0.24.0",
     "@coinbase/onchainkit": "^0.38.13",
     "@justaname.id/sdk": "^0.2.192",
     "@justweb3/widget": "^0.0.131",
@@ -20,6 +21,7 @@
     "@radix-ui/react-tooltip": "^1.2.7",
     "@types/cors": "^2.8.18",
     "@xmtp/browser-sdk": "^2.0.13",
+    "@xmtp/content-type-transaction-reference": "^2.0.2",
     "@xmtp/node-sdk": "^2.0.9",
     "cors": "^2.8.5",
     "drizzle-orm": "^0.43.1",

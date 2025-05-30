@@ -14,7 +14,6 @@ import { useXMTP } from "@/context/XMTPContext";
 import { clientEnv } from "@/utils/config/clientEnv";
 import { useConversations } from "@/hooks/xmtp";
 import { useRouter } from "next/navigation";
-import {ConfigureWallet} from "@/components/newChat/ConfigureWallet";
 
 export interface NewChatProps {
   agentName: string
@@ -61,8 +60,6 @@ export const NewChat: React.FC<NewChatProps> = ({
         {
           !isWalletConnected ?
             <ConnectWallet /> :
-            // true ?
-            //   <ConfigureWallet />:
             !isSubnameClaimed ?
               <ClaimIdentity /> :
               !isSubscribed ?

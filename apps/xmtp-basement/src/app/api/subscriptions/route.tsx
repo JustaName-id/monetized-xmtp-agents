@@ -35,17 +35,6 @@ export async function GET(request: NextRequest) {
 
     const results = await publicClient.multicall({
       contracts: spendPermissions.map((spendPermission) => {
-        console.log({
-          account: spendPermission.account,
-          spender: spendPermission.spender,
-          token: spendPermission.token,
-          allowance: spendPermission.allowance,
-          period: spendPermission.period,
-          start: Math.floor((new Date(spendPermission.start)).getTime() / 1000) ,
-          end: Math.floor((new Date(spendPermission.end)).getTime() / 1000),
-          salt: spendPermission.salt,
-          extraData: spendPermission.extraData,
-        })
         return {
           abi: spendPermissionManagerAbi,
           functionName: "isValid",
@@ -89,7 +78,7 @@ export async function GET(request: NextRequest) {
 
           const xmtpFees = subname.records.texts.find(record => record.key === 'xmtp_fees')
 
-          if (xmtpFees && result.spendPermission.allowance === parseUnits(xmtpFees.value, 18).toString()) {
+          if (xmtpFees && result.spendPermission.allowance === parseUnits(xmtpFees.value, 6).toString()) {
             return {
               ...result,
               isValid: true
