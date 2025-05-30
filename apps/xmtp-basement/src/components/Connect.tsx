@@ -39,6 +39,8 @@ export default function Connect() {
   const { accountSubnames } = useAccountSubnames();
   const [tooltipOpen, setTooltipOpen] = useState(false);
   const [tooltipText, setTooltipText] = useState("Copy");
+  const [isClaimDialogOpen, setIsClaimDialogOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const { switchChainAsync } = useSwitchChain();
 
 
@@ -73,7 +75,7 @@ export default function Connect() {
     <div className="flex flex-col bg-background font-sans">
       <div className="flex justify-end h-full">
           {account?.address ?
-            <DropdownMenu>
+            <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
               <DropdownMenuTrigger className="h-10 py-2 px-2 flex flex-row items-center gap-2 rounded-default bg-secondary">
                 <WalletIcon />
                 <p className="text-sm font-bold text-muted-foreground leading-[140%]">{claimedSubname?.ens ?? formatAddress(account.address)}</p>
@@ -121,14 +123,18 @@ export default function Connect() {
                     </Link>
                   </DropdownMenuItem>
                   {!claimedSubname &&
-                    <DropdownMenuItem className="cursor-pointer hover:bg-secondary">
-                      <ClaimDialog
-                        trigger={
-                          <div className="flex flex-row cursor-pointer items-center gap-2 px-4 py-3">
-                            <CursorInputIcon width={16} height={16} />
-                            <p className="text-popover-foreground font-normal text-base">Claim Subname</p>
-                          </div>
-                        } />
+                    <DropdownMenuItem
+                      className="cursor-pointer hover:bg-secondary"
+                      onSelect={(event) => {
+                        event.preventDefault();
+                        setIsDropdownOpen(false);
+                        setIsClaimDialogOpen(true);
+                      }}
+                    >
+                      <div className="flex flex-row cursor-pointer items-center gap-2" >
+                        <CursorInputIcon width={16} height={16} />
+                        <p className="text-popover-foreground font-normal text-base">Claim Subname</p>
+                      </div>
                     </DropdownMenuItem>
                   }
                   <DropdownMenuItem className="cursor-pointer hover:bg-secondary" onClick={() => disconnect()}>
@@ -147,6 +153,7 @@ export default function Connect() {
             </Button>
           }
       </div>
+      <ClaimDialog open={isClaimDialogOpen} onOpenChange={setIsClaimDialogOpen} />
     </div>
   );
 }

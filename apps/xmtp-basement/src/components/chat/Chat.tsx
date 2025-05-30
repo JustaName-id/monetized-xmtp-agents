@@ -93,7 +93,7 @@ export const Chat: React.FC<ChatProps> = ({
                         !isSubnameClaimed ?
                             <ClaimIdentity /> :
                             !isSubscribed ?
-                                <Subscribe spender={spender} fees={fees} /> :
+                                <Subscribe agentName={agentName} avatar={avatar} spender={spender} fees={fees} /> :
                                 !isXmtpConnected ?
                                     <ConnectXmtp /> :
                                     conversation ?

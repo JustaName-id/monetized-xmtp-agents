@@ -95,7 +95,7 @@ export const LogoutIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => {
 export const CreditCardIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => {
     return (
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" {...props}>
-            <path d="M1.33325 6.66667H14.6666M2.66659 3.33334H13.3333C14.0696 3.33334 14.6666 3.93029 14.6666 4.66667V11.3333C14.6666 12.0697 14.0696 12.6667 13.3333 12.6667H2.66659C1.93021 12.6667 1.33325 12.0697 1.33325 11.3333V4.66667C1.33325 3.93029 1.93021 3.33334 2.66659 3.33334Z" stroke="var(--popover-foreground)" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M1.33325 6.66667H14.6666M2.66659 3.33334H13.3333C14.0696 3.33334 14.6666 3.93029 14.6666 4.66667V11.3333C14.6666 12.0697 14.0696 12.6667 13.3333 12.6667H2.66659C1.93021 12.6667 1.33325 12.0697 1.33325 11.3333V4.66667C1.33325 3.93029 1.93021 3.33334 2.66659 3.33334Z" stroke="var(--popover-foreground)" strokeWidth="1.33" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
     )
 }

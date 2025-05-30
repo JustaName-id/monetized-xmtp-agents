@@ -4,10 +4,11 @@ import { cn } from "@/utils/cn"
 
 export interface InputProps extends React.ComponentProps<"input"> {
     rightElement?: React.ReactNode
+    leftElement?: React.ReactNode
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-    ({ className, type, rightElement, ...props }, ref) => {
+    ({ className, type, rightElement, leftElement, ...props }, ref) => {
         return (
             <div
                 className={cn(
@@ -16,11 +17,17 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
                     className
                 )}
             >
+                {leftElement && (
+                    <div className="flex h-full shrink-0 items-center justify-center px-3">
+                        {leftElement}
+                    </div>
+                )}
                 <input
                     type={type}
                     className={cn(
                         "h-full flex-grow bg-transparent px-3 py-1 placeholder:text-muted-foreground-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50",
                         rightElement ? "pr-0" : "",
+                        leftElement ? "pl-1" : ""
                     )}
                     ref={ref}
                     {...props}
