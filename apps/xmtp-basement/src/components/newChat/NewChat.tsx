@@ -40,15 +40,13 @@ export const NewChat: React.FC<NewChatProps> = ({
     return validSubscriptions?.some(subscription => subscription.spendPermission.spender.toLowerCase() === spender.toLowerCase())
   }, [spender, validSubscriptions]);
 
-  const { newGroupWithIdentifiers, loading, syncAll } = useConversations()
+  const { newGroupWithIdentifiers, isLoading, syncAll } = useConversations()
 
   const handleNewMessage = async (message: string) => {
-    if (loading) {
+    if (isLoading) {
       return;
     }
-    console.log(message, {
-      identifier: subname?.sanitizedRecords.ethAddress.value ?? '',
-    })
+
     const group = await newGroupWithIdentifiers?.([{
       identifier: subname?.sanitizedRecords.ethAddress.value ?? '',
       identifierKind: "Ethereum"

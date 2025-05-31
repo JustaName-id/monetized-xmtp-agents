@@ -16,13 +16,13 @@ export interface MessageTextFieldProps {
 export const MessageTextField: React.FC<MessageTextFieldProps> = ({ onNewMessage, amountSpent, conversation }) => {
     const [message, setMessage] = useState("");
     const { chainId} = useAccount()
-    const { send, sending, sync } = useConversation(conversation);
+    const { send, isSending, sync } = useConversation(conversation);
 
-    console.log(chainId)
     const handleSendMessage = async (message: string) => {
-        if (conversation) {
+      setMessage("");
+
+      if (conversation) {
             await send(message);
-            setMessage("");
             await sync();
         } else {
             onNewMessage?.(message);
@@ -43,7 +43,7 @@ export const MessageTextField: React.FC<MessageTextFieldProps> = ({ onNewMessage
                     className="w-full"
                     onChange={(e) => setMessage(e.target.value)}
                 />
-                <Button variant="default" disabled={!message || sending} className="px-3 h-full" onClick={() => handleSendMessage(message)}>
+                <Button variant="default" disabled={!message || isSending} className="px-3 h-full" onClick={() => handleSendMessage(message)}>
                     <SendIcon />
                 </Button>
             </div>

@@ -60,7 +60,6 @@ export const Chat: React.FC<ChatProps> = ({
     useEffect(() => {
         if(agentAddress) return
         if (!account.address) return
-        console.log("fetching conversation with id: ", conversationId, " and agent address: ", agentAddress, " and account address: ", account.address)
         const fetchConversation = async () => {
             const conversation = await getConversationById(conversationId)
             if (conversation) {
@@ -80,15 +79,13 @@ export const Chat: React.FC<ChatProps> = ({
 
     useEffect(() => {
         if (conversation) {
-            console.log("starting conversation with id: ", conversationId, " and agent address: ", agentAddress, " and account address: ", account.address)
             sync()
             streamMessages()
         }
     }, [conversation, streamMessages, sync])
 
-  console.log("messages: ", messages)
     return (
-        <div className="wrapper h-full">
+        <div className="wrapper h-full max-h-[calc(100vh-60px)]">
             <div className="container flex flex-col h-full justify-between">
                 <AgentCard description={description} tags={tags} avatar={avatar} name={agentName} />
                 <Messages conversation={conversation} />

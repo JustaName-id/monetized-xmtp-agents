@@ -1,206 +1,209 @@
 import { useXMTP } from '@/context/XMTPContext';
-import { clientEnv } from '@/utils/config/clientEnv';
-import { usePrimaryName } from '@justaname.id/react';
 import type {
   Conversation as OriginalConversation,
   Identifier,
   SafeCreateGroupOptions,
   SafeListConversationsOptions,
 } from '@xmtp/browser-sdk';
-import { SortDirection } from '@xmtp/browser-sdk';
-import { useEffect, useState } from 'react';
-import { useAccount } from 'wagmi';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
-export type AgentConversation = OriginalConversation & {
-  peerAddress: string;
-  primaryName?: string | null;
-  lastMessageTimestamp: number;
+type ConversationsState = {
+  conversations: OriginalConversation[];
+  isLoading: boolean;
+  isLoaded: boolean;
+  isSyncing: boolean;
+  error: Error | null;
+  lastFetch: number | null;
 };
+
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 export const useConversations = () => {
   const { client } = useXMTP();
-  const { address } = useAccount();
-  const [loading, setLoading] = useState(false);
-  const [syncing, setSyncing] = useState(false);
-  const { getPrimaryName } = usePrimaryName();
-  const [conversations, setConversations] = useState<OriginalConversation[]>(
-    []
-  );
-  const [agentConversations, setAgentConversations] = useState<
-    AgentConversation[]
-  >([]);
 
-  useEffect(() => {
-    const fetchAgentConversations = async () => {
-      console.log(address, clientEnv.userEnsDomain, client, conversations.length)
-      if (
-        !address ||
-        !clientEnv.userEnsDomain ||
-        !client ||
-        conversations.length === 0
-      ) {
-        return;
-      }
+  // Single state object for better management
+  const [state, setState] = useState<ConversationsState>({
+    conversations: [],
+    isLoading: false,
+    isLoaded: false,
+    isSyncing: false,
+    error: null,
+    lastFetch: null,
+  });
 
-      console.log(conversations)
-      const conversationChecks = conversations.map(async (conversation) => {
-        try {
-          const members = await conversation.members();
-          const peerMember = members.find(
-            (member) => member.accountIdentifiers[0].identifier !== address
-          );
-          if (!peerMember) {
-            return null;
-          }
-          const peerAddress = peerMember.accountIdentifiers[0].identifier;
-          const primaryName = await getPrimaryName({
-            address: peerAddress as `0x${string}`,
-            chainId: 1,
-          });
-          const isAgent = primaryName?.endsWith(clientEnv.userEnsDomain);
+  // Refs to track ongoing operations and prevent duplicates
+  const listPromiseRef = useRef<Promise<OriginalConversation[]> | null>(null);
+  const syncPromiseRef = useRef<Promise<void> | null>(null);
+  const syncAllPromiseRef = useRef<Promise<void> | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
-          if (isAgent) {
-            const messages = await conversation.messages({
-              direction: SortDirection.Descending,
-              limit: 1n,
-            });
-            const lastMessageTimestamp =
-              messages.length > 0
-                ? Number(messages[0].sentAtNs) / 1_000_000
-                : conversation.createdAt?.getTime() ?? 0;
+  // Helper to update state
+  const updateState = useCallback((updates: Partial<ConversationsState>) => {
+    setState(prev => ({ ...prev, ...updates }));
+  }, []);
 
-            return {
-              ...conversation,
-              peerAddress,
-              primaryName,
-              lastMessageTimestamp,
-            } as AgentConversation;
-          }
-          return null;
-        } catch (error) {
-          console.error('Error processing conversation:', error);
-          return null;
-        }
-      });
+  // Check if data is fresh enough
+  const isDataFresh = useCallback(() => {
+    return state.lastFetch && (Date.now() - state.lastFetch) < CACHE_DURATION;
+  }, [state.lastFetch]);
 
-      const results = await Promise.all(conversationChecks);
-      const filteredAgentConversations = results.filter(
-        (c) => c !== null
-      ) as AgentConversation[];
-
-      const sortedConversations = [...filteredAgentConversations].sort(
-        (a, b) => {
-          return (b.lastMessageTimestamp || 0) - (a.lastMessageTimestamp || 0);
-        }
-      );
-      setAgentConversations(sortedConversations);
-    };
-
-    void fetchAgentConversations();
-  }, [
-    client,
-    conversations,
-    address,
-    clientEnv.userEnsDomain,
-    getPrimaryName,
-    conversations.length,
-  ]);
-
-  if (!client) {
-    return {
-      conversations: [],
-      agentConversations: [],
-      getConversationById: async () => undefined,
-      getMessageById: async () => undefined,
-      list: async () => [],
-      loading: false,
-    };
-  }
-
-  const list = async (
+  // List conversations with deduplication and caching
+  const list = useCallback(async (
     options?: SafeListConversationsOptions,
-    syncFromNetwork = false
-  ) => {
+    syncFromNetwork = false,
+    forceRefresh = false
+  ): Promise<OriginalConversation[]> => {
     if (!client) {
       throw new Error("XMTP client is not initialized");
     }
 
-    if (syncFromNetwork) {
-      await sync();
+    // Return cached data if fresh and no force refresh
+    if (!forceRefresh && isDataFresh() && state.isLoaded && !syncFromNetwork) {
+      return state.conversations;
     }
 
-    setLoading(true);
-
-    try {
-      const convos = await client.conversations.list(options);
-      setConversations(convos);
-      return convos;
-    } finally {
-      setLoading(false);
+    // If there's already a request in progress, wait for it
+    if (listPromiseRef.current) {
+      return listPromiseRef.current;
     }
-  };
 
-  const sync = async () => {
+    updateState({ isLoading: true, error: null });
+
+    const fetchPromise = (async () => {
+      try {
+        if (syncFromNetwork) {
+          await sync();
+        }
+
+        const convos = await client.conversations.list(options);
+
+        updateState({
+          conversations: convos,
+          isLoaded: true,
+          lastFetch: Date.now(),
+          error: null,
+        });
+
+        return convos;
+      } catch (error) {
+        const err = error instanceof Error ? error : new Error('Failed to list conversations');
+        updateState({ error: err });
+        throw err;
+      } finally {
+        updateState({ isLoading: false });
+        listPromiseRef.current = null;
+      }
+    })();
+
+    listPromiseRef.current = fetchPromise;
+    return fetchPromise;
+  }, [client, isDataFresh, state.isLoaded, state.conversations, updateState]);
+
+  // Sync with deduplication
+  const sync = useCallback(async (): Promise<void> => {
     if (!client) {
       throw new Error("XMTP client is not initialized");
     }
 
-    setSyncing(true);
-
-    try {
-      await client.conversations.sync();
-    } finally {
-      setSyncing(false);
+    if (syncPromiseRef.current) {
+      return syncPromiseRef.current;
     }
-  };
 
-  const syncAll = async () => {
+    updateState({ isSyncing: true, error: null });
+
+    const syncPromise = (async () => {
+      try {
+        await client.conversations.sync();
+      } catch (error) {
+        const err = error instanceof Error ? error : new Error('Failed to sync conversations');
+        updateState({ error: err });
+        throw err;
+      } finally {
+        updateState({ isSyncing: false });
+        syncPromiseRef.current = null;
+      }
+    })();
+
+    syncPromiseRef.current = syncPromise;
+    return syncPromise;
+  }, [client, updateState]);
+
+  // Sync all with deduplication
+  const syncAll = useCallback(async (): Promise<void> => {
     if (!client) {
       throw new Error("XMTP client is not initialized");
     }
 
-    setSyncing(true);
-
-    try {
-      await client.conversations.syncAll();
-    } finally {
-      setSyncing(false);
+    if (syncAllPromiseRef.current) {
+      return syncAllPromiseRef.current;
     }
-  };
 
-  const getConversationById = async (conversationId: string) => {
+    updateState({ isSyncing: true, error: null });
+
+    const syncAllPromise = (async () => {
+      try {
+        await client.conversations.syncAll();
+      } catch (error) {
+        const err = error instanceof Error ? error : new Error('Failed to sync all conversations');
+        updateState({ error: err });
+        throw err;
+      } finally {
+        updateState({ isSyncing: false });
+        syncAllPromiseRef.current = null;
+      }
+    })();
+
+    syncAllPromiseRef.current = syncAllPromise;
+    return syncAllPromise;
+  }, [client, updateState]);
+
+  // Auto-fetch on mount if needed
+  useEffect(() => {
+    if (client && !state.isLoaded && !state.isLoading && !isDataFresh()) {
+      list().catch(console.error);
+    }
+  }, [client, state.isLoaded, state.isLoading, isDataFresh, list]);
+
+  // Other methods remain similar but with proper loading states
+  const getConversationById = useCallback(async (conversationId: string) => {
     if (!client) {
       throw new Error("XMTP client is not initialized");
     }
 
-    setLoading(true);
+    updateState({ isLoading: true, error: null });
 
     try {
-      const conversation = await client.conversations.getConversationById(
-        conversationId
-      );
+      const conversation = await client.conversations.getConversationById(conversationId);
       return conversation;
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error('Failed to get conversation');
+      updateState({ error: err });
+      throw err;
     } finally {
-      setLoading(false);
+      updateState({ isLoading: false });
     }
-  };
+  }, [client, updateState]);
 
-  const getMessageById = async (messageId: string) => {
+  const getMessageById = useCallback(async (messageId: string) => {
     if (!client) {
       throw new Error("XMTP client is not initialized");
     }
 
-    setLoading(true);
+    updateState({ isLoading: true, error: null });
 
     try {
       const message = await client.conversations.getMessageById(messageId);
       return message;
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error('Failed to get message');
+      updateState({ error: err });
+      throw err;
     } finally {
-      setLoading(false);
+      updateState({ isLoading: false });
     }
-  };
+  }, [client, updateState]);
 
-  const newGroup = async (
+  const newGroup = useCallback(async (
     inboxIds: string[],
     options?: SafeCreateGroupOptions
   ) => {
@@ -208,20 +211,23 @@ export const useConversations = () => {
       throw new Error("XMTP client is not initialized");
     }
 
-    setLoading(true);
+    updateState({ isLoading: true, error: null });
 
     try {
-      const conversation = await client.conversations.newGroup(
-        inboxIds,
-        options
-      );
+      const conversation = await client.conversations.newGroup(inboxIds, options);
+      // Invalidate cache to refetch conversations
+      updateState({ lastFetch: null });
       return conversation;
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error('Failed to create group');
+      updateState({ error: err });
+      throw err;
     } finally {
-      setLoading(false);
+      updateState({ isLoading: false });
     }
-  };
+  }, [client, updateState]);
 
-  const newGroupWithIdentifiers = async (
+  const newGroupWithIdentifiers = useCallback(async (
     identifiers: Identifier[],
     options?: SafeCreateGroupOptions
   ) => {
@@ -229,52 +235,68 @@ export const useConversations = () => {
       throw new Error("XMTP client is not initialized");
     }
 
-    setLoading(true);
+    updateState({ isLoading: true, error: null });
 
     try {
       const conversation = await client.conversations.newGroupWithIdentifiers(
         identifiers,
         options
       );
+      // Invalidate cache to refetch conversations
+      updateState({ lastFetch: null });
       return conversation;
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error('Failed to create group with identifiers');
+      updateState({ error: err });
+      throw err;
     } finally {
-      setLoading(false);
+      updateState({ isLoading: false });
     }
-  };
+  }, [client, updateState]);
 
-  const newDm = async (inboxId: string) => {
+  const newDm = useCallback(async (inboxId: string) => {
     if (!client) {
       throw new Error("XMTP client is not initialized");
     }
 
-    setLoading(true);
+    updateState({ isLoading: true, error: null });
 
     try {
       const conversation = await client.conversations.newDm(inboxId);
+      // Invalidate cache to refetch conversations
+      updateState({ lastFetch: null });
       return conversation;
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error('Failed to create DM');
+      updateState({ error: err });
+      throw err;
     } finally {
-      setLoading(false);
+      updateState({ isLoading: false });
     }
-  };
+  }, [client, updateState]);
 
-  const newDmWithIdentifier = async (identifier: Identifier) => {
+  const newDmWithIdentifier = useCallback(async (identifier: Identifier) => {
     if (!client) {
       throw new Error("XMTP client is not initialized");
     }
 
-    setLoading(true);
+    updateState({ isLoading: true, error: null });
 
     try {
-      const conversation = await client.conversations.newDmWithIdentifier(
-        identifier
-      );
+      const conversation = await client.conversations.newDmWithIdentifier(identifier);
+      // Invalidate cache to refetch conversations
+      updateState({ lastFetch: null });
       return conversation;
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error('Failed to create DM with identifier');
+      updateState({ error: err });
+      throw err;
     } finally {
-      setLoading(false);
+      updateState({ isLoading: false });
     }
-  };
+  }, [client, updateState]);
 
-  const stream = async () => {
+  const stream = useCallback(async () => {
     if (!client) {
       throw new Error("XMTP client is not initialized");
     }
@@ -283,12 +305,22 @@ export const useConversations = () => {
       error: Error | null,
       conversation: OriginalConversation | undefined
     ) => {
+      if (error) {
+        updateState({ error });
+        return;
+      }
+
       if (conversation) {
         const shouldAdd =
           conversation.metadata?.conversationType === 'dm' ||
           conversation.metadata?.conversationType === 'group';
+
         if (shouldAdd) {
-          setConversations((prev) => [conversation, ...prev]);
+          setState(prev => ({
+            ...prev,
+            conversations: [conversation, ...prev.conversations],
+            lastFetch: Date.now(), // Update cache timestamp
+          }));
         }
       }
     };
@@ -298,22 +330,52 @@ export const useConversations = () => {
     return () => {
       void stream.return(undefined);
     };
-  };
+  }, [client, updateState]);
+
+  // Refresh method to force reload
+  const refresh = useCallback(() => {
+    return list(undefined, false, true);
+  }, [list]);
+
+  // Clear error method
+  const clearError = useCallback(() => {
+    updateState({ error: null });
+  }, [updateState]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
 
   return {
-    conversations,
-    agentConversations,
-    getConversationById,
-    getMessageById,
+    // Data
+    conversations: state.conversations,
+
+    // State flags
+    isLoading: state.isLoading,
+    isLoaded: state.isLoaded,
+    isSyncing: state.isSyncing,
+    error: state.error,
+
+    // Computed state
+    isEmpty: state.isLoaded && state.conversations.length === 0,
+
+    // Methods
     list,
-    loading,
-    newDm,
-    newDmWithIdentifier,
-    newGroup,
-    newGroupWithIdentifiers,
-    stream,
+    refresh,
     sync,
     syncAll,
-    syncing,
+    getConversationById,
+    getMessageById,
+    newGroup,
+    newGroupWithIdentifiers,
+    newDm,
+    newDmWithIdentifier,
+    stream,
+    clearError,
   };
 };

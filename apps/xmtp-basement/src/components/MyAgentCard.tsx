@@ -17,7 +17,6 @@ export interface AgentProps {
 export const MyAgentCard: React.FC<AgentProps> = ({ subname, avatar, price, description, tags, consumption }) => {
 
     const onUnsubscribe = () => {
-        console.log('unsubscribe')
     }
     return (
         <Accordion type="single" collapsible className="p-5 rounded-lg bg-background border-border border-[1px] ">

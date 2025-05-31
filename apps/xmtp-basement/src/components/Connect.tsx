@@ -66,6 +66,7 @@ export default function Connect() {
           ? hexToUint8Array(encryptionKey)
           : undefined,
         env: "dev",
+        loggingLevel:'off',
         // loggingLevel: "debug",
         signer: createSCWSigner(account.address, (message: string) =>
           signMessageAsync({ message }),

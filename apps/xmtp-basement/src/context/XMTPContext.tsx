@@ -75,9 +75,7 @@ export const XMTPProvider: React.FC<XMTPProviderProps> = ({
             loggingLevel,
             signer,
         }: InitializeClientOptions) => {
-            console.log('initialize', { dbEncryptionKey, env, loggingLevel, signer });
             if (!client) {
-                console.log(initializingRef.current)
                 if (initializingRef.current) {
                     return undefined;
                 }
@@ -97,7 +95,6 @@ export const XMTPProvider: React.FC<XMTPProviderProps> = ({
                         dbEncryptionKey,
                         codecs: [],
                     });
-                    console.log('xmtpClient', xmtpClient);
                     setClient(xmtpClient);
                     void switchChainAsync({ chainId: baseSepolia.id });
                 } catch (e) {
@@ -106,7 +103,6 @@ export const XMTPProvider: React.FC<XMTPProviderProps> = ({
                     setError(e as Error);
                     throw e;
                 } finally {
-                  console.log("finally")
                     initializingRef.current = false;
                     setInitializing(false);
                 }
