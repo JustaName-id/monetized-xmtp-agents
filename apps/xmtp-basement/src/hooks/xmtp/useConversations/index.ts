@@ -32,6 +32,7 @@ export const useConversations = () => {
 
   useEffect(() => {
     const fetchAgentConversations = async () => {
+      console.log(address, clientEnv.userEnsDomain, client, conversations.length)
       if (
         !address ||
         !clientEnv.userEnsDomain ||
@@ -41,6 +42,7 @@ export const useConversations = () => {
         return;
       }
 
+      console.log(conversations)
       const conversationChecks = conversations.map(async (conversation) => {
         try {
           const members = await conversation.members();

@@ -53,3 +53,6 @@ xmtp-dev-*.db3*
 
 .cursor\rules\nx-rules.mdc
 .github\instructions\nx.instructions.md
+
+vite.config.*.timestamp*
+vitest.config.*.timestamp*

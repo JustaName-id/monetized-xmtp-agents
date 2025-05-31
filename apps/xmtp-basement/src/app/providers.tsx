@@ -13,6 +13,7 @@ import "@justweb3/widget/styles.css";
 import '@coinbase/onchainkit/styles.css';
 import { ThemeProvider } from "next-themes";
 import { XMTPProvider } from "@/context/XMTPContext";
+import {ChatBasedProvider} from "@/providers/ChatBasedProvider";
 
 const config = createConfig({
   chains: [baseSepolia, mainnet],
@@ -63,7 +64,9 @@ export function Providers(props: {
               }}
             >
               <XMTPProvider>
-                {props.children}
+                <ChatBasedProvider>
+                  {props.children}
+                </ChatBasedProvider>
               </XMTPProvider>
             </OnchainKitProvider>
           </JustWeb3Provider>

@@ -6,6 +6,7 @@ import { Button } from "./ui";
 import { Conversation } from "@xmtp/browser-sdk";
 import { useState } from "react";
 import { useConversation } from "@/hooks/xmtp";
+import {useAccount} from "wagmi";
 export interface MessageTextFieldProps {
     onNewMessage?: (message: string) => void;
     amountSpent?: number;
@@ -14,9 +15,10 @@ export interface MessageTextFieldProps {
 
 export const MessageTextField: React.FC<MessageTextFieldProps> = ({ onNewMessage, amountSpent, conversation }) => {
     const [message, setMessage] = useState("");
-
+    const { chainId} = useAccount()
     const { send, sending, sync } = useConversation(conversation);
 
+    console.log(chainId)
     const handleSendMessage = async (message: string) => {
         if (conversation) {
             await send(message);
@@ -41,7 +43,7 @@ export const MessageTextField: React.FC<MessageTextFieldProps> = ({ onNewMessage
                     className="w-full"
                     onChange={(e) => setMessage(e.target.value)}
                 />
-                <Button variant="default" disabled={!message || sending} className="px-3" onClick={() => handleSendMessage(message)}>
+                <Button variant="default" disabled={!message || sending} className="px-3 h-full" onClick={() => handleSendMessage(message)}>
                     <SendIcon />
                 </Button>
             </div>

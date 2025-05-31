@@ -7,7 +7,7 @@ import { ConnectXmtp } from "@/components/newChat/ConnectXmtp";
 import { Subscribe } from "@/components/newChat/Subscribe";
 import { useXMTP } from "@/context/XMTPContext";
 import { useAgentDetails } from "@/hooks/use-agent-details";
-import { useConversation, useConversations, useIdentity } from "@/hooks/xmtp";
+import { useConversation, useConversations } from "@/hooks/xmtp";
 import { LoadingIcon } from "@/lib/icons";
 import { useAgent } from "@/query/agents";
 import { clientEnv } from "@/utils/config/clientEnv";
@@ -16,7 +16,9 @@ import { Conversation } from "@xmtp/browser-sdk";
 import { useEffect, useMemo, useState } from "react";
 import { useAccount } from "wagmi";
 import { mainnet } from "wagmi/chains";
-import { MessageCard } from "../MessageCard";
+import React from 'react';
+import {useSubscription} from "@/query/subscription";
+import {Messages} from "@/components/chat/Messages";
 
 export interface ChatProps {
     conversationId: string
@@ -28,65 +30,68 @@ export const Chat: React.FC<ChatProps> = ({
     const [conversation, setConversation] = useState<Conversation | undefined>(undefined)
     const [agentAddress, setAgentAddress] = useState<string | null>(null)
     const { getConversationById } = useConversations()
-    const { inboxId } = useIdentity()
-    const { messages, streamMessages } = useConversation(conversation);
+    const { messages , streamMessages, sync } = useConversation(conversation);
     const { addressSubnames } = useAddressSubnames({
         address: agentAddress ?? undefined,
         chainId: mainnet.id,
         isClaimed: true,
         enabled: !!agentAddress
     })
-
-
-    const agentName = useMemo(() => addressSubnames[0]?.ens, [addressSubnames])
+    const agentName = useMemo(() =>
+      addressSubnames.length > 0 ?
+      addressSubnames[0]?.ens
+      : ""
+      , [addressSubnames])
     const { subname } = useAgent(agentName)
     const { description, tags, avatar, spender, fees } = useAgentDetails(subname);
     const account = useAccount();
     const { accountSubnames } = useAccountSubnames();
     const { client } = useXMTP();
-
+    const { validSubscriptions } = useSubscription()
+    const isSubscribed = useMemo(() => {
+      return validSubscriptions?.some(subscription => subscription.spendPermission.spender.toLowerCase() === spender.toLowerCase())
+    }, [spender, validSubscriptions]);
     const isWalletConnected = useMemo(() => account.isConnected, [account.isConnected]);
     const isSubnameClaimed = useMemo(() => !!accountSubnames.find(
         subname => subname.ens.endsWith(clientEnv.userEnsDomain)
     ), [accountSubnames]);
     const isXmtpConnected = useMemo(() => !!client, [client]);
-    const isSubscribed = useMemo(() => {
-        return false;
-    }, []);
-
 
     useEffect(() => {
+        if(agentAddress) return
+        if (!account.address) return
+        console.log("fetching conversation with id: ", conversationId, " and agent address: ", agentAddress, " and account address: ", account.address)
         const fetchConversation = async () => {
             const conversation = await getConversationById(conversationId)
             if (conversation) {
                 setConversation(conversation)
                 const members = await conversation.members()
-                const agentAddress = members.find(member => member.accountIdentifiers[0].identifier !== account.address)?.accountIdentifiers[0].identifier
+                const agentAddress = members.find(member =>
+                  member.accountIdentifiers[0].identifier.toLowerCase() !==
+                  account.address?.toLowerCase())?.accountIdentifiers[0].identifier
                 if (agentAddress) {
                     setAgentAddress(agentAddress)
                 }
             }
         }
         fetchConversation()
-    }, [conversationId, getConversationById, account.address])
+    }, [conversationId, getConversationById, account.address, agentAddress])
+
 
     useEffect(() => {
         if (conversation) {
+            console.log("starting conversation with id: ", conversationId, " and agent address: ", agentAddress, " and account address: ", account.address)
+            sync()
             streamMessages()
         }
-    }, [conversation, streamMessages])
+    }, [conversation, streamMessages, sync])
 
+  console.log("messages: ", messages)
     return (
         <div className="wrapper h-full">
             <div className="container flex flex-col h-full justify-between">
                 <AgentCard description={description} tags={tags} avatar={avatar} name={agentName} />
-                <div className="flex flex-col gap-4 flex-1">
-                    {
-                        messages.map((message) => (
-                            <MessageCard message={message} isSender={message.senderInboxId === inboxId} />
-                        ))
-                    }
-                </div>
+                <Messages conversation={conversation} />
                 {
                     !isWalletConnected ?
                         <ConnectWallet /> :
@@ -96,11 +101,11 @@ export const Chat: React.FC<ChatProps> = ({
                                 <Subscribe agentName={agentName} avatar={avatar} spender={spender} fees={fees} /> :
                                 !isXmtpConnected ?
                                     <ConnectXmtp /> :
-                                    conversation ?
-                                        <MessageTextField conversation={conversation} /> :
-                                        <div className="flex flex-col items-center justify-center h-full">
-                                            <LoadingIcon className="w-10 h-10" />
-                                        </div>
+                                      conversation ?
+                                          <MessageTextField conversation={conversation} /> :
+                                            <div className="flex flex-col items-center justify-center h-full">
+                                                <LoadingIcon className="w-10 h-10" />
+                                            </div>
                 }
             </div>
         </div>

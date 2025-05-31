@@ -2,22 +2,26 @@ import {
   useAccount,
   useConnect,
   useConnectors,
-  useSignTypedData, useSwitchChain,
+  useSignTypedData,
+  useSwitchChain,
 } from "wagmi";
 import { Address, Hex, parseUnits } from "viem";
-import { useMutation } from "@tanstack/react-query";
-import {spendPermissionManagerAddress} from "@xmtpbasement/spend-permission";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import {spendPermissionManagerAddress, SubscriptionsResponse} from "@xmtpbasement/spend-permission";
 import axios from 'axios'
 import {SpendPermission} from "@/types";
 import {baseSepolia} from "wagmi/chains";
-
-
+import {useMemo} from "react";
 
 interface SubscriptionResult {
   status: "success" | "failure";
   transactionHash: string;
   transactionUrl: string;
 }
+
+const buildSubscriptionKey = (address: Address | undefined) => {
+  return ['subscription', address] as const;
+};
 
 export function useSubscription() {
   const { signTypedDataAsync } = useSignTypedData();
@@ -27,9 +31,21 @@ export function useSubscription() {
   const { connectAsync } = useConnect();
   const connectors = useConnectors();
 
-  return useMutation({
-    mutationFn: async (variables: { spenderAddress: Address; fees: string }): Promise<SubscriptionResult> => {
-      const { spenderAddress, fees } = variables;
+  const { data: subscriptions, refetch } = useQuery({
+    queryKey: buildSubscriptionKey(account.address),
+    queryFn: async () => {
+      return axios.get<SubscriptionsResponse>("/api/subscriptions?account=" + account.address).then(res => res.data);
+    },
+    enabled: !!account.address,
+  })
+
+  const validSubscriptions = useMemo(() => {
+    return subscriptions?.subscriptions.filter(subscription => subscription.isValid);
+  }, [subscriptions])
+
+  const { mutateAsync: subscribe, isPending: isSubscribePending} = useMutation({
+    mutationFn: async (variables: { spenderAddress: Address; allowance: string }): Promise<SubscriptionResult> => {
+      const { spenderAddress, allowance } = variables;
       let accountAddress = account?.address;
 
       if (!accountAddress) {
@@ -44,8 +60,8 @@ export function useSubscription() {
         account: accountAddress,
         spender: spenderAddress,
         token: "0x036CbD53842c5426634e7929541eC2318f3dCF7e" as Address, // ETH
-        allowance: parseUnits(fees, 6),
-        period: 86400,
+        allowance: parseUnits(allowance, 6),
+        period: 86400*30,
         start: Math.ceil(Date.now() / 1000),
         end: Math.ceil(Date.now() / 1000) + 7 * 86400,
         salt: BigInt(0),
@@ -89,7 +105,15 @@ export function useSubscription() {
       );
 
       const response = await axios.post<SubscriptionResult>("/api/subscriptions/create", { spendPermission: spendPermissionSanitized, signature });
+      refetch();
       return response.data
     },
   });
+
+  return {
+    subscribe,
+    subscriptions,
+    validSubscriptions,
+    isSubscribePending
+  }
 }

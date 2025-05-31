@@ -17,12 +17,12 @@ export const SubscribeDialog = ({ open, onOpenChange, agentName, avatar, fees, s
     const [allowance, setAllowance] = useState(0);
     const [displayValueForInput, setDisplayValueForInput] = useState<string>("");
 
-    const { mutateAsync, isPending } = useSubscription()
+    const { subscribe, isSubscribePending } = useSubscription()
 
     const handleSubscribe = async () => {
-        const result = await mutateAsync({
+        const result = await subscribe({
             spenderAddress: spender as Address,
-            fees: fees
+            allowance: allowance.toString()
         })
         if (result.status === "success") {
             onOpenChange(false)
@@ -89,7 +89,7 @@ export const SubscribeDialog = ({ open, onOpenChange, agentName, avatar, fees, s
                         rightElement={<p className="text-sm text-primary font-bold">{"/Month"}</p>}
                     />
                     <div className="flex flex-row justify-end">
-                        <Button variant={"default"} className={"w-fit ml-auto"} onClick={handleSubscribe} disabled={isPending}>{isPending ? "Subscribing..." : "Subscribe"}</Button>
+                        <Button variant={"default"} className={"w-fit ml-auto"} onClick={handleSubscribe} disabled={isSubscribePending}>{isSubscribePending ? "Subscribing..." : "Subscribe"}</Button>
                     </div>
                 </DialogFooter>
             </DialogContent>

@@ -43,7 +43,8 @@ const main = async () => {
     displayName: 'The Ultimate Agent',
     fees: 0.01,
     tags: ['gm'],
-    hubUrl: 'http://localhost:3000/api'
+    hubUrl: 'http://localhost:3000/api',
+    chain: 'baseSepolia'
   });
 
   void logAgentDetails(client);

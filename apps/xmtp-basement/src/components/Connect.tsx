@@ -1,18 +1,13 @@
 "use client";
 
-import { useXMTP } from "@/context/XMTPContext";
-import { useLocalVariables } from "@/hooks/use-local";
 import { CreditCardIcon, CursorInputIcon, LogoutIcon, WalletIcon } from "@/lib/icons";
 import { clientEnv } from "@/utils/config/clientEnv";
-import { createSCWSigner } from "@/utils/helpers/createSigner";
 import { formatAddress } from "@/utils/helpers/formatAddress";
 import { useAccountSubnames } from '@justaname.id/react';
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { hexToUint8Array } from "uint8array-extras";
 import { useAccount, useConnect, useDisconnect, useSignMessage, useSwitchChain } from 'wagmi';
-import { mainnet } from "wagmi/chains";
-import { ClaimDialog } from "./ClaimDialog";
 import {
   Avatar,
   AvatarImage,
@@ -28,18 +23,24 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "./ui";
+import {useChatBased} from "@/providers/ChatBasedProvider";
+import {useLocalVariables} from "@/hooks/use-local";
+import {useXMTP} from "@/context/XMTPContext";
+import {mainnet} from "wagmi/chains";
+import {createSCWSigner} from "@/utils/helpers/createSigner";
+import {baseSepolia} from "viem/chains";
 
 
 export default function Connect() {
   const account = useAccount();
   const { connectors, connect, } = useConnect();
   const { disconnect } = useDisconnect();
+  const { handleOpenClaim } = useChatBased()
   const { initialize } = useXMTP();
   const { signMessageAsync } = useSignMessage();
   const { accountSubnames } = useAccountSubnames();
   const [tooltipOpen, setTooltipOpen] = useState(false);
   const [tooltipText, setTooltipText] = useState("Copy");
-  const [isClaimDialogOpen, setIsClaimDialogOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const { switchChainAsync } = useSwitchChain();
 
@@ -53,22 +54,29 @@ export default function Connect() {
   } = useLocalVariables();
 
   useEffect(() => {
-    if (!account.address) {
-      return;
+
+
+    async function initializeXmtp() {
+      if (!account.address) {
+        return;
+      }
+      await switchChainAsync({ chainId: mainnet.id });
+      await  initialize({
+        dbEncryptionKey: encryptionKey
+          ? hexToUint8Array(encryptionKey)
+          : undefined,
+        env: "dev",
+        // loggingLevel: "debug",
+        signer: createSCWSigner(account.address, (message: string) =>
+          signMessageAsync({ message }),
+        ),
+      });
+      await switchChainAsync({ chainId: baseSepolia.id });
     }
 
-    void switchChainAsync({ chainId: mainnet.id });
-    void initialize({
-      dbEncryptionKey: encryptionKey
-        ? hexToUint8Array(encryptionKey)
-        : undefined,
-      env: "dev",
-      loggingLevel: "debug",
-      signer: createSCWSigner(account.address, (message: string) =>
-        signMessageAsync({ message }),
-      ),
-    });
-  }, [account.address, encryptionKey, initialize, signMessageAsync]);
+
+    initializeXmtp()
+  }, [account.address, encryptionKey, initialize, signMessageAsync, switchChainAsync]);
 
 
   return (
@@ -128,7 +136,7 @@ export default function Connect() {
                       onSelect={(event) => {
                         event.preventDefault();
                         setIsDropdownOpen(false);
-                        setIsClaimDialogOpen(true);
+                        handleOpenClaim(true);
                       }}
                     >
                       <div className="flex flex-row cursor-pointer items-center gap-2" >
@@ -153,7 +161,6 @@ export default function Connect() {
             </Button>
           }
       </div>
-      <ClaimDialog open={isClaimDialogOpen} onOpenChange={setIsClaimDialogOpen} />
     </div>
   );
 }

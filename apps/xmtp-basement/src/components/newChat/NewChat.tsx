@@ -14,6 +14,7 @@ import { useXMTP } from "@/context/XMTPContext";
 import { clientEnv } from "@/utils/config/clientEnv";
 import { useConversations } from "@/hooks/xmtp";
 import { useRouter } from "next/navigation";
+import {useSubscription} from "@/query/subscription";
 
 export interface NewChatProps {
   agentName: string
@@ -34,9 +35,10 @@ export const NewChat: React.FC<NewChatProps> = ({
     subname => subname.ens.endsWith(clientEnv.userEnsDomain)
   ), [accountSubnames]);
   const isXmtpConnected = useMemo(() => !!client, [client]);
+  const { validSubscriptions } = useSubscription()
   const isSubscribed = useMemo(() => {
-    return false;
-  }, []);
+    return validSubscriptions?.some(subscription => subscription.spendPermission.spender.toLowerCase() === spender.toLowerCase())
+  }, [spender, validSubscriptions]);
 
   const { newGroupWithIdentifiers, loading, syncAll } = useConversations()
 
@@ -44,6 +46,9 @@ export const NewChat: React.FC<NewChatProps> = ({
     if (loading) {
       return;
     }
+    console.log(message, {
+      identifier: subname?.sanitizedRecords.ethAddress.value ?? '',
+    })
     const group = await newGroupWithIdentifiers?.([{
       identifier: subname?.sanitizedRecords.ethAddress.value ?? '',
       identifierKind: "Ethereum"
@@ -62,11 +67,11 @@ export const NewChat: React.FC<NewChatProps> = ({
             <ConnectWallet /> :
             !isSubnameClaimed ?
               <ClaimIdentity /> :
-              !isSubscribed ?
-                <Subscribe spender={spender} fees={fees} agentName={agentName} avatar={avatar} /> :
                 !isXmtpConnected ?
                   <ConnectXmtp /> :
-                  <MessageTextField onNewMessage={handleNewMessage} />
+                  !isSubscribed ?
+                    <Subscribe spender={spender} fees={fees} agentName={agentName} avatar={avatar} /> :
+                      <MessageTextField onNewMessage={handleNewMessage} />
         }
       </div>
     </div>

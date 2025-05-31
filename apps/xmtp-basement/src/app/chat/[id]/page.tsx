@@ -3,13 +3,13 @@ import { Chat } from "@/components/chat/Chat";
 export default async function Index({
     params,
 }: {
-    params: { id: string };
+    params: Promise<{ id: string }>;
 }) {
-    const conversationId = params.id;
+    const { id } = await params
 
-    if (!conversationId) {
+    if (!id) {
         return null;
     }
 
-    return <Chat conversationId={conversationId} />;
+    return <Chat conversationId={id} />;
 }

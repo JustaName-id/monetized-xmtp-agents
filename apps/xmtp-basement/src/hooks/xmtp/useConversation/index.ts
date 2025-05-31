@@ -15,7 +15,7 @@ export const useConversation = (conversation?: Conversation) => {
 
   const getMessages = async (
     options?: SafeListMessagesOptions,
-    syncFromNetwork: boolean = false
+    syncFromNetwork = false
   ) => {
     if (!client) {
       return;
@@ -76,7 +76,10 @@ export const useConversation = (conversation?: Conversation) => {
       message: DecodedMessage | undefined
     ) => {
       if (message) {
-        setMessages((prev) => [...prev, message]);
+        const isNewMessage = !messages.find(
+          (m) => m.id === message.id
+        )
+        if (isNewMessage) setMessages((prev) => [...prev, message]);
       }
     };
 

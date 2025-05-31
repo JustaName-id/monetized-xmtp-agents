@@ -26,7 +26,7 @@ import {
   SubscriptionsResponse,
 } from '@xmtpbasement/spend-permission';
 import * as _xmtp_node_bindings from '@xmtp/node-bindings';
-import { baseSepolia, mainnet } from 'wagmi/chains';
+import { baseSepolia, mainnet, base } from 'wagmi/chains';
 import { privateKeyToAccount } from 'viem/accounts';
 import {
   createBundlerClient,
@@ -40,6 +40,7 @@ import {
   TransactionReferenceCodec,
 } from '@xmtp/content-type-transaction-reference';
 import FormData from 'form-data';
+import {parseUnits} from "ethers";
 
 type MonetizedMsgReturn = Promise<{
   messageId: string;
@@ -67,6 +68,34 @@ async function getSubscription(basedClient: BasedClient, address: string) {
   return subscriptions[0];
 }
 
+async function getTokenBalance(
+  basedClient: BasedClient,
+  tokenAddress: string,
+  userAddress: string
+): Promise<bigint> {
+  const client = createPublicClient({
+    chain: basedClient.chain === 'base' ? base : baseSepolia,
+    transport: http(),
+  });
+
+  const balance = await client.readContract({
+    abi: [
+      {
+        constant: true,
+        inputs: [{ name: '_owner', type: 'address' }],
+        name: 'balanceOf',
+        outputs: [{ name: 'balance', type: 'uint256' }],
+        type: 'function',
+      },
+    ],
+    address: getAddress(tokenAddress),
+    functionName: 'balanceOf',
+    args: [getAddress(userAddress)],
+  });
+
+  return balance as bigint;
+}
+
 async function collectFees(
   basedClient: BasedClient,
   spendPermission: SpendPermissionResponse
@@ -74,7 +103,7 @@ async function collectFees(
   console.log('🚀 Starting fee collection...');
 
   const client = createPublicClient({
-    chain: baseSepolia,
+    chain: basedClient.chain === 'base' ? base: baseSepolia,
     transport: http(),
   });
 
@@ -157,6 +186,22 @@ function createSendWithFees(instance: Group | Dm, basedClient: BasedClient) {
         reason: 'Not Subscribed',
       };
     }
+
+    const userBalance = await getTokenBalance(
+      basedClient,
+      subscription.spendPermission.token,
+      subscription.spendPermission.account
+    )
+
+    if(userBalance < parseUnits(basedClient.fees.toString(), 6)){
+      const messageId = await instance.send('You do not have enough funds');
+      return {
+        messageId,
+        collected: false,
+        reason: 'Not Enough Funds'
+      }
+    }
+
     const txHash = await collectFees(basedClient, subscription.spendPermission);
 
     if (txHash === '') {
@@ -172,7 +217,7 @@ function createSendWithFees(instance: Group | Dm, basedClient: BasedClient) {
     await instance.send(
       {
         namespace: 'eip155',
-        networkId: baseSepolia.id,
+        networkId: basedClient.chain === 'base' ? base.id : baseSepolia.id,
         reference: txHash,
       },
       ContentTypeTransactionReference
@@ -538,6 +583,7 @@ export class BasedClient extends Client {
   tags: string[] = [];
   hubUrl: string | undefined;
   displayName: string | undefined;
+  chain: 'base' | 'baseSepolia' = 'base'
 
   private _basedConversations?: BasedConversations;
 
@@ -567,10 +613,13 @@ export class BasedClient extends Client {
       description?: string;
       tags?: string[];
       hubUrl?: string;
+      chain?: 'base' | 'baseSepolia'
     }
   ): Promise<BasedClient> {
     const data = fs.readFileSync('wallet.json', 'utf8');
     const walletData = JSON.parse(data) as WalletData;
+
+    const _chain = options?.chain || 'base';
 
     const client = await Client.create(signer, {
       ...options,
@@ -747,6 +796,7 @@ export class BasedClient extends Client {
 
     const subname = username + '.' + ensDomain;
     basedClient.subname = subname;
+    basedClient.chain = _chain;
 
     return basedClient;
   }

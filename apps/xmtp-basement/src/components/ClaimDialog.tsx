@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, Input } from "./ui"
+import { Button, Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, Input } from "./ui"
 import { useAddSubname, useIsSubnameAvailable } from "@justaname.id/react";
 import { clientEnv } from "@/utils/config/clientEnv";
 import { LoadingIcon } from "@/lib/icons";
@@ -41,9 +41,9 @@ export const ClaimDialog = ({ open, onOpenChange }: ClaimDialogProps) => {
             <DialogContent >
                 <DialogHeader>
                     <DialogTitle>Claim a Name!</DialogTitle>
-                    <DialogDescription>
-                        Anyone who has this link will be able to view this.
-                    </DialogDescription>
+                    {/*<DialogDescription>*/}
+                    {/*    Anyone who has this link will be able to view this.*/}
+                    {/*</DialogDescription>*/}
                 </DialogHeader>
                 <DialogFooter className="flex sm:flex-col flex-col gap-1">
                     <div className="flex flex-row items-center justify-between gap-2 w-full">

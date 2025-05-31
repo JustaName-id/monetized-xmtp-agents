@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/sidebar"
 import { useConversations } from "@/hooks/xmtp/useConversations";
 import { ExploreIcon, LoadingIcon, PenIcon, ProfileIcon } from "@/lib/icons"
+import {useEffect} from "react";
+import {useXMTP} from "@/context/XMTPContext";
 
 const items = [
     {
@@ -33,7 +35,20 @@ const items = [
 ]
 
 export function AppSidebar() {
-    const { agentConversations, loading } = useConversations();
+    const { agentConversations, loading, list } = useConversations();
+  const { client } = useXMTP();
+
+  useEffect(() => {
+    async function listConv(){
+      if(!client){
+        const conversation = await list()
+        console.log("conversation",conversation)
+      }
+    }
+
+    listConv()
+  }, [client, list]);
+
     return (
         <Sidebar>
             <SidebarHeader>XMTP Agents</SidebarHeader>

@@ -41,10 +41,12 @@ export type XMTPContextValue = {
 };
 
 export const XMTPContext = createContext<XMTPContextValue>({
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
     setClient: () => { },
     initialize: () => Promise.reject(new Error("XMTPProvider not available")),
     initializing: false,
     error: null,
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
     disconnect: () => { },
 });
 
@@ -73,7 +75,9 @@ export const XMTPProvider: React.FC<XMTPProviderProps> = ({
             loggingLevel,
             signer,
         }: InitializeClientOptions) => {
+            console.log('initialize', { dbEncryptionKey, env, loggingLevel, signer });
             if (!client) {
+                console.log(initializingRef.current)
                 if (initializingRef.current) {
                     return undefined;
                 }
@@ -86,20 +90,23 @@ export const XMTPProvider: React.FC<XMTPProviderProps> = ({
                 let xmtpClient: Client;
 
                 try {
-                    void switchChainAsync({ chainId: mainnet.id });
+                    await switchChainAsync({ chainId: mainnet.id });
                     xmtpClient = await Client.create(signer, {
                         env,
                         loggingLevel,
                         dbEncryptionKey,
                         codecs: [],
                     });
+                    console.log('xmtpClient', xmtpClient);
                     setClient(xmtpClient);
                     void switchChainAsync({ chainId: baseSepolia.id });
                 } catch (e) {
+                  console.log('e', e)
                     setClient(undefined);
                     setError(e as Error);
                     throw e;
                 } finally {
+                  console.log("finally")
                     initializingRef.current = false;
                     setInitializing(false);
                 }
@@ -108,7 +115,7 @@ export const XMTPProvider: React.FC<XMTPProviderProps> = ({
             }
             return client;
         },
-        [client],
+        [client, switchChainAsync],
     );
 
     const disconnect = useCallback(() => {

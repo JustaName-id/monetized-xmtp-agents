@@ -16,10 +16,11 @@ export const useAgents = () => {
 }
 
 
-export const useAgent = (name: string) => {
+export const useAgent = (name: string | undefined) => {
   const { subname } = useSubname({
     subname: name,
-    chainId: 1
+    chainId: 1,
+    enabled: !!name && name !== '',
   })
 
   return {

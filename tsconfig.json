@@ -17,6 +17,9 @@
     },
     {
       "path": "./libs/spend-permission"
+    },
+    {
+      "path": "./libs/xmtp-react-sdk"
     }
   ]
 }

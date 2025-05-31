@@ -21,18 +21,18 @@ export const ConnectXmtp = () => {
         if (!account.address) {
             return;
         }
-        void switchChainAsync({ chainId: mainnet.id });
+        await switchChainAsync({ chainId: mainnet.id });
         await initialize({
             dbEncryptionKey: encryptionKey
                 ? hexToUint8Array(encryptionKey)
                 : undefined,
             env: "dev",
-            loggingLevel: "debug",
+            // loggingLevel: "debug",
             signer: createSCWSigner(account.address, (message: string) =>
                 signMessageAsync({ message }),
             ),
         });
-        void switchChainAsync({ chainId: baseSepolia.id });
+        await switchChainAsync({ chainId: baseSepolia.id });
     }
 
     return (
