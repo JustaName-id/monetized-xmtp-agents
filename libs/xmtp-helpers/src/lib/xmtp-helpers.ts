@@ -6,7 +6,7 @@ import { fromString, toString } from "uint8arrays";
 import {createPublicClient, createWalletClient, http, toBytes} from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { sepolia } from "viem/chains";
-import {BasedClient} from "@xmtpbasement/xmtp-extended-client";
+import {BasedClient} from "@agenthub/xmtp-extended-client";
 import {base} from "wagmi/chains";
 import {toCoinbaseSmartAccount} from "viem/account-abstraction";
 

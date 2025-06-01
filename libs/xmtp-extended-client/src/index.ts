@@ -24,7 +24,7 @@ import {
   spendPermissionManagerAddress,
   SpendPermissionResponse,
   SubscriptionsResponse,
-} from '@xmtpbasement/spend-permission';
+} from '@agenthub/spend-permission';
 import * as _xmtp_node_bindings from '@xmtp/node-bindings';
 import { baseSepolia, mainnet, base } from 'wagmi/chains';
 import { privateKeyToAccount } from 'viem/accounts';
@@ -583,7 +583,8 @@ export class BasedClient extends Client {
   tags: string[] = [];
   hubUrl: string | undefined;
   displayName: string | undefined;
-  chain: 'base' | 'baseSepolia' = 'base'
+  chain: 'base' | 'baseSepolia' = 'base';
+
 
   private _basedConversations?: BasedConversations;
 
@@ -680,39 +681,101 @@ export class BasedClient extends Client {
       address: clientAddress,
     });
 
-    const registrySubname = subnames.subnames.find((_subname) =>
-      _subname.ens.startsWith(username)
-    );
+    const agentSubname = subnames.subnames.length > 0 ? subnames.subnames[0] : undefined;
 
-    const text = {} as Record<string, string>;
-
-    if (basedClient.description) text['description'] = basedClient.description;
-    if (basedClient.tags.length === 0) {
-      text['xmtp_tags'] = '';
-    } else {
-      text['xmtp_tags'] = basedClient.tags.join(',');
-    }
-    if (basedClient.fees) text['xmtp_fees'] = basedClient.fees.toString();
-    if (basedClient.displayName) text['displayName'] = basedClient.displayName;
+    const text = {
+      description: basedClient.description || "",
+      xmtp_tags: basedClient.tags.length === 0 ? "" : basedClient.tags.join(','),
+      xmtp_fees: basedClient.fees.toString(),
+      displayName: basedClient.displayName || "",
+    } as Record<string, string>;
 
     let ensDomain = '';
     let subnameResponse: SubnameResponse | undefined;
-    if (registrySubname) {
-      ensDomain = registrySubname.ens.split('.').slice(1).join('.');
-      subnameResponse =await justanameInstance.subnames.updateSubname(
-        {
-          addresses: [{ coinType: '60', address: clientAddress }],
-          ensDomain,
-          username: username,
-          text: text,
-        },
-        {
-          xMessage: challenge.challenge,
-          xSignature: signature,
-          xAddress: clientAddress,
+    const isSubnameSame  = agentSubname && agentSubname.ens.split('.').slice(1).join('.') === username;
+
+    if(!agentSubname){
+      try {
+        const newSubname = await axios.post<SubnameResponse>(
+          basedClient.hubUrl + '/subnames/add',
+          {
+            username,
+            address: clientAddress,
+            signature: signature,
+            message: challenge.challenge,
+            text,
+          }
+        )
+        subnameResponse = newSubname.data
+        ensDomain = newSubname.data.ens.split('.').slice(1).join('.');
+      } catch (e) {
+      let error = 'Unknown error occurred while registering subname';
+      if (
+        e &&
+        typeof e === 'object' &&
+        'response' in e &&
+        e.response &&
+        typeof e.response === 'object' &&
+        'data' in e.response &&
+        e.response.data &&
+        typeof e.response.data === 'object' &&
+        'error' in e.response.data
+      ) {
+        error = e.response.data.error as string;
+      }
+      throw new Error(error);
+    }
+    }else{
+      if(isSubnameSame){
+        ensDomain = agentSubname.ens.split('.').slice(1).join('.');
+        subnameResponse =await justanameInstance.subnames.updateSubname(
+          {
+            addresses: [{ coinType: '60', address: clientAddress }],
+            ensDomain,
+            username: username,
+            text: text,
+          },
+          {
+            xMessage: challenge.challenge,
+            xSignature: signature,
+            xAddress: clientAddress,
+          }
+        );
+      } else{
+        try {await axios.post<SubnameResponse>(
+          basedClient.hubUrl + '/subnames/revoke',
+          {
+            username: agentSubname.ens.split('.')[0],
+            address: clientAddress,
+            signature: signature,
+            message: challenge.challenge,
+            agent: true,
+          }
+        );
+        } catch (e) {
+          let error = 'Unknown error occurred while registering subname';
+          if (
+            e &&
+            typeof e === 'object' &&
+            'response' in e &&
+            e.response &&
+            typeof e.response === 'object' &&
+            'data' in e.response &&
+            e.response.data &&
+            typeof e.response.data === 'object' &&
+            'error' in e.response.data
+          ) {
+            error = e.response.data.error as string;
+          }
+
+          console.log(error)
+          if(!error.includes("NotFound")){
+            throw new Error(error);
+          }
         }
-      );
-    } else {
+      }
+
+
       try {
         const newSubname = await axios.post<SubnameResponse>(
           basedClient.hubUrl + '/subnames/add',
@@ -745,6 +808,7 @@ export class BasedClient extends Client {
         throw new Error(error);
       }
     }
+
 
     if(_avatar && subnameResponse){
       try {
@@ -801,6 +865,13 @@ export class BasedClient extends Client {
     return basedClient;
   }
 
+  async subnameByAddress(address: string) {
+    const justaname = JustaName.init();
+
+    const subnames = await justaname.subnames.getSubnamesByAddress({ address: address, chainId: 1, })
+
+    return subnames.subnames.length > 0 ? subnames.subnames[0] : undefined;
+  }
 }
 
 export default BasedClient;

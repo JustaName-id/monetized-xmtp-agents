@@ -4,10 +4,10 @@
   "files": [],
   "references": [
     {
-      "path": "./apps/xmtp-basement"
+      "path": "./apps/hub"
     },
     {
-      "path": "./agents/xmtp-ens-agent"
+      "path": "./agents/xmtp-gm-agent"
     },
     {
       "path": "./libs/xmtp-extended-client"
@@ -19,7 +19,7 @@
       "path": "./libs/spend-permission"
     },
     {
-      "path": "./libs/xmtp-react-sdk"
+      "path": "./agents/xmtp-ens-agent"
     }
   ]
 }

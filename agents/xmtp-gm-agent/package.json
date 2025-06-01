@@ -1,5 +1,5 @@
 {
-  "name": "@agenthub/xmtp-ens-agent",
+  "name": "@agenthub/xmtp-gm-agent",
   "version": "0.0.1",
   "private": true,
   "type": "module",

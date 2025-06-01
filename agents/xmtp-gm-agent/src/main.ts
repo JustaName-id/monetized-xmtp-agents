@@ -9,7 +9,7 @@ import {
 import { type XmtpEnv } from '@xmtp/node-sdk';
 import BasedClient from '@agenthub/xmtp-extended-client';
 
-const WALLET_PATH = 'wallet1.json';
+const WALLET_PATH = 'wallet.json';
 
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db

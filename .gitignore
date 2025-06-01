@@ -48,6 +48,7 @@ Thumbs.db
 out
 
 xmtp-dev-*.db3*
+xmtp-production-*.db3*
 .cursor
 .vscode
 
