@@ -17,6 +17,7 @@ import React from 'react';
 import { useXMTP } from '@/context/XMTPContext';
 import { Button } from '@/components/ui';
 import {useSubscription} from "@/query/subscription";
+import Link from 'next/link';
 
 export function AppSidebar() {
   const { conversations, isLoading } = useConversations();
@@ -33,28 +34,28 @@ export function AppSidebar() {
                 { (validSubscriptions && validSubscriptions.length > 0) &&
                   <SidebarMenuItem >
                     <SidebarMenuButton asChild>
-                      <a href={"/chat"}>
+                      <Link href="/chat">
                         <PenIcon />
                         <span>New Chat</span>
-                      </a>
+                      </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 }
 
                 <SidebarMenuItem >
                   <SidebarMenuButton asChild>
-                    <a href={'/my-agents'}>
+                    <Link href="/my-agents">
                       <ProfileIcon />
                       <span>My Agents</span>
-                    </a>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild>
-                    <a href={"/"}>
+                    <Link href="/">
                       <ExploreIcon />
                       <span>Explore</span>
-                    </a>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
             </SidebarMenu>

@@ -1,7 +1,13 @@
-'use client'
 
 import Agents from '@/components/Agents';
-export default function Index() {
+export async function generateMetadata() {
+  return {
+    title: 'XMTP Agent Hub',
+    description: 'Welcome to your XMTP agent hub!',
+  };
+}
+
+export default async function Index() {
 
   return (
     <div>

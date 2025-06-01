@@ -1,12 +1,12 @@
 import { Client, type ClientOptions, type Signer } from "@xmtp/browser-sdk";
 import type { GroupUpdated } from "@xmtp/content-type-group-updated";
 import {
-    createContext,
-    useCallback,
-    useContext,
-    useMemo,
-    useRef,
-    useState,
+  createContext,
+  useCallback,
+  useContext, useEffect,
+  useMemo,
+  useRef,
+  useState,
 } from "react";
 import {useAccount, useSignMessage, useSwitchChain} from "wagmi";
 import { baseSepolia, mainnet } from "wagmi/chains";
@@ -69,7 +69,7 @@ export const XMTPProvider: React.FC<XMTPProviderProps> = ({
     const [client, setClient] = useState<Client | undefined>(
         initialClient,
     );
-    const { address } = useAccount()
+    const { address, isConnected } = useAccount()
     const { switchChainAsync } = useSwitchChain();
     const { signMessageAsync } = useSignMessage()
     const {
@@ -162,7 +162,15 @@ export const XMTPProvider: React.FC<XMTPProviderProps> = ({
         [connect,client, initialize, isInitializing, error, disconnect],
     );
 
-    return <XMTPContext.Provider value={value}>{children}</XMTPContext.Provider>;
+
+    useEffect(() => {
+      if (!isConnected && !client && !isInitializing) {
+        return;
+      }
+      connect()
+    }, [isConnected, connect, client, isInitializing]);
+
+  return <XMTPContext.Provider value={value}>{children}</XMTPContext.Provider>;
 };
 
 export const useXMTP = () => {

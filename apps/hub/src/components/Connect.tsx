@@ -5,7 +5,7 @@ import { clientEnv } from "@/utils/config/clientEnv";
 import { formatAddress } from "@/utils/helpers/formatAddress";
 import { useAccountSubnames } from '@justaname.id/react';
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
 import {
   Avatar,
@@ -23,7 +23,6 @@ import {
   TooltipTrigger,
 } from "./ui";
 import {useChatBased} from "@/providers/ChatBasedProvider";
-import {useXMTP} from "@/context/XMTPContext";
 
 
 export default function Connect() {
@@ -31,7 +30,6 @@ export default function Connect() {
   const { connectors, connect: connectWallet } = useConnect();
   const { disconnect } = useDisconnect();
   const { handleOpenClaim } = useChatBased()
-  const { connect: connectXMTP } = useXMTP();
   const { accountSubnames } = useAccountSubnames();
   const [tooltipOpen, setTooltipOpen] = useState(false);
   const [tooltipText, setTooltipText] = useState("Copy");
@@ -41,14 +39,6 @@ export default function Connect() {
   const claimedSubname = useMemo(() =>
     accountSubnames.find(subname => subname.ens.endsWith(clientEnv.userEnsDomain))
     , [accountSubnames]);
-
-  useEffect(() => {
-    if (!account.address) {
-      return;
-    }
-    connectXMTP()
-  }, [account.address, connectXMTP]);
-
 
   return (
     <div className="flex flex-col bg-background font-sans">

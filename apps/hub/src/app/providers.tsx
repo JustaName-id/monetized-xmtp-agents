@@ -41,6 +41,12 @@ export function Providers(props: {
       <WagmiProvider config={config} initialState={props.initialState}>
         <QueryClientProvider client={queryClient}>
           <JustWeb3Provider config={{
+            networks: [
+              {
+                chainId: 1,
+                providerUrl: 'https://eth.drpc.org'
+              }
+            ],
             openOnWalletConnect: false
           }}>
             <OnchainKitProvider
