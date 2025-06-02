@@ -1,33 +1,26 @@
 'use client'
+import { useAgentDetails } from "@/hooks/use-agent-details";
 import { UsdcIcon } from "@/lib/icons";
+import { clientEnv } from "@/utils/config/clientEnv";
+import { useAddressSubnames } from "@justaname.id/react";
+import { useMemo } from "react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger, Button } from "./ui";
 import { Avatar, AvatarImage } from "./ui/avatar";
 import { Badge } from "./ui/badge";
-import {useAddressSubnames} from "@justaname.id/react";
-import {useMemo} from "react";
-import {clientEnv} from "@/utils/config/clientEnv";
-import {useAgentDetails} from "@/hooks/use-agent-details";
 
 export interface AgentProps {
-  address: string;
-    // subname: string;
-    // avatar: string;
-    // price: number;
-    // description: string;
-    // tags: string[];
-    // consumption: number;
-
+    address: string;
 }
 
 export const MyAgentCard: React.FC<AgentProps> = ({ address }) => {
 
-    const { addressSubnames} = useAddressSubnames({
-      address,
-      chainId:1
+    const { addressSubnames } = useAddressSubnames({
+        address,
+        chainId: 1
     })
-    const agentSubname = useMemo(()=> {
-      return addressSubnames.find(({ens})=>ens.endsWith(clientEnv.xmtpAgentEnsDomain))
-    },[addressSubnames])
+    const agentSubname = useMemo(() => {
+        return addressSubnames.find(({ ens }) => ens.endsWith(clientEnv.xmtpAgentEnsDomain))
+    }, [addressSubnames])
     const {
         avatar,
         description,

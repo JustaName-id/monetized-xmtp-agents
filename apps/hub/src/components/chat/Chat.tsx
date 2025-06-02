@@ -67,6 +67,7 @@ export const Chat: React.FC<ChatProps> = ({ conversationId, agentName }) => {
   const { accountSubnames, isAccountSubnamesLoading } = useAccountSubnames();
   const { isConnected, isInitializing } = useXMTP();
   const { validSubscriptions, isSubscriptionsPending } = useSubscription();
+
   const isSubscribed = useMemo(() => {
     return (
       validSubscriptions?.some(
@@ -88,7 +89,7 @@ export const Chat: React.FC<ChatProps> = ({ conversationId, agentName }) => {
     [accountSubnames]
   );
   const { isIdentityPending } = useIdentity();
-  const { newGroupWithIdentifiers, isLoading } = useConversations();
+  const { newGroupWithIdentifiers, isLoading, syncAll } = useConversations();
   const router = useRouter();
 
   const handleNewMessage = async (message: string) => {
@@ -105,6 +106,7 @@ export const Chat: React.FC<ChatProps> = ({ conversationId, agentName }) => {
 
     await group?.send(message);
     await group?.sync();
+    await syncAll();
     router.push(`/chat/${group?.id}`);
   };
 

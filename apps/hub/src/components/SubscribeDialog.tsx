@@ -16,6 +16,7 @@ interface SubscribeDialogProps {
 export const SubscribeDialog = ({ open, onOpenChange, agentName, avatar, fees, spender }: SubscribeDialogProps) => {
     const [allowance, setAllowance] = useState(0);
     const [displayValueForInput, setDisplayValueForInput] = useState<string>("");
+    const { refetch } = useSubscription();
 
     const { subscribe, isSubscribingPending } = useSubscription()
 
@@ -26,6 +27,7 @@ export const SubscribeDialog = ({ open, onOpenChange, agentName, avatar, fees, s
         })
         if (result.status === "success") {
             onOpenChange(false)
+            refetch()
         }
     }
 

@@ -1,12 +1,13 @@
 'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, useEffect } from 'react';
 import { Navbar } from './navbar';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { Inter } from 'next/font/google';
 import { AppSidebar } from './sidebar';
 import { useAccount } from 'wagmi';
-import {useIdentity} from "@/hooks/xmtp";
+import { useIdentity } from "@/hooks/xmtp";
+import { usePathname, useRouter } from 'next/navigation';
 
 interface LayoutProps {
   children: ReactNode;
@@ -15,8 +16,22 @@ interface LayoutProps {
 const inter = Inter({ subsets: ['latin'] });
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const { isConnected } = useAccount();
+  const { isConnected, isConnecting } = useAccount();
+  const pathname = usePathname();
+  const router = useRouter();
   useIdentity()
+
+  const CheckAccountStatus = () => {
+    if (!isConnected && !isConnecting && pathname !== '/') {
+      router.push('/');
+    }
+  }
+
+  useEffect(() => {
+    CheckAccountStatus();
+  }, [isConnected, isConnecting, pathname]);
+
+
   return (
     <SidebarProvider>
       {isConnected && <AppSidebar />}
