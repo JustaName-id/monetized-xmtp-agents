@@ -20,6 +20,9 @@
     },
     {
       "path": "./agents/xmtp-ens-agent"
+    },
+    {
+      "path": "./agents/xmtp-horoscope-agent"
     }
   ]
 }

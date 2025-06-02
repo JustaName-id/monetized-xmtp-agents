@@ -1,0 +1,67 @@
+{
+  "name": "@agenthub/xmtp-horoscope-agent",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "nx": {
+    "targets": {
+      "build": {
+        "executor": "@nx/esbuild:esbuild",
+        "outputs": [
+          "{options.outputPath}"
+        ],
+        "defaultConfiguration": "production",
+        "options": {
+          "platform": "node",
+          "outputPath": "agents/xmtp-horoscope-agent/dist",
+          "format": [
+            "esm"
+          ],
+          "bundle": false,
+          "main": "agents/xmtp-horoscope-agent/src/main.ts",
+          "tsConfig": "agents/xmtp-horoscope-agent/tsconfig.app.json",
+          "assets": [
+            "agents/xmtp-horoscope-agent/src/assets"
+          ],
+          "esbuildOptions": {
+            "sourcemap": true,
+            "outExtension": {
+              ".js": ".js"
+            }
+          }
+        },
+        "configurations": {
+          "development": {},
+          "production": {
+            "esbuildOptions": {
+              "sourcemap": false,
+              "outExtension": {
+                ".js": ".js"
+              }
+            }
+          }
+        }
+      },
+      "serve": {
+        "continuous": true,
+        "executor": "@nx/js:node",
+        "defaultConfiguration": "development",
+        "dependsOn": [
+          "build"
+        ],
+        "options": {
+          "buildTarget": "@agenthub/xmtp-horoscope-agent:build",
+          "runBuildTargetDependencies": false
+        },
+        "configurations": {
+          "development": {
+            "buildTarget": "@agenthub/xmtp-horoscope-agent:build:development"
+          },
+          "production": {
+            "buildTarget": "@agenthub/xmtp-horoscope-agent:build:production"
+          }
+        }
+      }
+    }
+  }
+}
