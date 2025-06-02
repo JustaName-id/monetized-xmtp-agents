@@ -108,6 +108,9 @@ export function useSubscription() {
       refetch();
       return response.data
     },
+    onSuccess: () => {
+      refetch();
+    }
   });
 
   return {

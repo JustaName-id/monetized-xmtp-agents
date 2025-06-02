@@ -150,7 +150,7 @@ async function collectFees(
             end: Math.floor(new Date(spendPermission.end).getTime() / 1000),
             extraData: spendPermission.extraData as `0x${string}`,
           },
-          BigInt(1),
+          parseUnits(basedClient.fees.toString(), 6),
         ],
       },
     ];

@@ -104,6 +104,7 @@ export const Chat: React.FC<ChatProps> = ({ conversationId, agentName }) => {
     ]);
 
     await group?.send(message);
+    await group?.sync();
     router.push(`/chat/${group?.id}`);
   };
 

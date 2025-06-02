@@ -2,12 +2,18 @@ import {useQuery} from "@tanstack/react-query";
 import {Conversation} from "@xmtp/browser-sdk";
 
 
+const membersKeys = {
+  all: ['members'] as const,
+  conversation: (id: string) => [...membersKeys.all,"conversation", id] as const,
+};
+
 export const useMembers = (conversation?: Conversation) => {
   const {
     data,
-    isLoading
+    isLoading,
+    refetch
   } = useQuery({
-    queryKey: ['members', conversation?.id],
+    queryKey: membersKeys.conversation(conversation?.id || ""),
     queryFn: async () => {
       return conversation?.members();
     },
@@ -16,6 +22,7 @@ export const useMembers = (conversation?: Conversation) => {
 
   return {
     members: data,
-    isMembersLoading: isLoading
+    isMembersLoading: isLoading,
+    refetchMembers: refetch
   }
 }

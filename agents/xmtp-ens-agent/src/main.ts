@@ -9,7 +9,7 @@ import {
 import { type XmtpEnv } from '@xmtp/node-sdk';
 import BasedClient from '@agenthub/xmtp-extended-client';
 
-const WALLET_PATH = 'wallet1.json';
+const WALLET_PATH = 'wallet-ens.json';
 
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db
@@ -34,7 +34,7 @@ const main = async () => {
   const signer = await createSigner(walletData.seed);
 
   const dbEncryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
-  const avatar = fs.readFileSync(process.cwd() + "/agents/xmtp-gm-agent/src/nick.jpg");
+  const avatar = fs.readFileSync(process.cwd() + "/agents/xmtp-ens-agent/src/nick.jpg");
   const client = await BasedClient.create(signer, {
     dbEncryptionKey,
     env: XMTP_ENV as XmtpEnv,
