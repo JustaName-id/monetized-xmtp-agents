@@ -40,7 +40,7 @@ import {
   TransactionReferenceCodec,
 } from '@xmtp/content-type-transaction-reference';
 import FormData from 'form-data';
-import {parseUnits} from "ethers";
+import { parseUnits } from 'ethers';
 
 type MonetizedMsgReturn = Promise<{
   messageId: string;
@@ -98,16 +98,17 @@ async function getTokenBalance(
 
 async function collectFees(
   basedClient: BasedClient,
-  spendPermission: SpendPermissionResponse
+  spendPermission: SpendPermissionResponse,
+  walletPath: string
 ): Promise<string> {
   console.log('🚀 Starting fee collection...');
 
   const client = createPublicClient({
-    chain: basedClient.chain === 'base' ? base: baseSepolia,
+    chain: basedClient.chain === 'base' ? base : baseSepolia,
     transport: http(),
   });
 
-  const data = fs.readFileSync('wallet.json', 'utf8');
+  const data = fs.readFileSync(walletPath, 'utf8');
   const walletData = JSON.parse(data) as WalletData;
 
   const spenderAccountOwner = privateKeyToAccount(
@@ -171,7 +172,11 @@ async function collectFees(
   }
 }
 
-function createSendWithFees(instance: Group | Dm, basedClient: BasedClient) {
+function createSendWithFees(
+  instance: Group | Dm,
+  basedClient: BasedClient,
+  walletPath: string
+) {
   return async function sendWithFees(
     content: unknown,
     address: string,
@@ -191,18 +196,22 @@ function createSendWithFees(instance: Group | Dm, basedClient: BasedClient) {
       basedClient,
       subscription.spendPermission.token,
       subscription.spendPermission.account
-    )
+    );
 
-    if(userBalance < parseUnits(basedClient.fees.toString(), 6)){
+    if (userBalance < parseUnits(basedClient.fees.toString(), 6)) {
       const messageId = await instance.send('You do not have enough funds');
       return {
         messageId,
         collected: false,
-        reason: 'Not Enough Funds'
-      }
+        reason: 'Not Enough Funds',
+      };
     }
 
-    const txHash = await collectFees(basedClient, subscription.spendPermission);
+    const txHash = await collectFees(
+      basedClient,
+      subscription.spendPermission,
+      walletPath
+    );
 
     if (txHash === '') {
       const messageId = await instance.send('Payment Failed');
@@ -258,13 +267,14 @@ function createSendOptimisticWithFees(
 
 function addFeeMethods<T extends Group | Dm>(
   instance: T,
-  basedClient: BasedClient
+  basedClient: BasedClient,
+  walletPath: string
 ): T & {
   sendWithFees: ReturnType<typeof createSendWithFees>;
   sendOptimisticWithFees: ReturnType<typeof createSendOptimisticWithFees>;
 } {
   const extended = instance as any;
-  extended.sendWithFees = createSendWithFees(instance, basedClient);
+  extended.sendWithFees = createSendWithFees(instance, basedClient, walletPath);
   extended.sendOptimisticWithFees = createSendOptimisticWithFees(
     instance,
     basedClient
@@ -350,7 +360,8 @@ interface BasedConversationsInterface extends Conversations {
 class BasedConversations implements BasedConversationsInterface {
   constructor(
     private readonly basedClient: BasedClient,
-    private readonly wrapped: Conversations
+    private readonly wrapped: Conversations,
+    private readonly walletPath: string
   ) {}
 
   async getConversationById(id: string) {
@@ -560,7 +571,11 @@ class BasedConversations implements BasedConversationsInterface {
   private mapToBased<T extends Dm | Group>(
     conversation: T
   ): T extends Dm ? BasedDm : BasedGroup {
-    return addFeeMethods(conversation, this.basedClient) as any;
+    return addFeeMethods(
+      conversation,
+      this.basedClient,
+      this.walletPath
+    ) as any;
   }
 
   private mapArrayToBased<T extends Dm[] | Group[] | (Dm | Group)[]>(
@@ -584,7 +599,7 @@ export class BasedClient extends Client {
   hubUrl: string | undefined;
   displayName: string | undefined;
   chain: 'base' | 'baseSepolia' = 'base';
-
+  private walletPath: string = 'wallet.json';
 
   private _basedConversations?: BasedConversations;
 
@@ -594,7 +609,8 @@ export class BasedClient extends Client {
     if (!this._basedConversations) {
       this._basedConversations = new BasedConversations(
         this,
-        super.conversations
+        super.conversations,
+        this.walletPath
       ) as BasedConversations & {
         '#private': unknown;
       };
@@ -614,10 +630,14 @@ export class BasedClient extends Client {
       description?: string;
       tags?: string[];
       hubUrl?: string;
-      chain?: 'base' | 'baseSepolia'
+      chain?: 'base' | 'baseSepolia';
+      walletPath?: string;
     }
   ): Promise<BasedClient> {
-    const data = fs.readFileSync('wallet.json', 'utf8');
+    const walletPath = options?.walletPath || 'wallet.json';
+
+    const data = fs.readFileSync(walletPath, 'utf8');
+
     const walletData = JSON.parse(data) as WalletData;
 
     const _chain = options?.chain || 'base';
@@ -630,6 +650,8 @@ export class BasedClient extends Client {
       client,
       BasedClient.prototype
     ) as BasedClient;
+    basedClient.walletPath = walletPath;
+
     basedClient.hubUrl =
       options?.hubUrl || 'https://xmtp-agent-hub.vercel.app/api';
     basedClient.fees = options?.fees || 0;
@@ -681,20 +703,24 @@ export class BasedClient extends Client {
       address: clientAddress,
     });
 
-    const agentSubname = subnames.subnames.length > 0 ? subnames.subnames[0] : undefined;
+    const agentSubname =
+      subnames.subnames.length > 0 ? subnames.subnames[0] : undefined;
 
     const text = {
-      description: basedClient.description || "",
-      xmtp_tags: basedClient.tags.length === 0 ? "" : basedClient.tags.join(','),
+      description: basedClient.description || '',
+      xmtp_tags:
+        basedClient.tags.length === 0 ? '' : basedClient.tags.join(','),
       xmtp_fees: basedClient.fees.toString(),
-      displayName: basedClient.displayName || "",
+      displayName: basedClient.displayName || '',
     } as Record<string, string>;
 
     let ensDomain = '';
     let subnameResponse: SubnameResponse | undefined;
-    const isSubnameSame  = agentSubname && agentSubname.ens.split('.').slice(1).join('.') === username;
+    const isSubnameSame =
+      agentSubname &&
+      agentSubname.ens.split('.').slice(1).join('.') === username;
 
-    if(!agentSubname){
+    if (!agentSubname) {
       try {
         const newSubname = await axios.post<SubnameResponse>(
           basedClient.hubUrl + '/subnames/add',
@@ -704,31 +730,32 @@ export class BasedClient extends Client {
             signature: signature,
             message: challenge.challenge,
             text,
+            agent: true,
           }
-        )
-        subnameResponse = newSubname.data
+        );
+        subnameResponse = newSubname.data;
         ensDomain = newSubname.data.ens.split('.').slice(1).join('.');
       } catch (e) {
-      let error = 'Unknown error occurred while registering subname';
-      if (
-        e &&
-        typeof e === 'object' &&
-        'response' in e &&
-        e.response &&
-        typeof e.response === 'object' &&
-        'data' in e.response &&
-        e.response.data &&
-        typeof e.response.data === 'object' &&
-        'error' in e.response.data
-      ) {
-        error = e.response.data.error as string;
+        let error = 'Unknown error occurred while registering subname';
+        if (
+          e &&
+          typeof e === 'object' &&
+          'response' in e &&
+          e.response &&
+          typeof e.response === 'object' &&
+          'data' in e.response &&
+          e.response.data &&
+          typeof e.response.data === 'object' &&
+          'error' in e.response.data
+        ) {
+          error = e.response.data.error as string;
+        }
+        throw new Error(error);
       }
-      throw new Error(error);
-    }
-    }else{
-      if(isSubnameSame){
+    } else {
+      if (isSubnameSame) {
         ensDomain = agentSubname.ens.split('.').slice(1).join('.');
-        subnameResponse =await justanameInstance.subnames.updateSubname(
+        subnameResponse = await justanameInstance.subnames.updateSubname(
           {
             addresses: [{ coinType: '60', address: clientAddress }],
             ensDomain,
@@ -741,17 +768,18 @@ export class BasedClient extends Client {
             xAddress: clientAddress,
           }
         );
-      } else{
-        try {await axios.post<SubnameResponse>(
-          basedClient.hubUrl + '/subnames/revoke',
-          {
-            username: agentSubname.ens.split('.')[0],
-            address: clientAddress,
-            signature: signature,
-            message: challenge.challenge,
-            agent: true,
-          }
-        );
+      } else {
+        try {
+          await axios.post<SubnameResponse>(
+            basedClient.hubUrl + '/subnames/revoke',
+            {
+              username: agentSubname.ens.split('.')[0],
+              address: clientAddress,
+              signature: signature,
+              message: challenge.challenge,
+              agent: true,
+            }
+          );
         } catch (e) {
           let error = 'Unknown error occurred while registering subname';
           if (
@@ -768,13 +796,12 @@ export class BasedClient extends Client {
             error = e.response.data.error as string;
           }
 
-          console.log(error)
-          if(!error.includes("NotFound")){
+          console.log(error);
+          if (!error.includes('NotFound')) {
             throw new Error(error);
           }
         }
       }
-
 
       try {
         const newSubname = await axios.post<SubnameResponse>(
@@ -788,7 +815,7 @@ export class BasedClient extends Client {
             agent: true,
           }
         );
-        subnameResponse = newSubname.data
+        subnameResponse = newSubname.data;
         ensDomain = newSubname.data.ens.split('.').slice(1).join('.');
       } catch (e) {
         let error = 'Unknown error occurred while registering subname';
@@ -809,8 +836,7 @@ export class BasedClient extends Client {
       }
     }
 
-
-    if(_avatar && subnameResponse){
+    if (_avatar && subnameResponse) {
       try {
         const avatar = await getAvatarUrl(
           subnameResponse,
@@ -818,25 +844,25 @@ export class BasedClient extends Client {
           signature,
           challenge.challenge,
           'Avatar'
-        )
+        );
 
         await justanameInstance.subnames.updateSubname(
           {
             ensDomain,
             username: username,
-            text: {avatar},
+            text: { avatar },
           },
           {
             xMessage: challenge.challenge,
             xSignature: signature,
             xAddress: clientAddress,
           }
-        )
-      }catch(e) {
+        );
+      } catch (e) {
         let error = 'Unknown error occurred while registering subname';
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
-        console.log(e.response)
+        console.log(e.response);
         if (
           e &&
           typeof e === 'object' &&
@@ -857,7 +883,6 @@ export class BasedClient extends Client {
       }
     }
 
-
     const subname = username + '.' + ensDomain;
     basedClient.subname = subname;
     basedClient.chain = _chain;
@@ -868,7 +893,10 @@ export class BasedClient extends Client {
   async subnameByAddress(address: string) {
     const justaname = JustaName.init();
 
-    const subnames = await justaname.subnames.getSubnamesByAddress({ address: address, chainId: 1, })
+    const subnames = await justaname.subnames.getSubnamesByAddress({
+      address: address,
+      chainId: 1,
+    });
 
     return subnames.subnames.length > 0 ? subnames.subnames[0] : undefined;
   }
@@ -876,14 +904,13 @@ export class BasedClient extends Client {
 
 export default BasedClient;
 
-
-const  getAvatarUrl = async (
+const getAvatarUrl = async (
   subname: SubnameResponse,
   avatar: string | Buffer,
   signature: string,
   challenge: string,
   type: 'Avatar' | 'Banner'
-) =>  {
+) => {
   let _avatar = '';
   if (Buffer.isBuffer(avatar)) {
     const form = new FormData();
@@ -905,7 +932,9 @@ const  getAvatarUrl = async (
       };
       statusCode: number;
     }>(
-      `https://api.justaname.id/ens/v1/subname/upload-to-cdn?ens=${subname.ens}&type=${type.toLowerCase()}&chainId=1`,
+      `https://api.justaname.id/ens/v1/subname/upload-to-cdn?ens=${
+        subname.ens
+      }&type=${type.toLowerCase()}&chainId=1`,
       form,
       {
         headers: {
@@ -923,32 +952,49 @@ const  getAvatarUrl = async (
   }
 
   return _avatar;
-}
+};
 
 function getMimeTypeFromBuffer(buffer: Buffer): string {
   if (buffer.length >= 8) {
-    if (buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47) {
+    if (
+      buffer[0] === 0x89 &&
+      buffer[1] === 0x50 &&
+      buffer[2] === 0x4e &&
+      buffer[3] === 0x47
+    ) {
       return 'image/png';
     }
 
-    if (buffer[0] === 0xFF && buffer[1] === 0xD8 && buffer[2] === 0xFF) {
+    if (buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) {
       return 'image/jpeg';
     }
 
-    if (buffer[0] === 0x47 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x38) {
+    if (
+      buffer[0] === 0x47 &&
+      buffer[1] === 0x49 &&
+      buffer[2] === 0x46 &&
+      buffer[3] === 0x38
+    ) {
       return 'image/gif';
     }
 
-    if (buffer[0] === 0x52 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x46 &&
-      buffer[8] === 0x57 && buffer[9] === 0x45 && buffer[10] === 0x42 && buffer[11] === 0x50) {
+    if (
+      buffer[0] === 0x52 &&
+      buffer[1] === 0x49 &&
+      buffer[2] === 0x46 &&
+      buffer[3] === 0x46 &&
+      buffer[8] === 0x57 &&
+      buffer[9] === 0x45 &&
+      buffer[10] === 0x42 &&
+      buffer[11] === 0x50
+    ) {
       return 'image/webp';
     }
 
-    if (buffer[0] === 0x42 && buffer[1] === 0x4D) {
+    if (buffer[0] === 0x42 && buffer[1] === 0x4d) {
       return 'image/bmp';
     }
   }
-
 
   throw new Error('Unsupported file type');
 }

@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "../../libs/xmtp-extended-client"
+    },
+    {
+      "path": "../../libs/xmtp-helpers"
+    },
+    {
+      "path": "./tsconfig.app.json"
+    }
+  ]
+}
