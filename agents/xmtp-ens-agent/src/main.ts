@@ -1,35 +1,56 @@
+import fs from 'fs';
+import { Coinbase, Wallet, type WalletData } from '@coinbase/coinbase-sdk';
 import {
   createSigner,
   getEncryptionKeyFromHex,
   logAgentDetails,
   validateEnvironment,
-} from "@xmtpbasement/xmtp-helpers";
-import { type XmtpEnv } from "@xmtp/node-sdk";
-import {BasedClient} from "@xmtpbasement/xmtp-extended-client";
+} from '@agenthub/xmtp-helpers';
+import { type XmtpEnv } from '@xmtp/node-sdk';
+import BasedClient from '@agenthub/xmtp-extended-client';
+
+const WALLET_PATH = 'wallet-ens.json';
 
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db
  * that stores your agent's messages */
-const { WALLET_KEY, ENCRYPTION_KEY, XMTP_ENV } = validateEnvironment([
-  "WALLET_KEY",
-  "ENCRYPTION_KEY",
+const {
+  XMTP_ENV,
+  ENCRYPTION_KEY,
+  NETWORK_ID,
+  CDP_API_KEY_NAME,
+  CDP_API_KEY_PRIVATE_KEY,
+} = validateEnvironment([
   "XMTP_ENV",
+  "ENCRYPTION_KEY",
+  "NETWORK_ID",
+  "CDP_API_KEY_NAME",
+  "CDP_API_KEY_PRIVATE_KEY",
 ]);
 
-/* Create the signer using viem and parse the encryption key for the local db */
-const signer = createSigner(WALLET_KEY);
-const dbEncryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
+const main = async () => {
+  const walletData = await initializeWallet(WALLET_PATH);
+  /* Create the signer using viem and parse the encryption key for the local db */
+  const signer = await createSigner(walletData.seed);
 
-async function main() {
+  const dbEncryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
+  const avatar = fs.readFileSync(process.cwd() + "/agents/xmtp-ens-agent/src/nick.jpg");
   const client = await BasedClient.create(signer, {
     dbEncryptionKey,
     env: XMTP_ENV as XmtpEnv,
-    username: "xmtp-ens-agent",
-    fees: 0.01,
-    description:"This is a GM Agent"
+    username: 'gm',
+    avatar,
+    displayName: 'The GM Agent',
+    description: "Gm Agent",
+    fees: 0.05,
+    tags: ['gm'],
+    hubUrl: 'http://localhost:3000/api',
+    chain: 'baseSepolia'
   });
+
   void logAgentDetails(client);
 
+  /* Sync the conversations from the network to update the local db */
   console.log("✓ Syncing conversations...");
   await client.conversations.sync();
 
@@ -57,10 +78,58 @@ async function main() {
       message.senderInboxId,
     ]);
     const addressFromInboxId = inboxState[0].identifiers[0].identifier;
+    const subname = await client.subnameByAddress(addressFromInboxId)
+
     console.log(`Sending "gm" response to ${addressFromInboxId}...`);
-    await conversation.send("gm");
+    if(subname){
+      await conversation.sendWithFees(`gm ${subname.ens}`, addressFromInboxId);
+    }else{
+      await conversation.sendWithFees("gm", addressFromInboxId);
+    }
 
     console.log("Waiting for messages...");
+  }
+};
+
+/**
+ * Generates a random Smart Contract Wallet
+ * @param networkId - The network ID (e.g., 'base-sepolia', 'base-mainnet')
+ * @returns WalletData object containing all necessary wallet information
+ */
+
+async function initializeWallet(walletPath: string): Promise<WalletData> {
+  try {
+    let walletData: WalletData | null = null;
+    if (fs.existsSync(walletPath)) {
+      const data = fs.readFileSync(walletPath, "utf8");
+      walletData = JSON.parse(data) as WalletData;
+      return walletData;
+    } else {
+      console.log(`Creating wallet on network: ${NETWORK_ID}`);
+      Coinbase.configure({
+        apiKeyName: CDP_API_KEY_NAME,
+        privateKey: CDP_API_KEY_PRIVATE_KEY,
+      });
+      const wallet = await Wallet.create({
+        networkId: NETWORK_ID,
+      });
+
+      console.log("Wallet created successfully, exporting data...");
+      const data = wallet.export();
+      console.log("Getting default address...");
+      const walletInfo: WalletData = {
+        seed: data.seed || "",
+        walletId: wallet.getId() || "",
+        networkId: wallet.getNetworkId(),
+      };
+
+      fs.writeFileSync(walletPath, JSON.stringify(walletInfo, null, 2));
+      console.log(`Wallet data saved to ${walletPath}`);
+      return walletInfo;
+    }
+  } catch (error) {
+    console.error("Error creating wallet:", error);
+    throw error;
   }
 }
 

@@ -1,0 +1,67 @@
+{
+  "name": "@agenthub/xmtp-gm-agent",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "nx": {
+    "targets": {
+      "build": {
+        "executor": "@nx/esbuild:esbuild",
+        "outputs": [
+          "{options.outputPath}"
+        ],
+        "defaultConfiguration": "production",
+        "options": {
+          "platform": "node",
+          "outputPath": "agents/xmtp-gm-agent/dist",
+          "format": [
+            "esm"
+          ],
+          "bundle": false,
+          "main": "agents/xmtp-gm-agent/src/main.ts",
+          "tsConfig": "agents/xmtp-gm-agent/tsconfig.app.json",
+          "assets": [
+            "agents/xmtp-gm-agent/src/assets"
+          ],
+          "esbuildOptions": {
+            "sourcemap": true,
+            "outExtension": {
+              ".js": ".js"
+            }
+          }
+        },
+        "configurations": {
+          "development": {},
+          "production": {
+            "esbuildOptions": {
+              "sourcemap": false,
+              "outExtension": {
+                ".js": ".js"
+              }
+            }
+          }
+        }
+      },
+      "serve": {
+        "continuous": true,
+        "executor": "@nx/js:node",
+        "defaultConfiguration": "development",
+        "dependsOn": [
+          "build"
+        ],
+        "options": {
+          "buildTarget": "@agenthub/xmtp-gm-agent:build",
+          "runBuildTargetDependencies": false
+        },
+        "configurations": {
+          "development": {
+            "buildTarget": "@agenthub/xmtp-gm-agent:build:development"
+          },
+          "production": {
+            "buildTarget": "@agenthub/xmtp-gm-agent:build:production"
+          }
+        }
+      }
+    }
+  }
+}
