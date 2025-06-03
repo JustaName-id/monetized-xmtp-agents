@@ -1,5 +1,6 @@
 'use client';
-import { ChatCard } from '@/components/sidebar/ChatCard';
+import { ChatCard } from '@/layout/sidebar/ChatCard';
+import { Button } from '@/components/ui';
 import {
   Sidebar,
   SidebarContent,
@@ -11,53 +12,53 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { useConversations } from '@/hooks/xmtp/useConversations';
-import { ExploreIcon, LoadingIcon, PenIcon, ProfileIcon } from '@/lib/icons';
-import React from 'react';
 import { useXMTP } from '@/context/XMTPContext';
-import { Button } from '@/components/ui';
-import {useSubscription} from "@/query/subscription";
+import { useGroupedChats } from '@/query/xmtp/useGroupedChats';
+import { ExploreIcon, LoadingIcon, PenIcon, ProfileIcon } from '@/lib/icons';
+import { useSubscription } from "@/query/subscription";
 import Link from 'next/link';
 
 export function AppSidebar() {
-  const { conversations, isLoading } = useConversations();
+  // const { conversations, isLoading } = useConversations();
+  const { groupedChats, isLoading } = useGroupedChats();
   const { client, isInitializing, connect } = useXMTP();
   const { validSubscriptions } = useSubscription();
 
+  console.log(groupedChats)
   return (
     <Sidebar>
-      <SidebarHeader>XMTP Agents</SidebarHeader>
+      <SidebarHeader className='max-md:pb-8'>XMTP Agents</SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-                { (validSubscriptions && validSubscriptions.length > 0) &&
-                  <SidebarMenuItem >
-                    <SidebarMenuButton asChild>
-                      <Link href="/chat">
-                        <PenIcon />
-                        <span>New Chat</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                }
-
+              {(validSubscriptions && validSubscriptions.length > 0) &&
                 <SidebarMenuItem >
                   <SidebarMenuButton asChild>
-                    <Link href="/my-agents">
-                      <ProfileIcon />
-                      <span>My Agents</span>
+                    <Link href="/chat">
+                      <PenIcon />
+                      <span>New Chat</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
-                    <Link href="/">
-                      <ExploreIcon />
-                      <span>Explore</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+              }
+
+              <SidebarMenuItem >
+                <SidebarMenuButton asChild>
+                  <Link href="/my-agents">
+                    <ProfileIcon />
+                    <span>My Agents</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link href="/">
+                    <ExploreIcon />
+                    <span>Explore</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -69,15 +70,19 @@ export function AppSidebar() {
         )}
         {isInitializing ? null : client ? (
           <SidebarGroup>
-            <SidebarGroupLabel>Today</SidebarGroupLabel>
-            <SidebarGroupContent className="flex flex-col gap-2">
+            <SidebarGroupContent className="flex flex-col gap-2 flex-1 overflow-y-auto">
               {isLoading ? (
                 <div className="flex justify-center items-center h-full">
                   <LoadingIcon />
                 </div>
               ) : (
-                conversations.map((conversation) => (
-                  <ChatCard key={conversation.id} conversationId={conversation.id} />
+                groupedChats.map((group) => (
+                  <div className='flex flex-col gap-2' key={group.date}>
+                    <SidebarGroupLabel>{group.date}</SidebarGroupLabel>
+                    {group.chats.map((chat) => (
+                      <ChatCard key={chat.id} conversation={chat} />
+                    ))}
+                  </div>
                 ))
               )}
             </SidebarGroupContent>

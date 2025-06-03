@@ -1,10 +1,14 @@
-import {useQuery} from "@tanstack/react-query";
-import {Conversation} from "@xmtp/browser-sdk";
+import { useQuery } from "@tanstack/react-query";
+import { Conversation } from "@xmtp/browser-sdk";
 
+interface MembersKeys {
+  all: readonly ["members"];
+  conversation: (id: string) => readonly ["members", "conversation", string];
+}
 
-const membersKeys = {
+const membersKeys: MembersKeys = {
   all: ['members'] as const,
-  conversation: (id: string) => [...membersKeys.all,"conversation", id] as const,
+  conversation: (id: string) => [...membersKeys.all, "conversation", id] as const,
 };
 
 export const useMembers = (conversation?: Conversation) => {

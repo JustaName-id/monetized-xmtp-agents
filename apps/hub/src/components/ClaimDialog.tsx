@@ -1,10 +1,11 @@
-import { useState } from "react";
-import { Button, Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, Input } from "./ui"
-import { useAddSubname, useIsSubnameAvailable } from "@justaname.id/react";
-import { clientEnv } from "@/utils/config/clientEnv";
 import { LoadingIcon } from "@/lib/icons";
+import { clientEnv } from "@/utils/config/clientEnv";
+import { useAddSubname, useIsSubnameAvailable } from "@justaname.id/react";
+import { useJustWeb3 } from "@justweb3/widget";
+import { useState } from "react";
 import { useSwitchChain } from "wagmi";
 import { mainnet } from "wagmi/chains";
+import { Button, Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, Input } from "./ui";
 
 interface ClaimDialogProps {
     open: boolean;
@@ -20,7 +21,7 @@ export const ClaimDialog = ({ open, onOpenChange }: ClaimDialogProps) => {
         ensDomain: clientEnv.userEnsDomain,
         chainId: mainnet.id,
     });
-
+    const { refreshEnsAuth } = useJustWeb3();
     const { switchChainAsync, isPending: isSwitchChainPending } = useSwitchChain();
 
     const handleClaim = async () => {
@@ -30,7 +31,9 @@ export const ClaimDialog = ({ open, onOpenChange }: ClaimDialogProps) => {
             ensDomain: clientEnv.userEnsDomain,
             chainId: mainnet.id,
         });
+        await switchChainAsync({ chainId: clientEnv.baseNetwork.id as 8453 | 84532 });
         onOpenChange(false);
+        refreshEnsAuth();
     }
 
     const isClaiming = isAddSubnamePending || isSwitchChainPending;

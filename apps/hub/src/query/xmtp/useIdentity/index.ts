@@ -1,17 +1,17 @@
+import { useXMTP } from '@/context/XMTPContext';
+import {
+  useMutation,
+  UseMutationResult,
+  useQuery,
+  useQueryClient,
+  UseQueryResult,
+} from '@tanstack/react-query';
 import type {
   Identifier,
   SafeInstallation,
   SafeKeyPackageStatus,
 } from '@xmtp/browser-sdk';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useXMTP } from '@/context/XMTPContext';
-import {
-  useQuery,
-  useMutation,
-  useQueryClient,
-  UseQueryResult,
-  UseMutationResult
-} from '@tanstack/react-query';
 
 export type Installation = SafeInstallation & {
   keyPackageStatus: SafeKeyPackageStatus | undefined;
@@ -38,7 +38,8 @@ const CACHE_TIME = 5 * 60 * 1000; // Keep in cache for 5 minutes
 const identityKeys = {
   all: ['identity'] as const,
   identity: (inboxId: string) => [...identityKeys.all, inboxId] as const,
-  installations: (inboxId: string) => [...identityKeys.identity(inboxId), 'installations'] as const,
+  installations: (inboxId: string) =>
+    [...identityKeys.identity(inboxId), 'installations'] as const,
 };
 
 export const useIdentity = (syncOnMount = false) => {
@@ -62,13 +63,13 @@ export const useIdentity = (syncOnMount = false) => {
   // Helper to update local state
   const updateState = useCallback((updates: Partial<IdentityState>) => {
     if (mountedRef.current) {
-      setState(prev => ({ ...prev, ...updates }));
+      setState((prev) => ({ ...prev, ...updates }));
     }
   }, []);
 
   // Check if sync is on cooldown
   const isSyncOnCooldown = useCallback(() => {
-    return state.lastSync && (Date.now() - state.lastSync) < SYNC_COOLDOWN;
+    return state.lastSync && Date.now() - state.lastSync < SYNC_COOLDOWN;
   }, [state.lastSync]);
 
   // Sort installations by timestamp (newest first)
@@ -88,24 +89,25 @@ export const useIdentity = (syncOnMount = false) => {
     queryKey: identityKeys.identity(clientInboxId || ''),
     queryFn: async (): Promise<IdentityData> => {
       if (!client) {
-        throw new Error("XMTP client is not initialized");
+        throw new Error('XMTP client is not initialized');
       }
 
       const inboxState = await client.preferences.inboxState(true);
 
       if (!mountedRef.current) {
-        throw new Error("Component unmounted");
+        throw new Error('Component unmounted');
       }
 
       const sortedInstallations = sortInstallations(inboxState.installations);
 
       // Get key package statuses for all installations
-      const keyPackageStatuses = await client.getKeyPackageStatusesForInstallationIds(
-        sortedInstallations.map((installation) => installation.id)
-      );
+      const keyPackageStatuses =
+        await client.getKeyPackageStatusesForInstallationIds(
+          sortedInstallations.map((installation) => installation.id)
+        );
 
       if (!mountedRef.current) {
-        throw new Error("Component unmounted");
+        throw new Error('Component unmounted');
       }
 
       const installationsWithStatus: Installation[] = sortedInstallations.map(
@@ -131,7 +133,10 @@ export const useIdentity = (syncOnMount = false) => {
     refetchOnMount: syncOnMount,
     retry: (failureCount, error) => {
       // Don't retry if it's a client availability error or component unmounted
-      if (error.message.includes('not initialized') || error.message.includes('unmounted')) {
+      if (
+        error.message.includes('not initialized') ||
+        error.message.includes('unmounted')
+      ) {
         return false;
       }
       return failureCount < 3;
@@ -139,16 +144,24 @@ export const useIdentity = (syncOnMount = false) => {
   });
 
   // Sync mutation (force refresh)
-  const syncMutation: UseMutationResult<IdentityData, Error, { force?: boolean } | undefined> = useMutation({
-    mutationFn: async ({ force = false }: { force?: boolean } = {}): Promise<IdentityData> => {
+  const syncMutation: UseMutationResult<
+    IdentityData,
+    Error,
+    { force?: boolean } | undefined
+  > = useMutation({
+    mutationFn: async ({
+      force = false,
+    }: { force?: boolean } = {}): Promise<IdentityData> => {
       if (!client || !clientInboxId) {
-        throw new Error("XMTP client is not initialized");
+        throw new Error('XMTP client is not initialized');
       }
 
       // Respect cooldown unless forced
       if (!force && isSyncOnCooldown()) {
         // Return cached data if available and not forcing
-        const cachedData = queryClient.getQueryData<IdentityData>(identityKeys.identity(clientInboxId));
+        const cachedData = queryClient.getQueryData<IdentityData>(
+          identityKeys.identity(clientInboxId)
+        );
         if (cachedData) {
           return cachedData;
         }
@@ -159,17 +172,19 @@ export const useIdentity = (syncOnMount = false) => {
         queryKey: identityKeys.identity(clientInboxId),
         queryFn: async () => {
           const inboxState = await client.preferences.inboxState(true);
-          const sortedInstallations = sortInstallations(inboxState.installations);
-          const keyPackageStatuses = await client.getKeyPackageStatusesForInstallationIds(
-            sortedInstallations.map((installation) => installation.id)
+          const sortedInstallations = sortInstallations(
+            inboxState.installations
           );
+          const keyPackageStatuses =
+            await client.getKeyPackageStatusesForInstallationIds(
+              sortedInstallations.map((installation) => installation.id)
+            );
 
-          const installationsWithStatus: Installation[] = sortedInstallations.map(
-            (installation) => ({
+          const installationsWithStatus: Installation[] =
+            sortedInstallations.map((installation) => ({
               ...installation,
               keyPackageStatus: keyPackageStatuses.get(installation.id),
-            })
-          );
+            }));
 
           updateState({ lastSync: Date.now() });
 
@@ -191,49 +206,54 @@ export const useIdentity = (syncOnMount = false) => {
   });
 
   // Revoke installation mutation
-  const revokeInstallationMutation: UseMutationResult<void, Error, Uint8Array> = useMutation({
-    mutationFn: async (installationIdBytes: Uint8Array): Promise<void> => {
-      if (!client) {
-        throw new Error("XMTP client is not initialized");
-      }
-
-      // Prevent duplicate revocations
-      if (revokePromiseRef.current) {
-        return revokePromiseRef.current;
-      }
-
-      updateState({ isRevoking: true, error: null });
-
-      const revokePromise = (async () => {
-        try {
-          await client.revokeInstallations([installationIdBytes]);
-        } finally {
-          updateState({ isRevoking: false });
-          revokePromiseRef.current = null;
+  const revokeInstallationMutation: UseMutationResult<void, Error, Uint8Array> =
+    useMutation({
+      mutationFn: async (installationIdBytes: Uint8Array): Promise<void> => {
+        if (!client) {
+          throw new Error('XMTP client is not initialized');
         }
-      })();
 
-      revokePromiseRef.current = revokePromise;
-      return revokePromise;
-    },
-    onError: (error: Error) => {
-      updateState({ error, isRevoking: false });
-    },
-    onSuccess: () => {
-      // Invalidate and refetch identity data after successful revocation
-      if (clientInboxId) {
-        queryClient.invalidateQueries({
-          queryKey: identityKeys.identity(clientInboxId)
-        });
-      }
-    },
-  });
+        // Prevent duplicate revocations
+        if (revokePromiseRef.current) {
+          return revokePromiseRef.current;
+        }
+
+        updateState({ isRevoking: true, error: null });
+
+        const revokePromise = (async () => {
+          try {
+            await client.revokeInstallations([installationIdBytes]);
+          } finally {
+            updateState({ isRevoking: false });
+            revokePromiseRef.current = null;
+          }
+        })();
+
+        revokePromiseRef.current = revokePromise;
+        return revokePromise;
+      },
+      onError: (error: Error) => {
+        updateState({ error, isRevoking: false });
+      },
+      onSuccess: () => {
+        // Invalidate and refetch identity data after successful revocation
+        if (clientInboxId) {
+          queryClient.invalidateQueries({
+            queryKey: identityKeys.identity(clientInboxId),
+          });
+        }
+      },
+    });
 
   // Revoke all other installations mutation
-  const revokeAllOtherInstallationsMutation: UseMutationResult<void, Error, void> = useMutation({
+  const revokeAllOtherInstallationsMutation: UseMutationResult<
+    void,
+    Error,
+    void
+  > = useMutation({
     mutationFn: async (): Promise<void> => {
       if (!client) {
-        throw new Error("XMTP client is not initialized");
+        throw new Error('XMTP client is not initialized');
       }
 
       // Prevent duplicate revocations
@@ -262,27 +282,31 @@ export const useIdentity = (syncOnMount = false) => {
       // Invalidate and refetch identity data after successful revocation
       if (clientInboxId) {
         queryClient.invalidateQueries({
-          queryKey: identityKeys.identity(clientInboxId)
+          queryKey: identityKeys.identity(clientInboxId),
         });
       }
     },
   });
 
   // Sync wrapper - uses mutation for force refresh, query refetch for normal sync
-  const sync = useCallback(async (force = false): Promise<void> => {
-    if (force) {
-      await syncMutation.mutateAsync({ force });
-    } else {
-      await identityQuery.refetch();
-    }
-  }, [syncMutation.mutateAsync, identityQuery.refetch]);
+  const sync = useCallback(
+    async (force = false): Promise<void> => {
+      if (force) {
+        await syncMutation.mutateAsync({ force });
+      } else {
+        await identityQuery.refetch();
+      }
+    },
+    [syncMutation.mutateAsync, identityQuery.refetch]
+  );
 
   // Revoke installation wrapper
-  const revokeInstallation = useCallback(async (
-    installationIdBytes: Uint8Array
-  ): Promise<void> => {
-    return revokeInstallationMutation.mutateAsync(installationIdBytes);
-  }, [revokeInstallationMutation.mutateAsync]);
+  const revokeInstallation = useCallback(
+    async (installationIdBytes: Uint8Array): Promise<void> => {
+      return revokeInstallationMutation.mutateAsync(installationIdBytes);
+    },
+    [revokeInstallationMutation.mutateAsync]
+  );
 
   // Revoke all other installations wrapper
   const revokeAllOtherInstallations = useCallback(async (): Promise<void> => {
@@ -300,23 +324,32 @@ export const useIdentity = (syncOnMount = false) => {
     syncMutation.reset();
     revokeInstallationMutation.reset();
     revokeAllOtherInstallationsMutation.reset();
-  }, [syncMutation.reset, revokeInstallationMutation.reset, revokeAllOtherInstallationsMutation.reset]);
+  }, [
+    syncMutation.reset,
+    revokeInstallationMutation.reset,
+    revokeAllOtherInstallationsMutation.reset,
+  ]);
 
-  const getInstallationById = useCallback((installationId: string) => {
-    return identityQuery.data?.installations.find(installation => installation.id === installationId);
-  }, [identityQuery.data?.installations]);
+  const getInstallationById = useCallback(
+    (installationId: string) => {
+      return identityQuery.data?.installations.find(
+        (installation) => installation.id === installationId
+      );
+    },
+    [identityQuery.data?.installations]
+  );
 
   const getCurrentInstallation = useCallback(() => {
     if (!client || !identityQuery.data) return null;
-    return identityQuery.data.installations.find(installation =>
-      installation.id === client.installationId
+    return identityQuery.data.installations.find(
+      (installation) => installation.id === client.installationId
     );
   }, [client, identityQuery.data?.installations]);
 
   const getOtherInstallations = useCallback(() => {
     if (!client || !identityQuery.data) return [];
-    return identityQuery.data.installations.filter(installation =>
-      installation.id !== client.installationId
+    return identityQuery.data.installations.filter(
+      (installation) => installation.id !== client.installationId
     );
   }, [client, identityQuery.data?.installations]);
 
@@ -332,15 +365,14 @@ export const useIdentity = (syncOnMount = false) => {
   useEffect(() => {
     mountedRef.current = true;
 
-
-
     return () => {
       mountedRef.current = false;
     };
   }, []);
 
   // Combine all errors
-  const combinedError = state.error ||
+  const combinedError =
+    state.error ||
     identityQuery.error ||
     syncMutation.error ||
     revokeInstallationMutation.error ||
@@ -357,11 +389,15 @@ export const useIdentity = (syncOnMount = false) => {
     isIdentityPending: identityQuery.isPending,
     isSyncing: identityQuery.isLoading || syncMutation.isPending,
     isLoaded: identityQuery.isSuccess,
-    isRevoking: state.isRevoking || revokeInstallationMutation.isPending || revokeAllOtherInstallationsMutation.isPending,
+    isRevoking:
+      state.isRevoking ||
+      revokeInstallationMutation.isPending ||
+      revokeAllOtherInstallationsMutation.isPending,
     error: combinedError,
 
     // Computed state
-    isEmpty: identityQuery.isSuccess && (identityQuery.data?.installations.length === 0),
+    isEmpty:
+      identityQuery.isSuccess && identityQuery.data?.installations.length === 0,
     hasInstallations: (identityQuery.data?.installations.length || 0) > 0,
     installationCount: identityQuery.data?.installations.length || 0,
     hasMultipleInstallations: hasMultipleInstallations(),

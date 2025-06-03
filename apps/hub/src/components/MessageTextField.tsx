@@ -5,7 +5,7 @@ import { Textarea } from "./ui/textarea";
 import { Button } from "./ui";
 import { Conversation } from "@xmtp/browser-sdk";
 import { useState } from "react";
-import { useConversation } from "@/hooks/xmtp";
+import { useConversation } from "../query/xmtp";
 
 export interface MessageTextFieldProps {
   onNewMessage?: (message: string) => void;

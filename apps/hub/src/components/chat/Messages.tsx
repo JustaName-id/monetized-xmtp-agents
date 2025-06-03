@@ -1,7 +1,7 @@
-import {useConversation, useIdentity} from "@/hooks/xmtp";
-import React from "react";
-import {MessageCard} from "@/components/MessageCard";
-import {Conversation} from "@xmtp/browser-sdk";
+import { MessageCard } from "@/components/MessageCard";
+import { useConversation, useIdentity } from "../../query/xmtp";
+import { Conversation } from "@xmtp/browser-sdk";
+import React, { useEffect, useRef } from "react";
 
 interface MessagesProps {
   conversation?: Conversation;
@@ -9,10 +9,18 @@ interface MessagesProps {
 
 export const Messages: React.FC<MessagesProps> = ({
   conversation,
-                         }) => {
-
+}) => {
+  const messagesEndRef = useRef<null | HTMLDivElement>(null);
   const { inboxId } = useIdentity()
   const { messages } = useConversation(conversation);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   return (
     <div className="flex flex-col gap-4 flex-1 overflow-y-scroll my-3">
@@ -23,6 +31,7 @@ export const Messages: React.FC<MessagesProps> = ({
           </React.Fragment>
         ))
       }
+      <div ref={messagesEndRef} />
     </div>
   )
 }

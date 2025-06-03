@@ -1,24 +1,24 @@
 import { useAgentDetails } from '@/hooks/use-agent-details';
-import { useAddressSubnames } from '@justaname.id/react';
-import Link from 'next/link';
-import { Avatar, AvatarImage } from '../ui/avatar';
-import { useMembers } from '@/hooks/xmtp/useMembers';
-import { useMemo} from 'react';
-import { useAccount } from 'wagmi';
+import { useConversation } from "../../query/xmtp";
+import { useMembers } from '@/query/xmtp/useMembers';
 import { clientEnv } from '@/utils/config/clientEnv';
-import {useConversation} from "@/hooks/xmtp";
-import { useParams } from 'next/navigation'
+import { useAddressSubnames } from '@justaname.id/react';
+import { Conversation } from '@xmtp/browser-sdk';
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
+import { useMemo } from 'react';
+import { useAccount } from 'wagmi';
+import { Avatar, AvatarImage } from '../../components/ui/avatar';
 
 export interface ChatCardProps {
-  conversationId: string;
+  conversation: Conversation;
 }
 
-export const ChatCard: React.FC<ChatCardProps> = ({ conversationId }) => {
+export const ChatCard: React.FC<ChatCardProps> = ({ conversation }) => {
   const { slug } = useParams()
 
   const { address } = useAccount();
 
-  const { conversation } = useConversation(conversationId)
   const { members } = useMembers(conversation);
   const agentMember = useMemo(() => {
     if (!members) return;
@@ -43,7 +43,7 @@ export const ChatCard: React.FC<ChatCardProps> = ({ conversationId }) => {
   const { avatar } = useAgentDetails(subname);
   const { latestStringMessage } = useConversation(subname ? conversation : undefined)
 
-  if(!subname) {
+  if (!subname) {
     return null
   }
 
@@ -51,7 +51,7 @@ export const ChatCard: React.FC<ChatCardProps> = ({ conversationId }) => {
     <Link
       href={`/chat/${conversation?.id}`}
       className={
-        `p-2.5 flex flex-col gap-0.5 border  ${slug === conversationId ? "border-foreground" : "border-background"} rounded-default bg-background cursor-pointer`
+        `p-2.5 flex flex-col gap-0.5 border  ${slug === conversation.id ? "border-foreground" : "border-background"} rounded-default bg-background cursor-pointer`
       }
     >
       <div className="flex flex-row gap-2 items-center">

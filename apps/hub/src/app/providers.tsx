@@ -1,18 +1,18 @@
 "use client";
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { baseSepolia } from "wagmi/chains";
+import { clientEnv } from "@/utils/config/clientEnv";
 import { OnchainKitProvider } from "@coinbase/onchainkit";
+import { JustWeb3Provider } from "@justweb3/widget";
+import "@justweb3/widget/styles.css";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { type ReactNode, useState } from "react";
 import { type State, WagmiProvider } from "wagmi";
-import { JustWeb3Provider } from "@justweb3/widget";
-import { clientEnv } from "@/utils/config/clientEnv";
-import "@justweb3/widget/styles.css";
 // import '@coinbase/onchainkit/styles.css';
-import { ThemeProvider } from "next-themes";
 import { XMTPProvider } from "@/context/XMTPContext";
-import {ChatBasedProvider} from "@/providers/ChatBasedProvider";
-import {getConfig} from "@/wagmi";
+import { ChatBasedProvider } from "@/providers/ChatBasedProvider";
+import { getConfig } from "@/wagmi";
+import { ThemeProvider } from "next-themes";
+// import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
 export function Providers(props: {
   children: ReactNode;
@@ -22,7 +22,7 @@ export function Providers(props: {
 
   const [queryClient] = useState(() => new QueryClient({
     defaultOptions: {
-      queries:{
+      queries: {
         refetchOnWindowFocus: false,
         refetchOnMount: false,
         refetchOnReconnect: false,
@@ -47,11 +47,13 @@ export function Providers(props: {
                 providerUrl: 'https://eth.drpc.org'
               }
             ],
+            disableOverlay: true,
+            enableAuth: false,
             openOnWalletConnect: false
           }}>
             <OnchainKitProvider
               apiKey={clientEnv.onchainClientApiKey}
-              chain={baseSepolia}
+              chain={clientEnv.baseNetwork}
               config={{
                 appearance: {
                   mode: "auto",
@@ -65,6 +67,7 @@ export function Providers(props: {
                 </ChatBasedProvider>
               </XMTPProvider>
             </OnchainKitProvider>
+                    {/*<ReactQueryDevtools />*/}
           </JustWeb3Provider>
         </QueryClientProvider>
       </WagmiProvider>
