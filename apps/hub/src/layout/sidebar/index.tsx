@@ -76,7 +76,7 @@ export function AppSidebar() {
                 </div>
               ) : (
                 groupedChats.map((group) => (
-                  <div className='flex flex-col gap-2'>
+                  <div className='flex flex-col gap-2' key={group.date}>
                     <SidebarGroupLabel>{group.date}</SidebarGroupLabel>
                     {group.chats.map((chat) => (
                       <ChatCard key={chat.id} conversation={chat} />

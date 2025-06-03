@@ -3,7 +3,7 @@ import { useConversations } from "@/hooks/xmtp";
 import { useSubscription } from "@/query/subscription";
 import { useSubname } from "@justaname.id/react";
 import { useParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useAccount } from "wagmi";
 import { mainnet } from "wagmi/chains";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuTrigger } from "../ui";
@@ -62,10 +62,10 @@ export const AgentSelector: React.FC = () => {
         <DropdownMenu>
             <DropdownMenuTrigger showArrow className="h-8 p-2 flex flex-row items-center gap-2 rounded-default bg-background">
                 {selectedAgentAddress ?
-                    <div>
-                        <AgentItem address={selectedAgentAddress} small className="min-md:hidden" />
-                        <AgentItem address={selectedAgentAddress} className="hidden min-md:block" />
-                    </div>
+                    <React.Fragment>
+                        <AgentItem address={selectedAgentAddress} small className="md:hidden" />
+                        <AgentItem address={selectedAgentAddress} className="hidden md:flex" />
+                    </React.Fragment>
                     :
                     <p className="text-xs font-semibold text-base-sidebar-foreground leading-[100%]">Select Agent</p>
                 }

@@ -4,6 +4,7 @@ import { useEnsSubnames } from '@justaname.id/react';
 import { useQuery } from '@tanstack/react-query';
 import {
   SafeGroupMember,
+  SortDirection,
   Conversation as XMTPConversation,
 } from '@xmtp/browser-sdk';
 import { format, isSameDay } from 'date-fns';
@@ -75,23 +76,13 @@ export const useGroupedChats = () => {
       const agentChats: XMTPConversation[] = [];
 
       for (const convo of conversations) {
-        const updatedAtNs = (convo as any).updatedAt;
-        if (typeof updatedAtNs !== 'number') {
-          console.warn(
-            `Conversation (ID: ${
-              (convo as any).id || (convo as any).topic || 'N/A'
-            }) missing valid updatedAt (number), skipping.`
-          );
-          continue;
-        }
-
         let membersFromSDK: SafeGroupMember[] = [];
         try {
           membersFromSDK = await convo.members();
         } catch (e) {
           console.error(
             `Error fetching members for conversation (ID: ${
-              (convo as any).id || (convo as any).topic || 'N/A'
+              convo.id || 'N/A'
             }):`,
             e
           );
@@ -100,7 +91,6 @@ export const useGroupedChats = () => {
 
         if (!membersFromSDK || membersFromSDK.length === 0) continue;
 
-        let isAgentChatForThisConvo = false;
         const processedPeerAddresses = new Set<string>();
 
         for (const member of membersFromSDK) {
@@ -113,81 +103,53 @@ export const useGroupedChats = () => {
           if (
             memberAddress &&
             isValidAddress(memberAddress) &&
-            memberAddress.toLowerCase() !== currentUserAddress.toLowerCase()
+            memberAddress.toLowerCase() !== currentUserAddress.toLowerCase() &&
+            agentEnsSubnames?.pages[0].data &&
+            agentEnsSubnames.pages[0].data.find((sub) =>
+              sub.sanitizedRecords.ethAddress.value
+                .toLowerCase()
+                .includes(currentUserAddress.toLowerCase())
+            )
           ) {
-            if (processedPeerAddresses.has(memberAddress.toLowerCase()))
-              continue;
-
-            try {
-              processedPeerAddresses.add(memberAddress.toLowerCase());
-
-              if (
-                agentEnsSubnames &&
-                agentEnsSubnames.pages &&
-                agentEnsSubnames.pages.length > 0 &&
-                agentEnsSubnames.pages[0].data &&
-                Array.isArray(agentEnsSubnames.pages[0].data)
-              ) {
-                const agentSubname = agentEnsSubnames.pages[0].data.find(
-                  (subname) =>
-                    subname.ens &&
-                    subname.ens.endsWith(clientEnv.xmtpAgentEnsDomain)
-                );
-                if (agentSubname) {
-                  isAgentChatForThisConvo = true;
-                  break;
-                }
-              }
-            } catch (e) {
-              console.error(
-                `Failed to fetch subnames for ${memberAddress}:`,
-                e
-              );
-            }
+            processedPeerAddresses.add(memberAddress.toLowerCase());
           }
         }
 
-        if (isAgentChatForThisConvo) {
-          agentChats.push({
-            ...(convo as any),
-          });
-        }
+        agentChats.push(convo);
       }
-
-      const sortedAgentChats = agentChats.sort((a, b) => {
-        const aTime = (a as any).updatedAt;
-        const bTime = (b as any).updatedAt;
-        return (
-          (typeof bTime === 'number' ? bTime : 0) -
-          (typeof aTime === 'number' ? aTime : 0)
-        );
-      });
 
       const groups: GroupedChat[] = [];
-      if (sortedAgentChats.length === 0) return groups;
+      if (agentChats.length === 0) return groups;
 
-      const firstChatUpdatedAt = (sortedAgentChats[0] as any).updatedAt;
-      if (typeof firstChatUpdatedAt !== 'number') {
-        console.warn(
-          'First chat in sorted list has invalid updatedAt, cannot group.'
-        );
-        return groups;
-      }
+      const firstChatLastMessage = await agentChats[0].messages({
+        direction: SortDirection.Descending,
+        limit: BigInt(1),
+      });
 
       let currentGroup: GroupedChat = {
-        date: formatDate(new Date(firstChatUpdatedAt / 1_000_000)),
-        chats: [sortedAgentChats[0]],
+        date: formatDate(
+          new Date(Number(firstChatLastMessage[0].sentAtNs) / 1_000_000)
+        ),
+        chats: [agentChats[0]],
       };
 
-      for (let i = 1; i < sortedAgentChats.length; i++) {
-        const chat = sortedAgentChats[i];
-        const chatUpdatedAt = (chat as any).updatedAt;
-        if (typeof chatUpdatedAt !== 'number') continue;
+      for (let i = 1; i < agentChats.length; i++) {
+        const chat = agentChats[i];
+        const chatLastMessage = await chat.messages({
+          direction: SortDirection.Descending,
+          limit: BigInt(1),
+        });
+        const chatUpdatedAt = Number(chatLastMessage[0].sentAtNs) / 1_000_000;
 
-        const chatDate = new Date(chatUpdatedAt / 1_000_000);
+        const chatDate = new Date(chatUpdatedAt);
 
-        const currentGroupFirstChatUpdatedAt = (currentGroup.chats[0] as any)
-          .updatedAt;
+        const currentGroupFirstChatLastMessage =
+          await currentGroup.chats[0].messages({
+            direction: SortDirection.Descending,
+            limit: BigInt(1),
+          });
+        const currentGroupFirstChatUpdatedAt =
+          Number(currentGroupFirstChatLastMessage[0].sentAtNs) / 1_000_000;
         if (typeof currentGroupFirstChatUpdatedAt !== 'number') {
           groups.push(currentGroup);
           currentGroup = { date: formatDate(chatDate), chats: [chat] };

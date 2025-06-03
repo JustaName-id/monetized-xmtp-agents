@@ -42,7 +42,7 @@ export const AgentItem: React.FC<AgentItemProps> = ({ address, selected, small, 
                 <AvatarImage src={avatar} />
             </Avatar>
             {!small && (
-                <p className="text-xs font-semibold text-base-sidebar-foreground leading-[100%]">{agentSubname?.ens}</p>
+                <p className="text-xs font-semibold text-base-sidebar-foreground my-auto leading-[100%]">{agentSubname?.ens}</p>
             )}
             {selected && <Check className="w-4 h-4 ml-auto" />}
         </div>

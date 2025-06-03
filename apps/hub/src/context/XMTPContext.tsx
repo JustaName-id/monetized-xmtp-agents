@@ -71,7 +71,7 @@ export const XMTPProvider: React.FC<XMTPProviderProps> = ({
     initialClient,
   );
   const { address, isConnected, isConnecting } = useAccount()
-  const { switchChainAsync } = useSwitchChain();
+  const { switchChainAsync, status } = useSwitchChain();
   const { signMessageAsync } = useSignMessage()
   const {
     encryptionKey,
@@ -88,7 +88,7 @@ export const XMTPProvider: React.FC<XMTPProviderProps> = ({
       loggingLevel,
       signer,
     }: InitializeClientOptions) => {
-      if (!client) {
+      if (!client || status !== 'pending') {
         if (isInitializingRef.current) {
           return undefined;
         }
@@ -101,7 +101,7 @@ export const XMTPProvider: React.FC<XMTPProviderProps> = ({
         let xmtpClient: Client;
 
         try {
-          await switchChainAsync({ chainId: mainnet.id });
+          // await switchChainAsync({ chainId: mainnet.id });
           xmtpClient = await Client.create(signer, {
             env,
             loggingLevel,
@@ -124,7 +124,7 @@ export const XMTPProvider: React.FC<XMTPProviderProps> = ({
       }
       return client;
     },
-    [client, switchChainAsync],
+    [client, switchChainAsync, status],
   );
 
   const connect = useCallback(() => {
