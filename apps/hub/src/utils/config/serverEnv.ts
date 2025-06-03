@@ -8,7 +8,7 @@ const SERVER_ENV = {
   xmtpAgentJustaNameApiKey: process.env.XMTP_AGENT_JUSTANAME_API_KEY,
   userJustaNameApiKey: process.env.USER_JUSTANAME_API_KEY,
   basePaymasterUrl: process.env.BASE_PAYMASTER_URL,
-  serverBaseNetwork: process.env.ENV === 'production' ? base : baseSepolia,
+  serverBaseNetwork: process.env.BASE_NETWORK === 'mainnet' ? base : baseSepolia,
 };
 
 export const serverEnvSchema = z.object({
