@@ -77,7 +77,7 @@ export function useSubscription() {
         const spendPermission: SpendPermission = {
           account: accountAddress,
           spender: spenderAddress,
-          token: '0x036CbD53842c5426634e7929541eC2318f3dCF7e' as Address, // ETH
+          token: clientEnv.tokenAddress as Address, // ETH
           allowance: parseUnits(allowance, 6),
           period: 86400 * 30,
           start: Math.ceil(Date.now() / 1000),
