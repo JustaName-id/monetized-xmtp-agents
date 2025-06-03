@@ -1,5 +1,4 @@
 import { useLocalVariables } from "@/hooks/use-local";
-import { clientEnv } from "@/utils/config/clientEnv";
 import { createSCWSigner } from "@/utils/helpers/createSigner";
 import { Client, type ClientOptions, type Signer } from "@xmtp/browser-sdk";
 import type { GroupUpdated } from "@xmtp/content-type-group-updated";
@@ -13,6 +12,7 @@ import {
 } from "react";
 import { hexToUint8Array } from "uint8array-extras";
 import { useAccount, useSignMessage, useSwitchChain } from "wagmi";
+import {mainnet} from "wagmi/chains";
 
 export type ContentTypes =
   | string
@@ -69,7 +69,7 @@ export const XMTPProvider: React.FC<XMTPProviderProps> = ({
   const [client, setClient] = useState<Client | undefined>(
     initialClient,
   );
-  const { address, isConnected, isConnecting } = useAccount()
+  const { address, isConnected, isConnecting, chainId } = useAccount()
   const { switchChainAsync, status } = useSwitchChain();
   const { signMessageAsync } = useSignMessage()
   const {
@@ -98,9 +98,10 @@ export const XMTPProvider: React.FC<XMTPProviderProps> = ({
         setisInitializing(true);
 
         let xmtpClient: Client;
-
         try {
-          await switchChainAsync({ chainId: clientEnv.baseNetwork.id as 1 | 8453 | 84532 });
+          if(chainId !== mainnet.id){
+            await switchChainAsync({ chainId: mainnet.id });
+          }
           xmtpClient = await Client.create(signer, {
             env,
             loggingLevel,
@@ -122,7 +123,7 @@ export const XMTPProvider: React.FC<XMTPProviderProps> = ({
       }
       return client;
     },
-    [client, switchChainAsync, status],
+    [chainId,client, switchChainAsync, status],
   );
 
   const connect = useCallback(() => {

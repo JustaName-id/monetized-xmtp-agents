@@ -5,7 +5,7 @@ import { useAddressSubnames } from "@justaname.id/react";
 import { Check } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useMemo } from "react";
-import { Avatar, AvatarImage } from "../ui";
+import { Avatar, AvatarImage } from "../../../components/ui";
 export interface AgentItemProps {
     address: string;
     selected?: boolean;

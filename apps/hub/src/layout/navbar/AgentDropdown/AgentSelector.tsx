@@ -1,13 +1,13 @@
 'use client'
-import { useConversations } from "@/hooks/xmtp";
+import { useConversations } from "../../../query/xmtp";
 import { useSubscription } from "@/query/subscription";
 import { useSubname } from "@justaname.id/react";
 import { useParams } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
 import { useAccount } from "wagmi";
 import { mainnet } from "wagmi/chains";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuTrigger } from "../ui";
-import { AgentItem } from "./AgentItem";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui";
+import { AgentItem } from "@/layout/navbar/AgentDropdown/AgentItem";
 
 export const AgentSelector: React.FC = () => {
     const [selectedAgent, setSelectedAgent] = useState<string | undefined>(undefined)
@@ -17,9 +17,6 @@ export const AgentSelector: React.FC = () => {
         return slug ? slug?.toString()?.split('.').length > 2 ? [undefined, slug as string] : [slug as string, undefined] : [undefined, undefined]
     }, [slug])
 
-    if (!conversationId && !agentName) {
-        return null
-    }
     const { subname } = useSubname({
         subname: agentName,
         chainId: mainnet.id,
@@ -38,14 +35,11 @@ export const AgentSelector: React.FC = () => {
     }, [validSubscriptions]);
     const { conversations } = useConversations()
 
-    useEffect(() => {
-        if (!conversationId) return
-        fetchAgentAddressFromConvo()
-    }, [conversationId])
-
     const fetchAgentAddressFromConvo = async () => {
         if (!conversationId) return
-        const convo = await conversations.find((conversation) => conversation.id === conversationId)
+        const convo = conversations.find(
+          (conversation) => conversation.id === conversationId
+        );
         if (!convo) return
         const members = await convo.members()
         const agentAddress = members.find((member) => member.accountIdentifiers[0].identifier !== address)?.accountIdentifiers[0].identifier
@@ -57,7 +51,18 @@ export const AgentSelector: React.FC = () => {
         return subname?.sanitizedRecords.ethAddress.value
     }, [subname?.sanitizedRecords.ethAddress, selectedAgent])
 
+    useEffect(() => {
+      if (!conversationId) return
+      fetchAgentAddressFromConvo()
+    }, [conversationId, fetchAgentAddressFromConvo])
+
+
     if (isSubscriptionsPending) return null
+
+    if (!conversationId && !agentName) {
+      return null
+    }
+
     return (
         <DropdownMenu>
             <DropdownMenuTrigger showArrow className="h-8 p-2 flex flex-row items-center gap-2 rounded-default bg-background">

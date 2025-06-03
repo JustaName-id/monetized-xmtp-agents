@@ -1,6 +1,6 @@
 import { useAgentDetails } from '@/hooks/use-agent-details';
-import { useConversation } from "@/hooks/xmtp";
-import { useMembers } from '@/hooks/xmtp/useMembers';
+import { useConversation } from "../../query/xmtp";
+import { useMembers } from '@/query/xmtp/useMembers';
 import { clientEnv } from '@/utils/config/clientEnv';
 import { useAddressSubnames } from '@justaname.id/react';
 import { Conversation } from '@xmtp/browser-sdk';
@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useMemo } from 'react';
 import { useAccount } from 'wagmi';
-import { Avatar, AvatarImage } from '../ui/avatar';
+import { Avatar, AvatarImage } from '../../components/ui/avatar';
 
 export interface ChatCardProps {
   conversation: Conversation;

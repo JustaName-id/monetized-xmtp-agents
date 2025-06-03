@@ -1,4 +1,4 @@
-import { useConversations } from '@/hooks/xmtp/useConversations';
+import { useConversations } from '@/query/xmtp/useConversations';
 import { clientEnv } from '@/utils/config/clientEnv';
 import { useEnsSubnames } from '@justaname.id/react';
 import { useQuery } from '@tanstack/react-query';
@@ -9,6 +9,7 @@ import {
 } from '@xmtp/browser-sdk';
 import { format, isSameDay } from 'date-fns';
 import { useAccount } from 'wagmi';
+import {useEffect} from "react";
 
 const isValidAddress = (address: string): boolean => {
   if (typeof address !== 'string') return false;
@@ -55,6 +56,7 @@ export const useGroupedChats = () => {
     error: conversationsError,
     refetch: refetchConversations,
   } = useConversations();
+  console.log(conversations)
   const { data: agentEnsSubnames, isLoading: isLoadingAgentEnsSubnames } =
     useEnsSubnames({
       ensDomain: clientEnv.xmtpAgentEnsDomain,
@@ -148,17 +150,17 @@ export const useGroupedChats = () => {
             direction: SortDirection.Descending,
             limit: BigInt(1),
           });
-        const currentGroupFirstChatUpdatedAt =
-          Number(currentGroupFirstChatLastMessage[0].sentAtNs) / 1_000_000;
+        const currentGroupFirstChatUpdatedAt = Number(currentGroupFirstChatLastMessage[0].sentAtNs) / 1_000_000;
         if (typeof currentGroupFirstChatUpdatedAt !== 'number') {
           groups.push(currentGroup);
           currentGroup = { date: formatDate(chatDate), chats: [chat] };
           continue;
         }
         const currentGroupDate = new Date(
-          currentGroupFirstChatUpdatedAt / 1_000_000
+          currentGroupFirstChatUpdatedAt
         );
 
+        console.log(chatDate, currentGroupDate, isSameDay(chatDate, currentGroupDate),)
         if (isSameDay(chatDate, currentGroupDate)) {
           currentGroup.chats.push(chat);
         } else {
@@ -187,6 +189,12 @@ export const useGroupedChats = () => {
     isLoadingGroupedChats ||
     isLoadingAgentEnsSubnames;
   const error = conversationsError || errorGroupedChats;
+
+  useEffect(() => {
+    if(conversations && conversations.length > 0){
+      refetchGroupedChatsQuery();
+    }
+  }, [conversations, refetchGroupedChatsQuery]);
 
   return {
     groupedChats: data || [],

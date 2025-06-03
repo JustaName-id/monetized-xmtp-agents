@@ -1,5 +1,5 @@
 'use client';
-import { ChatCard } from '@/components/sidebar/ChatCard';
+import { ChatCard } from '@/layout/sidebar/ChatCard';
 import { Button } from '@/components/ui';
 import {
   Sidebar,
@@ -13,7 +13,7 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { useXMTP } from '@/context/XMTPContext';
-import { useGroupedChats } from '@/hooks/xmtp/useGroupedChats';
+import { useGroupedChats } from '@/query/xmtp/useGroupedChats';
 import { ExploreIcon, LoadingIcon, PenIcon, ProfileIcon } from '@/lib/icons';
 import { useSubscription } from "@/query/subscription";
 import Link from 'next/link';
@@ -24,6 +24,7 @@ export function AppSidebar() {
   const { client, isInitializing, connect } = useXMTP();
   const { validSubscriptions } = useSubscription();
 
+  console.log(groupedChats)
   return (
     <Sidebar>
       <SidebarHeader className='max-md:pb-8'>XMTP Agents</SidebarHeader>

@@ -7,7 +7,7 @@ import { ConnectXmtp } from '@/components/chat/ConnectXmtp';
 import { Subscribe } from '@/components/chat/Subscribe';
 import { useXMTP } from '@/context/XMTPContext';
 import { useAgentDetails } from '@/hooks/use-agent-details';
-import { useConversation, useConversations, useIdentity } from '@/hooks/xmtp';
+import { useConversation, useConversations, useIdentity } from '../../query/xmtp';
 import { LoadingIcon } from '@/lib/icons';
 import { clientEnv } from '@/utils/config/clientEnv';
 import {
@@ -20,7 +20,7 @@ import { useAccount } from 'wagmi';
 import { mainnet } from 'wagmi/chains';
 import { useSubscription } from '@/query/subscription';
 import { Messages } from '@/components/chat/Messages';
-import { useMembers } from '@/hooks/xmtp/useMembers';
+import { useMembers } from '@/query/xmtp/useMembers';
 import { useRouter } from 'next/navigation';
 
 export interface ChatProps {

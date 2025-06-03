@@ -28,7 +28,7 @@ const buildSubscriptionKey = (address: Address | undefined) => {
 
 export function useSubscription() {
   const { signTypedDataAsync } = useSignTypedData();
-  const { switchChain } = useSwitchChain();
+  const { switchChainAsync } = useSwitchChain();
 
   const account = useAccount();
   const { connectAsync } = useConnect();
@@ -73,7 +73,7 @@ export function useSubscription() {
           accountAddress = requestAccounts.accounts[0];
         }
 
-        switchChain({ chainId: clientEnv.baseNetwork.id as 1 | 8453 | 84532 });
+        await switchChainAsync({ chainId: clientEnv.baseNetwork.id as 1 | 8453 | 84532 });
         const spendPermission: SpendPermission = {
           account: accountAddress,
           spender: spenderAddress,
@@ -110,6 +110,7 @@ export function useSubscription() {
           message: spendPermission,
         });
 
+        await switchChainAsync({ chainId: 1 });
         const replacer = (key: string, value: any) => {
           if (typeof value === 'bigint') {
             return value.toString();

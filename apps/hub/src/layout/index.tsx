@@ -6,7 +6,7 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import { Inter } from 'next/font/google';
 import { AppSidebar } from './sidebar';
 import { useAccount } from 'wagmi';
-import { useIdentity } from "@/hooks/xmtp";
+import { useIdentity } from "../query/xmtp";
 import { usePathname, useRouter } from 'next/navigation';
 
 interface LayoutProps {

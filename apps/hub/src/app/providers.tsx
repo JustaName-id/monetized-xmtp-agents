@@ -12,6 +12,7 @@ import { XMTPProvider } from "@/context/XMTPContext";
 import { ChatBasedProvider } from "@/providers/ChatBasedProvider";
 import { getConfig } from "@/wagmi";
 import { ThemeProvider } from "next-themes";
+// import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
 export function Providers(props: {
   children: ReactNode;
@@ -46,6 +47,7 @@ export function Providers(props: {
                 providerUrl: 'https://eth.drpc.org'
               }
             ],
+            disableOverlay: true,
             enableAuth: false,
             openOnWalletConnect: false
           }}>
@@ -65,6 +67,7 @@ export function Providers(props: {
                 </ChatBasedProvider>
               </XMTPProvider>
             </OnchainKitProvider>
+                    {/*<ReactQueryDevtools />*/}
           </JustWeb3Provider>
         </QueryClientProvider>
       </WagmiProvider>

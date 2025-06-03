@@ -1,5 +1,5 @@
 import { MessageCard } from "@/components/MessageCard";
-import { useConversation, useIdentity } from "@/hooks/xmtp";
+import { useConversation, useIdentity } from "../../query/xmtp";
 import { Conversation } from "@xmtp/browser-sdk";
 import React, { useEffect, useRef } from "react";
 

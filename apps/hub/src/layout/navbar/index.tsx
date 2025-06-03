@@ -1,5 +1,5 @@
 'use client'
-import { AgentSelector } from "@/components/agentDropdown/AgentSelector";
+import { AgentSelector } from "@/layout/navbar/AgentDropdown/AgentSelector";
 import Connect from "@/components/Connect";
 import { ModeToggle } from "@/components/ModeToggle";
 import { SidebarTrigger } from "@/components/ui/sidebar";
