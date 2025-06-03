@@ -16,10 +16,12 @@ const {
   XMTP_ENV,
   WALLET_KEY,
   ENCRYPTION_KEY,
+  CHAIN
 } = validateEnvironment([
   "XMTP_ENV",
   "WALLET_KEY",
   "ENCRYPTION_KEY",
+  "CHAIN"
 ]);
 
 const main = async () => {
@@ -38,7 +40,7 @@ const main = async () => {
     description: "Gm Agent",
     fees: 0.05,
     tags: ['gm'],
-    chain: 'baseSepolia'
+    chain: CHAIN ==="mainnet" ? "base" : 'baseSepolia'
   });
 
   void logAgentDetails(client);
