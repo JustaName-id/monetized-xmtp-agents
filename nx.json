@@ -15,7 +15,6 @@
   "tui": {
     "enabled": false
   },
-  "nxCloudId": "68323915d8f1014385a53b2c",
   "plugins": [
     {
       "plugin": "@nx/js/typescript",
