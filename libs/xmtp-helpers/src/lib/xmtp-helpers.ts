@@ -48,12 +48,10 @@ export const createSigner = async (key: string): Promise<Signer> => {
       identifier: spenderAccount.address.toLowerCase(),
     }),
     signMessage: async (message: string) => {
-      console.log("signing message: ", message, " with key: ", sanitizedKey)
       const signature = await spenderAccount.signMessage({
         message,
       });
 
-      console.log("signature: ", signature)
       return toBytes(signature);
     },
     getChainId: () => BigInt(base.id),

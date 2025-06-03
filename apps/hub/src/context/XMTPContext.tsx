@@ -13,7 +13,6 @@ import {
 } from "react";
 import { hexToUint8Array } from "uint8array-extras";
 import { useAccount, useSignMessage, useSwitchChain } from "wagmi";
-import { mainnet } from "wagmi/chains";
 
 export type ContentTypes =
   | string
@@ -101,7 +100,7 @@ export const XMTPProvider: React.FC<XMTPProviderProps> = ({
         let xmtpClient: Client;
 
         try {
-          // await switchChainAsync({ chainId: mainnet.id });
+          await switchChainAsync({ chainId: clientEnv.baseNetwork.id as 1 | 8453 | 84532 });
           xmtpClient = await Client.create(signer, {
             env,
             loggingLevel,
@@ -109,7 +108,6 @@ export const XMTPProvider: React.FC<XMTPProviderProps> = ({
             codecs: [],
           });
           setClient(xmtpClient);
-          void switchChainAsync({ chainId: clientEnv.baseNetwork.id as 1 | 8453 | 84532 });
         } catch (e) {
           console.log('e', e)
           setClient(undefined);

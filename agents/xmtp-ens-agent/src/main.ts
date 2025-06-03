@@ -1,5 +1,4 @@
 import fs from 'fs';
-import { Coinbase, Wallet, type WalletData } from '@coinbase/coinbase-sdk';
 import {
   createSigner,
   getEncryptionKeyFromHex,
@@ -9,29 +8,22 @@ import {
 import { type XmtpEnv } from '@xmtp/node-sdk';
 import BasedClient from '@agenthub/xmtp-extended-client';
 
-const WALLET_PATH = 'wallet-ens.json';
-
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db
  * that stores your agent's messages */
 const {
-  XMTP_ENV,
-  ENCRYPTION_KEY,
-  NETWORK_ID,
-  CDP_API_KEY_NAME,
-  CDP_API_KEY_PRIVATE_KEY,
+    XMTP_ENV,
+    WALLET_KEY,
+    ENCRYPTION_KEY,
 } = validateEnvironment([
   "XMTP_ENV",
+  "WALLET_KEY",
   "ENCRYPTION_KEY",
-  "NETWORK_ID",
-  "CDP_API_KEY_NAME",
-  "CDP_API_KEY_PRIVATE_KEY",
 ]);
 
 const main = async () => {
-  const walletData = await initializeWallet(WALLET_PATH);
   /* Create the signer using viem and parse the encryption key for the local db */
-  const signer = await createSigner(walletData.seed);
+  const signer = await createSigner(WALLET_KEY);
 
   const dbEncryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
   const avatar = fs.readFileSync(process.cwd() + "/agents/xmtp-ens-agent/src/nick.jpg");
@@ -90,47 +82,5 @@ const main = async () => {
     console.log("Waiting for messages...");
   }
 };
-
-/**
- * Generates a random Smart Contract Wallet
- * @param networkId - The network ID (e.g., 'base-sepolia', 'base-mainnet')
- * @returns WalletData object containing all necessary wallet information
- */
-
-async function initializeWallet(walletPath: string): Promise<WalletData> {
-  try {
-    let walletData: WalletData | null = null;
-    if (fs.existsSync(walletPath)) {
-      const data = fs.readFileSync(walletPath, "utf8");
-      walletData = JSON.parse(data) as WalletData;
-      return walletData;
-    } else {
-      console.log(`Creating wallet on network: ${NETWORK_ID}`);
-      Coinbase.configure({
-        apiKeyName: CDP_API_KEY_NAME,
-        privateKey: CDP_API_KEY_PRIVATE_KEY,
-      });
-      const wallet = await Wallet.create({
-        networkId: NETWORK_ID,
-      });
-
-      console.log("Wallet created successfully, exporting data...");
-      const data = wallet.export();
-      console.log("Getting default address...");
-      const walletInfo: WalletData = {
-        seed: data.seed || "",
-        walletId: wallet.getId() || "",
-        networkId: wallet.getNetworkId(),
-      };
-
-      fs.writeFileSync(walletPath, JSON.stringify(walletInfo, null, 2));
-      console.log(`Wallet data saved to ${walletPath}`);
-      return walletInfo;
-    }
-  } catch (error) {
-    console.error("Error creating wallet:", error);
-    throw error;
-  }
-}
 
 main().catch(console.error);
