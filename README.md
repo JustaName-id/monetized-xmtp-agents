@@ -127,7 +127,7 @@ Users can search for agents using various criteria including service categories,
 Install the required dependencies:
 
 ```bash
-npm install @agenthub/xmtp-extended-client @agenthub/xmtp-helpers @coinbase/coinbase-sdk @xmtp/node-sdk
+npm install @agenthub/xmtp-extended-client @agenthub/xmtp-helpers @xmtp/node-sdk
 ```
 
 ### Environment Setup
@@ -136,140 +136,47 @@ Create a `.env` file with the following variables:
 
 ```env
 ENCRYPTION_KEY=your_hex_encryption_key
-XMTP_ENV=dev  # or 'production'
-NETWORK_ID=base-sepolia  # or 'base-mainnet'
-CDP_API_KEY_NAME=your_cdp_api_key_name
-CDP_API_KEY_PRIVATE_KEY=your_cdp_private_key
+XMTP_ENV=production  # or 'dev'
+WALLET_KEY=your_private_key_hex
 ```
 
 ### Complete Agent Example
 
 ```typescript
-import fs from 'fs';
-import { Coinbase, Wallet, type WalletData } from '@coinbase/coinbase-sdk';
-import { createSigner, getEncryptionKeyFromHex, logAgentDetails, validateEnvironment } from '@agenthub/xmtp-helpers';
+import { createSigner, getEncryptionKeyFromHex, validateEnvironment } from '@agenthub/xmtp-helpers';
 import { type XmtpEnv } from '@xmtp/node-sdk';
 import BasedClient from '@agenthub/xmtp-extended-client';
 
-const WALLET_PATH = 'wallet.json';
-
-// Validate required environment variables
-const { XMTP_ENV, ENCRYPTION_KEY, NETWORK_ID, CDP_API_KEY_NAME, CDP_API_KEY_PRIVATE_KEY } = validateEnvironment(['XMTP_ENV', 'ENCRYPTION_KEY', 'NETWORK_ID', 'CDP_API_KEY_NAME', 'CDP_API_KEY_PRIVATE_KEY']);
+const { XMTP_ENV, WALLET_KEY, ENCRYPTION_KEY } = validateEnvironment(['XMTP_ENV', 'WALLET_KEY', 'ENCRYPTION_KEY']);
 
 const main = async () => {
-  // Initialize or load existing wallet
-  const walletData = await initializeWallet(WALLET_PATH);
-
-  // Create signer and encryption key
-  const signer = await createSigner(walletData.seed);
+  const signer = await createSigner(WALLET_KEY);
   const dbEncryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
 
-  // Optional: Load avatar image
-  const avatar = fs.readFileSync(process.cwd() + '/path/to/avatar.jpg');
-
-  // Create the agent client
   const client = await BasedClient.create(signer, {
     dbEncryptionKey,
     env: XMTP_ENV as XmtpEnv,
     username: 'your-agent-name',
-    avatar, // Optional
     displayName: 'Your Agent Display Name',
     description: 'Your agent description',
-    fees: 0.01, // Fee in USDC
+    fees: 0.01,
     tags: ['your-tags'],
     chain: 'baseSepolia',
   });
 
-  // Log agent details for debugging
-  void logAgentDetails(client);
-
-  // Sync existing conversations
-  console.log('✓ Syncing conversations...');
   await client.conversations.sync();
 
-  console.log('Waiting for messages...');
+  // Start listening for messages and responding
   const stream = await client.conversations.streamAllMessages();
-
-  // Process incoming messages
   for await (const message of stream) {
-    // Skip own messages and non-text messages
-    if (message?.senderInboxId.toLowerCase() === client.inboxId.toLowerCase() || message?.contentType?.typeId !== 'text') {
-      continue;
-    }
-
-    const conversation = await client.conversations.getConversationById(message.conversationId);
-
-    if (!conversation) {
-      console.log('Unable to find conversation, skipping');
-      continue;
-    }
-
-    // Get sender information
-    const inboxState = await client.preferences.inboxStateFromInboxIds([message.senderInboxId]);
-    const addressFromInboxId = inboxState[0].identifiers[0].identifier;
-    const subname = await client.subnameByAddress(addressFromInboxId);
-
-    console.log(`Processing message from ${addressFromInboxId}: ${message.content}`);
-
-    // Send response (customize this logic for your agent)
-    const response = processMessage(message.content);
-
-    if (subname) {
-      await conversation.sendWithFees(`${response} ${subname.ens}`, addressFromInboxId);
-    } else {
-      await conversation.sendWithFees(response, addressFromInboxId);
-    }
-
-    console.log('Waiting for messages...');
+    // Process and respond to messages (implementation details omitted for brevity)
   }
 };
 
-// Add your message processing logic here
 function processMessage(messageContent: string): string {
-  // Example: Simple echo or custom logic
   return `You said: ${messageContent}`;
 }
 
-// Wallet initialization function
-async function initializeWallet(walletPath: string): Promise<WalletData> {
-  try {
-    // Load existing wallet if it exists
-    if (fs.existsSync(walletPath)) {
-      const data = fs.readFileSync(walletPath, 'utf8');
-      return JSON.parse(data) as WalletData;
-    }
-
-    // Create new wallet
-    console.log(`Creating wallet on network: ${NETWORK_ID}`);
-    Coinbase.configure({
-      apiKeyName: CDP_API_KEY_NAME,
-      privateKey: CDP_API_KEY_PRIVATE_KEY,
-    });
-
-    const wallet = await Wallet.create({
-      networkId: NETWORK_ID,
-    });
-
-    console.log('Wallet created successfully, exporting data...');
-    const data = wallet.export();
-
-    const walletInfo: WalletData = {
-      seed: data.seed || '',
-      walletId: wallet.getId() || '',
-      networkId: wallet.getNetworkId(),
-    };
-
-    // Save wallet data for future use
-    fs.writeFileSync(walletPath, JSON.stringify(walletInfo, null, 2));
-    console.log(`Wallet data saved to ${walletPath}`);
-    return walletInfo;
-  } catch (error) {
-    console.error('Error creating wallet:', error);
-    throw error;
-  }
-}
-
-// Start the agent
 main().catch(console.error);
 ```
 
@@ -285,26 +192,6 @@ When creating your agent with `BasedClient.create()`:
 - **avatar**: Optional image buffer for agent profile picture
 - **chain**: Blockchain network ('baseSepolia' for testnet, 'base' for mainnet)
 - **hubUrl**: Agent registry URL (use provided default)
-
-### Customization
-
-Replace the `processMessage()` function with your own logic:
-
-```typescript
-function processMessage(messageContent: string): string {
-  const message = messageContent.toLowerCase().trim();
-
-  if (message.includes('hello') || message.includes('hi')) {
-    return 'Hello! How can I help you today?';
-  }
-
-  if (message.includes('help')) {
-    return 'I can assist you with various tasks. What do you need help with?';
-  }
-
-  return 'Thanks for your message! I received: ' + messageContent;
-}
-```
 
 ### Running Your Agent
 
