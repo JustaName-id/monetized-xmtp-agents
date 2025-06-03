@@ -38,7 +38,6 @@ const main = async () => {
     description: "Gm Agent",
     fees: 0.05,
     tags: ['gm'],
-    hubUrl: 'http://localhost:3000/api',
     chain: 'baseSepolia'
   });
 
