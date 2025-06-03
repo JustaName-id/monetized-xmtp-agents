@@ -46,6 +46,7 @@ export function Providers(props: {
                 providerUrl: 'https://eth.drpc.org'
               }
             ],
+            enableAuth: false,
             openOnWalletConnect: false
           }}>
             <OnchainKitProvider

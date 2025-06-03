@@ -8,9 +8,7 @@ const CLIENT_ENV = {
   onchainProjectName: process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME,
   onchainWalletConfig: process.env.NEXT_PUBLIC_ONCHAINKIT_WALLET_CONFIG,
   userEnsDomain: process.env.NEXT_PUBLIC_USER_ENS_DOMAIN,
-  env: process.env.NEXT_PUBLIC_ENV,
-  baseNetwork:
-    process.env.NEXT_PUBLIC_ENV === 'production' ? base : baseSepolia,
+  baseNetwork: process.env.NEXT_PUBLIC_BASE_NETWORK === 'mainnet' ? base : baseSepolia,
 };
 
 export const clientEnvSchema = z.object({
@@ -19,7 +17,6 @@ export const clientEnvSchema = z.object({
   onchainProjectName: z.string(),
   onchainWalletConfig: z.enum(['smartWalletOnly', 'all']),
   userEnsDomain: z.string(),
-  env: z.enum(['dev', 'staging', 'production']),
   baseNetwork: z.custom<Chain>(
     (data) => data === base || data === baseSepolia,
     {

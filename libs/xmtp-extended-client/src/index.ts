@@ -27,20 +27,20 @@ import {
 } from '@agenthub/spend-permission';
 import * as _xmtp_node_bindings from '@xmtp/node-bindings';
 import { baseSepolia, mainnet, base } from 'wagmi/chains';
-import { privateKeyToAccount } from 'viem/accounts';
 import {
   createBundlerClient,
   createPaymasterClient,
   toCoinbaseSmartAccount,
 } from 'viem/account-abstraction';
-import fs from 'fs';
-import type { WalletData } from '@coinbase/coinbase-sdk';
 import {
   ContentTypeTransactionReference,
   TransactionReferenceCodec,
 } from '@xmtp/content-type-transaction-reference';
 import FormData from 'form-data';
 import { parseUnits } from 'ethers';
+import {
+  privateKeyToAccount,
+} from 'viem/accounts';
 
 type MonetizedMsgReturn = Promise<{
   messageId: string;
@@ -53,6 +53,7 @@ type MonetizedMsgFunction = (
   address: string,
   contentType?: ContentTypeId
 ) => MonetizedMsgReturn;
+
 
 async function getSubscription(basedClient: BasedClient, address: string) {
   const response = await axios.get<SubscriptionsResponse>(
@@ -99,7 +100,6 @@ async function getTokenBalance(
 async function collectFees(
   basedClient: BasedClient,
   spendPermission: SpendPermissionResponse,
-  walletPath: string
 ): Promise<string> {
   console.log('🚀 Starting fee collection...');
 
@@ -108,12 +108,13 @@ async function collectFees(
     transport: http(),
   });
 
-  const data = fs.readFileSync(walletPath, 'utf8');
-  const walletData = JSON.parse(data) as WalletData;
+  if(!basedClient.signer){
+    throw new Error('Signer is not set');
+  }
 
-  const spenderAccountOwner = privateKeyToAccount(
-    ('0x' + walletData.seed) as `0x${string}`
-  );
+  const key = process.env.WALLET_KEY as string;
+  const sanitizedKey = (key.startsWith("0x") ? key : `0x${key}`) as `0x${string}`;
+  const spenderAccountOwner = privateKeyToAccount(sanitizedKey);
 
   const spenderAccount = await toCoinbaseSmartAccount({
     client,
@@ -175,7 +176,6 @@ async function collectFees(
 function createSendWithFees(
   instance: Group | Dm,
   basedClient: BasedClient,
-  walletPath: string
 ) {
   return async function sendWithFees(
     content: unknown,
@@ -210,7 +210,6 @@ function createSendWithFees(
     const txHash = await collectFees(
       basedClient,
       subscription.spendPermission,
-      walletPath
     );
 
     if (txHash === '') {
@@ -268,13 +267,12 @@ function createSendOptimisticWithFees(
 function addFeeMethods<T extends Group | Dm>(
   instance: T,
   basedClient: BasedClient,
-  walletPath: string
 ): T & {
   sendWithFees: ReturnType<typeof createSendWithFees>;
   sendOptimisticWithFees: ReturnType<typeof createSendOptimisticWithFees>;
 } {
   const extended = instance as any;
-  extended.sendWithFees = createSendWithFees(instance, basedClient, walletPath);
+  extended.sendWithFees = createSendWithFees(instance, basedClient);
   extended.sendOptimisticWithFees = createSendOptimisticWithFees(
     instance,
     basedClient
@@ -361,7 +359,6 @@ class BasedConversations implements BasedConversationsInterface {
   constructor(
     private readonly basedClient: BasedClient,
     private readonly wrapped: Conversations,
-    private readonly walletPath: string
   ) {}
 
   async getConversationById(id: string) {
@@ -574,7 +571,6 @@ class BasedConversations implements BasedConversationsInterface {
     return addFeeMethods(
       conversation,
       this.basedClient,
-      this.walletPath
     ) as any;
   }
 
@@ -599,7 +595,6 @@ export class BasedClient extends Client {
   hubUrl: string | undefined;
   displayName: string | undefined;
   chain: 'base' | 'baseSepolia' = 'base';
-  private walletPath: string = 'wallet.json';
 
   private _basedConversations?: BasedConversations;
 
@@ -610,7 +605,6 @@ export class BasedClient extends Client {
       this._basedConversations = new BasedConversations(
         this,
         super.conversations,
-        this.walletPath
       ) as BasedConversations & {
         '#private': unknown;
       };
@@ -631,15 +625,8 @@ export class BasedClient extends Client {
       tags?: string[];
       hubUrl?: string;
       chain?: 'base' | 'baseSepolia';
-      walletPath?: string;
     }
   ): Promise<BasedClient> {
-    const walletPath = options?.walletPath || 'wallet.json';
-
-    const data = fs.readFileSync(walletPath, 'utf8');
-
-    const walletData = JSON.parse(data) as WalletData;
-
     const _chain = options?.chain || 'base';
 
     const client = await Client.create(signer, {
@@ -650,7 +637,6 @@ export class BasedClient extends Client {
       client,
       BasedClient.prototype
     ) as BasedClient;
-    basedClient.walletPath = walletPath;
 
     basedClient.hubUrl =
       options?.hubUrl || 'https://xmtp-agent-hub.vercel.app/api';
@@ -680,11 +666,9 @@ export class BasedClient extends Client {
       address: clientAddress,
     });
 
-    const account = privateKeyToAccount(
-      (walletData.seed.startsWith('0x')
-        ? walletData.seed
-        : '0x' + walletData.seed) as `0x${string}`
-    );
+    const key = process.env.WALLET_KEY as string;
+    const sanitizedKey = (key.startsWith("0x") ? key : `0x${key}`) as `0x${string}`;
+    const account = privateKeyToAccount(sanitizedKey);
 
     const publicClient = createPublicClient({
       chain: mainnet,
@@ -696,9 +680,11 @@ export class BasedClient extends Client {
       owners: [account],
     });
 
+
     const signature = await spenderAccount.signMessage({
       message: challenge.challenge,
     });
+
     const subnames = await justanameInstance.subnames.getSubnamesByAddress({
       address: clientAddress,
     });
