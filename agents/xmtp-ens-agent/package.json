@@ -13,15 +13,15 @@
         "defaultConfiguration": "production",
         "options": {
           "platform": "node",
-          "outputPath": "agents/xmtp-gm-agent/dist",
+          "outputPath": "agents/xmtp-ens-agent/dist",
           "format": [
             "esm"
           ],
           "bundle": false,
-          "main": "agents/xmtp-gm-agent/src/main.ts",
-          "tsConfig": "agents/xmtp-gm-agent/tsconfig.app.json",
+          "main": "agents/xmtp-ens-agent/src/main.ts",
+          "tsConfig": "agents/xmtp-ens-agent/tsconfig.app.json",
           "assets": [
-            "agents/xmtp-gm-agent/src/assets"
+            "agents/xmtp-ens-agent/src/assets"
           ],
           "esbuildOptions": {
             "sourcemap": true,
@@ -50,15 +50,15 @@
           "build"
         ],
         "options": {
-          "buildTarget": "@agenthub/xmtp-gm-agent:build",
+          "buildTarget": "@agenthub/xmtp-ens-agent:build",
           "runBuildTargetDependencies": false
         },
         "configurations": {
           "development": {
-            "buildTarget": "@agenthub/xmtp-gm-agent:build:development"
+            "buildTarget": "@agenthub/xmtp-ens-agent:build:development"
           },
           "production": {
-            "buildTarget": "@agenthub/xmtp-gm-agent:build:production"
+            "buildTarget": "@agenthub/xmtp-ens-agent:build:production"
           }
         }
       }

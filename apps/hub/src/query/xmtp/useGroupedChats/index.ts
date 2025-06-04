@@ -160,7 +160,6 @@ export const useGroupedChats = () => {
           currentGroupFirstChatUpdatedAt
         );
 
-        console.log(chatDate, currentGroupDate, isSameDay(chatDate, currentGroupDate),)
         if (isSameDay(chatDate, currentGroupDate)) {
           currentGroup.chats.push(chat);
         } else {
@@ -196,6 +195,7 @@ export const useGroupedChats = () => {
     }
   }, [conversations, refetchGroupedChatsQuery]);
 
+  console.log(conversations)
   return {
     groupedChats: data || [],
     isLoading,
