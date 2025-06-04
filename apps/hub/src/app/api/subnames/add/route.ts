@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SiweMessage } from 'siwe';
-import {JustaName} from "@justaname.id/sdk";
-import {serverEnv} from "@/utils/config/serverEnv";
+import { JustaName } from '@justaname.id/sdk';
+import { serverEnv } from '@/utils/config/serverEnv';
 
 interface SubnameRequest {
   username: string;
@@ -9,7 +9,7 @@ interface SubnameRequest {
   signature: string;
   message: string;
   text: Record<string, string>;
-  agent: boolean
+  agent: boolean;
 }
 
 export async function POST(request: NextRequest) {
@@ -18,26 +18,34 @@ export async function POST(request: NextRequest) {
     const { username, address, signature, message, text, agent } = body;
 
     if (!username) {
-      return NextResponse.json({ message: "Username is required" }, { status: 400 });
+      return NextResponse.json(
+        { message: 'Username is required' },
+        { status: 400 }
+      );
     }
     if (!address || !signature || !message) {
-      return NextResponse.json({ message: "Address, signature and message are required" }, { status: 400 });
+      return NextResponse.json(
+        { message: 'Address, signature and message are required' },
+        { status: 400 }
+      );
     }
 
     const siweMessage = new SiweMessage(message);
     const chainId = siweMessage.chainId;
 
     if (!chainId) {
-      return NextResponse.json({ message: "Invalid message" }, { status: 400 });
+      return NextResponse.json({ message: 'Invalid message' }, { status: 400 });
     }
 
     if (chainId !== 1 && chainId !== 11155111) {
-      return NextResponse.json({ message: "Invalid chainId" }, { status: 400 });
+      return NextResponse.json({ message: 'Invalid chainId' }, { status: 400 });
     }
 
     const justaname = JustaName.init();
 
-    const ensDomain = agent ? serverEnv.xmtpAgentEnsDomain : serverEnv.userEnsDomain;
+    const ensDomain = agent
+      ? serverEnv.xmtpAgentEnsDomain
+      : serverEnv.userEnsDomain;
 
     const names = await justaname.subnames.getSubnamesByAddress({
       address: address,
@@ -47,7 +55,10 @@ export async function POST(request: NextRequest) {
     });
 
     if (names.subnames.find((name) => name.ens.endsWith(`.${ensDomain}`))) {
-      return NextResponse.json({ message: "Address already claimed" }, { status: 400 });
+      return NextResponse.json(
+        { message: 'Address already claimed' },
+        { status: 400 }
+      );
     }
 
     const add = await justaname.subnames.addSubname(
@@ -56,12 +67,15 @@ export async function POST(request: NextRequest) {
         ensDomain,
         chainId,
         text,
+        addresses: [{ address, coinType: '2147492101' }],
       },
       {
         xSignature: signature,
         xAddress: address,
         xMessage: message,
-        xApiKey: agent ? serverEnv.xmtpAgentJustaNameApiKey : serverEnv.userJustaNameApiKey,
+        xApiKey: agent
+          ? serverEnv.xmtpAgentJustaNameApiKey
+          : serverEnv.userJustaNameApiKey,
       }
     );
 
@@ -70,6 +84,9 @@ export async function POST(request: NextRequest) {
     if (error instanceof Error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
-    return NextResponse.json({ error: "Unknown error occurred" }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Unknown error occurred' },
+      { status: 500 }
+    );
   }
 }

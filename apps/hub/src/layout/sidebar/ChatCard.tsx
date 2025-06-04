@@ -33,6 +33,7 @@ export const ChatCard: React.FC<ChatCardProps> = ({ conversation }) => {
     address: agentMember?.accountIdentifiers[0].identifier,
     chainId: 1,
     enabled: !!agentMember?.accountIdentifiers[0].identifier,
+    isClaimed: true
   });
   const subname = useMemo(() => {
     if (!addressSubnames) return;
@@ -40,6 +41,7 @@ export const ChatCard: React.FC<ChatCardProps> = ({ conversation }) => {
       subname.ens.endsWith(clientEnv.xmtpAgentEnsDomain)
     );
   }, [addressSubnames]);
+
   const { avatar } = useAgentDetails(subname);
   const { latestStringMessage } = useConversation(subname ? conversation : undefined)
 
