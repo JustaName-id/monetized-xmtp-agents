@@ -22,6 +22,7 @@ export function AppSidebar() {
   const { groupedChats, isLoading } = useGroupedChats();
   const { client, isInitializing, connect } = useXMTP();
   const { validSubscriptions } = useSubscription();
+  console.log("groupedChats", groupedChats)
 
   return (
     <Sidebar>
