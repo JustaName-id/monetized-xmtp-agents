@@ -125,6 +125,7 @@ export const useGroupedChats = () => {
       const groups: GroupedChat[] = [];
       if (agentChats.length === 0) return groups;
 
+      await agentChats[0].sync();
       const firstChatLastMessage = await agentChats[0].messages({
         direction: SortDirection.Descending,
         limit: BigInt(1),
@@ -138,6 +139,7 @@ export const useGroupedChats = () => {
       };
       for (let i = 1; i < agentChats.length; i++) {
         const chat = agentChats[i];
+        await chat.sync();
         const chatLastMessage = await chat.messages({
           direction: SortDirection.Descending,
           limit: BigInt(1),
