@@ -56,7 +56,6 @@ export const useGroupedChats = () => {
     error: conversationsError,
     refetch: refetchConversations,
   } = useConversations();
-  console.log('conversations', conversations);
   const { data: agentEnsSubnames, isLoading: isLoadingAgentEnsSubnames } =
     useEnsSubnames({
       ensDomain: clientEnv.xmtpAgentEnsDomain,
@@ -80,7 +79,6 @@ export const useGroupedChats = () => {
           ?.map((sub) => sub.sanitizedRecords.ethAddress.value.toLowerCase())
           .filter(Boolean) || [];
 
-      console.log('allAgentAddresses', allAgentAddresses);
       const agentChats: XMTPConversation[] = [];
 
       for (const convo of conversations) {
@@ -132,7 +130,6 @@ export const useGroupedChats = () => {
         direction: SortDirection.Descending,
         limit: BigInt(1),
       });
-      console.log('firstChatLastMessage', firstChatLastMessage);
 
       let currentGroup: GroupedChat = {
         date: formatDate(
@@ -147,7 +144,6 @@ export const useGroupedChats = () => {
           direction: SortDirection.Descending,
           limit: BigInt(1),
         });
-        console.log('chatLastMessage', chatLastMessage);
         const chatUpdatedAt = Number(chatLastMessage[0].sentAtNs) / 1_000_000;
 
         const chatDate = new Date(chatUpdatedAt);
@@ -201,7 +197,6 @@ export const useGroupedChats = () => {
     }
   }, [conversations, refetchGroupedChatsQuery]);
 
-  console.log(conversations);
   return {
     groupedChats: data || [],
     isLoading,
