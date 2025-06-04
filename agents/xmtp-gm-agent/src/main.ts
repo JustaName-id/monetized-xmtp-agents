@@ -30,7 +30,7 @@ const main = async () => {
   const signer = await createSigner(WALLET_KEY);
 
   const dbEncryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
-  const avatar = fs.readFileSync(process.cwd() + "/agents/xmtp-gm-agent/src/nick.jpg");
+  const avatar = fs.readFileSync(process.cwd() + "/agents/xmtp-gm-agent/src/gm.gif");
   const client = await BasedClient.create(signer, {
     dbEncryptionKey,
     env: XMTP_ENV as XmtpEnv,
