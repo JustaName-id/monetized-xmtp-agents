@@ -19,12 +19,10 @@ import { useSubscription } from "@/query/subscription";
 import Link from 'next/link';
 
 export function AppSidebar() {
-  // const { conversations, isLoading } = useConversations();
   const { groupedChats, isLoading } = useGroupedChats();
   const { client, isInitializing, connect } = useXMTP();
   const { validSubscriptions } = useSubscription();
 
-  console.log(groupedChats)
   return (
     <Sidebar>
       <SidebarHeader className='max-md:pb-8'>XMTP Agents</SidebarHeader>

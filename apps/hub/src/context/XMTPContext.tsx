@@ -12,7 +12,7 @@ import {
 } from "react";
 import { hexToUint8Array } from "uint8array-extras";
 import { useAccount, useSignMessage, useSwitchChain } from "wagmi";
-import {mainnet} from "wagmi/chains";
+import { mainnet } from "wagmi/chains";
 
 export type ContentTypes =
   | string
@@ -99,7 +99,7 @@ export const XMTPProvider: React.FC<XMTPProviderProps> = ({
 
         let xmtpClient: Client;
         try {
-          if(chainId !== mainnet.id){
+          if (chainId !== mainnet.id) {
             await switchChainAsync({ chainId: mainnet.id });
           }
           xmtpClient = await Client.create(signer, {
@@ -123,7 +123,7 @@ export const XMTPProvider: React.FC<XMTPProviderProps> = ({
       }
       return client;
     },
-    [chainId,client, switchChainAsync, status],
+    [chainId, client, switchChainAsync, status],
   );
 
   const connect = useCallback(() => {

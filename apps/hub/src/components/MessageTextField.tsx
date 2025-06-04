@@ -1,11 +1,11 @@
 'use client'
 
-import {FileAttachmentIcon, SendIcon, UsdcIcon} from "@/lib/icons";
-import { Textarea } from "./ui/textarea";
-import { Button } from "./ui";
+import { FileAttachmentIcon, SendIcon, UsdcIcon } from "@/lib/icons";
 import { Conversation } from "@xmtp/browser-sdk";
 import { useState } from "react";
 import { useConversation } from "../query/xmtp";
+import { Button } from "./ui";
+import { Textarea } from "./ui/textarea";
 
 export interface MessageTextFieldProps {
   onNewMessage?: (message: string) => void;

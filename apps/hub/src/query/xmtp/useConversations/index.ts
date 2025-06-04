@@ -1,7 +1,8 @@
 import { useXMTP } from '@/context/XMTPContext';
 import {
   Conversation as OriginalConversation,
-  DecodedMessage, Group,
+  DecodedMessage,
+  Group,
   Identifier,
   SafeCreateGroupOptions,
   SafeListConversationsOptions,
@@ -12,7 +13,7 @@ import {
   useMutation,
   useQueryClient,
   UseQueryResult,
-  UseMutationResult
+  UseMutationResult,
 } from '@tanstack/react-query';
 
 type ConversationsState = {
@@ -29,7 +30,8 @@ const conversationsKeys = {
   lists: () => [...conversationsKeys.all, 'list'] as const,
   list: (options?: SafeListConversationsOptions) =>
     [...conversationsKeys.lists(), options] as const,
-  conversation: (id: string) => [...conversationsKeys.all, 'conversation', id] as const,
+  conversation: (id: string) =>
+    [...conversationsKeys.all, 'conversation', id] as const,
   message: (id: string) => [...conversationsKeys.all, 'message', id] as const,
 };
 
@@ -51,35 +53,36 @@ export const useConversations = () => {
 
   // Helper to update local state
   const updateState = useCallback((updates: Partial<ConversationsState>) => {
-    setState(prev => ({ ...prev, ...updates }));
+    setState((prev) => ({ ...prev, ...updates }));
   }, []);
 
   // Main conversations query
-  const conversationsQuery: UseQueryResult<OriginalConversation[], Error> = useQuery({
-    queryKey: conversationsKeys.list(),
-    queryFn: async (): Promise<OriginalConversation[]> => {
-      if (!client) {
-        throw new Error("XMTP client is not initialized");
-      }
-      return await client.conversations.list();
-    },
-    enabled: !!client && !!clientInboxId,
-    staleTime: STALE_TIME,
-    gcTime: CACHE_TIME,
-    refetchOnWindowFocus: false,
-    refetchOnMount: true,
-    retry: (failureCount, error) => {
-      // Don't retry if it's a client availability error
-      if (error.message.includes('not initialized')) return false;
-      return failureCount < 3;
-    },
-  });
+  const conversationsQuery: UseQueryResult<OriginalConversation[], Error> =
+    useQuery({
+      queryKey: conversationsKeys.list(),
+      queryFn: async (): Promise<OriginalConversation[]> => {
+        if (!client) {
+          throw new Error('XMTP client is not initialized');
+        }
+        return await client.conversations.list();
+      },
+      enabled: !!client && !!clientInboxId,
+      staleTime: STALE_TIME,
+      gcTime: CACHE_TIME,
+      refetchOnWindowFocus: false,
+      refetchOnMount: true,
+      retry: (failureCount, error) => {
+        // Don't retry if it's a client availability error
+        if (error.message.includes('not initialized')) return false;
+        return failureCount < 3;
+      },
+    });
 
   // Sync conversations mutation
   const syncMutation: UseMutationResult<void, Error, void> = useMutation({
     mutationFn: async (): Promise<void> => {
       if (!client) {
-        throw new Error("XMTP client is not initialized");
+        throw new Error('XMTP client is not initialized');
       }
       await client.conversations.sync();
     },
@@ -89,7 +92,7 @@ export const useConversations = () => {
     onSuccess: () => {
       // Invalidate conversations after successful sync
       queryClient.invalidateQueries({
-        queryKey: conversationsKeys.lists()
+        queryKey: conversationsKeys.lists(),
       });
     },
   });
@@ -98,7 +101,7 @@ export const useConversations = () => {
   const syncAllMutation: UseMutationResult<void, Error, void> = useMutation({
     mutationFn: async (): Promise<void> => {
       if (!client) {
-        throw new Error("XMTP client is not initialized");
+        throw new Error('XMTP client is not initialized');
       }
       await client.conversations.syncAll();
     },
@@ -108,18 +111,26 @@ export const useConversations = () => {
     onSuccess: () => {
       // Invalidate conversations after successful sync all
       queryClient.invalidateQueries({
-        queryKey: conversationsKeys.lists()
+        queryKey: conversationsKeys.lists(),
       });
     },
   });
 
   // Get conversation by ID mutation
-  const getConversationByIdMutation: UseMutationResult<OriginalConversation | null, Error, string> = useMutation({
-    mutationFn: async (conversationId: string): Promise<OriginalConversation | null> => {
+  const getConversationByIdMutation: UseMutationResult<
+    OriginalConversation | null,
+    Error,
+    string
+  > = useMutation({
+    mutationFn: async (
+      conversationId: string
+    ): Promise<OriginalConversation | null> => {
       if (!client) {
-        throw new Error("XMTP client is not initialized");
+        throw new Error('XMTP client is not initialized');
       }
-      const result = await client.conversations.getConversationById(conversationId);
+      const result = await client.conversations.getConversationById(
+        conversationId
+      );
       return result || null;
     },
     onError: (error: Error) => {
@@ -128,10 +139,14 @@ export const useConversations = () => {
   });
 
   // Get message by ID mutation
-  const getMessageByIdMutation: UseMutationResult<DecodedMessage | null, Error, string> = useMutation({
+  const getMessageByIdMutation: UseMutationResult<
+    DecodedMessage | null,
+    Error,
+    string
+  > = useMutation({
     mutationFn: async (messageId: string): Promise<DecodedMessage | null> => {
       if (!client) {
-        throw new Error("XMTP client is not initialized");
+        throw new Error('XMTP client is not initialized');
       }
       const message = await client.conversations.getMessageById(messageId);
       return message || null;
@@ -142,10 +157,20 @@ export const useConversations = () => {
   });
 
   // Create group mutation
-  const newGroupMutation: UseMutationResult<OriginalConversation, Error, { inboxIds: string[]; options?: SafeCreateGroupOptions }> = useMutation({
-    mutationFn: async ({ inboxIds, options }: { inboxIds: string[]; options?: SafeCreateGroupOptions }): Promise<OriginalConversation> => {
+  const newGroupMutation: UseMutationResult<
+    OriginalConversation,
+    Error,
+    { inboxIds: string[]; options?: SafeCreateGroupOptions }
+  > = useMutation({
+    mutationFn: async ({
+      inboxIds,
+      options,
+    }: {
+      inboxIds: string[];
+      options?: SafeCreateGroupOptions;
+    }): Promise<OriginalConversation> => {
       if (!client) {
-        throw new Error("XMTP client is not initialized");
+        throw new Error('XMTP client is not initialized');
       }
       return await client.conversations.newGroup(inboxIds, options);
     },
@@ -162,61 +187,79 @@ export const useConversations = () => {
   });
 
   // Create group with identifiers mutation
-  const newGroupWithIdentifiersMutation: UseMutationResult<Group, Error, { identifiers: Identifier[]; options?: SafeCreateGroupOptions }> = useMutation({
-    mutationFn: async ({ identifiers, options }: { identifiers: Identifier[]; options?: SafeCreateGroupOptions }): Promise<Group> => {
+  const newGroupWithIdentifiersMutation: UseMutationResult<
+    Group,
+    Error,
+    { identifiers: Identifier[]; options?: SafeCreateGroupOptions }
+  > = useMutation({
+    mutationFn: async ({
+      identifiers,
+      options,
+    }: {
+      identifiers: Identifier[];
+      options?: SafeCreateGroupOptions;
+    }): Promise<Group> => {
       if (!client) {
-        throw new Error("XMTP client is not initialized");
+        throw new Error('XMTP client is not initialized');
       }
-      return await client.conversations.newGroupWithIdentifiers(identifiers, options);
+      return await client.conversations.newGroupWithIdentifiers(
+        identifiers,
+        options
+      );
     },
     onError: (error: Error) => {
       updateState({ error });
     },
     onSuccess: (newConversation) => {
-
-      console.log("onSuccess newConversation: ", newConversation)
       // Add the new conversation to the cache optimistically
       queryClient.setQueryData<OriginalConversation[]>(
         conversationsKeys.list(),
         (oldConversations = []) => {
           // Check for duplicates
-          const isDuplicate = oldConversations.some(c => c.id === newConversation.id);
+          const isDuplicate = oldConversations.some(
+            (c) => c.id === newConversation.id
+          );
           if (isDuplicate) return oldConversations;
 
           // Add new conversation at the beginning
           return [newConversation, ...oldConversations];
         }
       );
-
-      console.log("After onSuccess: ", queryClient.getQueryData(conversationsKeys.list()))
     },
   });
 
   // Create DM mutation
-  const newDmMutation: UseMutationResult<OriginalConversation, Error, string> = useMutation({
-    mutationFn: async (inboxId: string): Promise<OriginalConversation> => {
-      if (!client) {
-        throw new Error("XMTP client is not initialized");
-      }
-      return await client.conversations.newDm(inboxId);
-    },
-    onError: (error: Error) => {
-      updateState({ error });
-    },
-    onSuccess: (newConversation) => {
-      // Add the new conversation to the cache optimistically
-      queryClient.setQueryData<OriginalConversation[]>(
-        conversationsKeys.list(),
-        (oldConversations = []) => [newConversation, ...oldConversations]
-      );
-    },
-  });
+  const newDmMutation: UseMutationResult<OriginalConversation, Error, string> =
+    useMutation({
+      mutationFn: async (inboxId: string): Promise<OriginalConversation> => {
+        if (!client) {
+          throw new Error('XMTP client is not initialized');
+        }
+        return await client.conversations.newDm(inboxId);
+      },
+      onError: (error: Error) => {
+        updateState({ error });
+      },
+      onSuccess: (newConversation) => {
+        // Add the new conversation to the cache optimistically
+        queryClient.setQueryData<OriginalConversation[]>(
+          conversationsKeys.list(),
+          (oldConversations = []) => [newConversation, ...oldConversations]
+        );
+      },
+    });
 
   // Create DM with identifier mutation
-  const newDmWithIdentifierMutation: UseMutationResult<OriginalConversation, Error, Identifier> = useMutation({
-    mutationFn: async (identifier: Identifier): Promise<OriginalConversation> => {
+  const newDmWithIdentifierMutation: UseMutationResult<
+    OriginalConversation,
+    Error,
+    Identifier
+  > = useMutation({
+    mutationFn: async (
+      identifier: Identifier
+    ): Promise<OriginalConversation> => {
       if (!client) {
-        throw new Error("XMTP client is not initialized");
+        throw new Error('XMTP client is not initialized');
       }
       return await client.conversations.newDmWithIdentifier(identifier);
     },
@@ -233,45 +276,50 @@ export const useConversations = () => {
   });
 
   // List conversations with options (uses separate queries for different options)
-  const list = useCallback(async (
-    options?: SafeListConversationsOptions,
-    syncFromNetwork = false,
-    forceRefresh = false
-  ): Promise<OriginalConversation[]> => {
-    if (!client) {
-      throw new Error("XMTP client is not initialized");
-    }
+  const list = useCallback(
+    async (
+      options?: SafeListConversationsOptions,
+      syncFromNetwork = false,
+      forceRefresh = false
+    ): Promise<OriginalConversation[]> => {
+      if (!client) {
+        throw new Error('XMTP client is not initialized');
+      }
 
-    // Sync first if requested
-    if (syncFromNetwork) {
-      await syncMutation.mutateAsync();
-    }
+      // Sync first if requested
+      if (syncFromNetwork) {
+        await syncMutation.mutateAsync();
+      }
 
-    // If we have options, use a separate query
-    if (options) {
-      return queryClient.fetchQuery({
-        queryKey: conversationsKeys.list(options),
-        queryFn: async () => await client.conversations.list(options),
-        staleTime: forceRefresh ? 0 : STALE_TIME,
-      });
-    }
+      // If we have options, use a separate query
+      if (options) {
+        return queryClient.fetchQuery({
+          queryKey: conversationsKeys.list(options),
+          queryFn: async () => await client.conversations.list(options),
+          staleTime: forceRefresh ? 0 : STALE_TIME,
+        });
+      }
 
-    // Use main query, force refetch if needed
-    if (forceRefresh) {
-      await queryClient.refetchQueries({
-        queryKey: conversationsKeys.list()
-      });
-      return conversationsQuery.data || [];
-    }
+      // Use main query, force refetch if needed
+      if (forceRefresh) {
+        await queryClient.refetchQueries({
+          queryKey: conversationsKeys.list(),
+        });
+        return conversationsQuery.data || [];
+      }
 
-    // Return cached data or trigger fetch
-    return conversationsQuery.data ||
-      await queryClient.fetchQuery({
-        queryKey: conversationsKeys.list(),
-        queryFn: async () => await client.conversations.list(),
-        staleTime: 0,
-      });
-  }, [client, queryClient, syncMutation, conversationsQuery.data]);
+      // Return cached data or trigger fetch
+      return (
+        conversationsQuery.data ||
+        (await queryClient.fetchQuery({
+          queryKey: conversationsKeys.list(),
+          queryFn: async () => await client.conversations.list(),
+          staleTime: 0,
+        }))
+      );
+    },
+    [client, queryClient, syncMutation, conversationsQuery.data]
+  );
 
   // Wrapper methods
   const sync = useCallback(async (): Promise<void> => {
@@ -282,40 +330,61 @@ export const useConversations = () => {
     return syncAllMutation.mutateAsync();
   }, [syncAllMutation.mutateAsync]);
 
-  const getConversationById = useCallback(async (conversationId: string): Promise<OriginalConversation | null> => {
-    return getConversationByIdMutation.mutateAsync(conversationId);
-  }, [getConversationByIdMutation.mutateAsync]);
+  const getConversationById = useCallback(
+    async (conversationId: string): Promise<OriginalConversation | null> => {
+      return getConversationByIdMutation.mutateAsync(conversationId);
+    },
+    [getConversationByIdMutation.mutateAsync]
+  );
 
-  const getMessageById = useCallback(async (messageId: string): Promise<DecodedMessage | null> => {
-    return getMessageByIdMutation.mutateAsync(messageId);
-  }, [getMessageByIdMutation.mutateAsync]);
+  const getMessageById = useCallback(
+    async (messageId: string): Promise<DecodedMessage | null> => {
+      return getMessageByIdMutation.mutateAsync(messageId);
+    },
+    [getMessageByIdMutation.mutateAsync]
+  );
 
-  const newGroup = useCallback(async (
-    inboxIds: string[],
-    options?: SafeCreateGroupOptions
-  ): Promise<OriginalConversation> => {
-    return newGroupMutation.mutateAsync({ inboxIds, options });
-  }, [newGroupMutation.mutateAsync]);
+  const newGroup = useCallback(
+    async (
+      inboxIds: string[],
+      options?: SafeCreateGroupOptions
+    ): Promise<OriginalConversation> => {
+      return newGroupMutation.mutateAsync({ inboxIds, options });
+    },
+    [newGroupMutation.mutateAsync]
+  );
 
-  const newGroupWithIdentifiers = useCallback(async (
-    identifiers: Identifier[],
-    options?: SafeCreateGroupOptions
-  ): Promise<Group> => {
-    return newGroupWithIdentifiersMutation.mutateAsync({ identifiers, options });
-  }, [newGroupWithIdentifiersMutation.mutateAsync]);
+  const newGroupWithIdentifiers = useCallback(
+    async (
+      identifiers: Identifier[],
+      options?: SafeCreateGroupOptions
+    ): Promise<Group> => {
+      return newGroupWithIdentifiersMutation.mutateAsync({
+        identifiers,
+        options,
+      });
+    },
+    [newGroupWithIdentifiersMutation.mutateAsync]
+  );
 
-  const newDm = useCallback(async (inboxId: string): Promise<OriginalConversation> => {
-    return newDmMutation.mutateAsync(inboxId);
-  }, [newDmMutation.mutateAsync]);
+  const newDm = useCallback(
+    async (inboxId: string): Promise<OriginalConversation> => {
+      return newDmMutation.mutateAsync(inboxId);
+    },
+    [newDmMutation.mutateAsync]
+  );
 
-  const newDmWithIdentifier = useCallback(async (identifier: Identifier): Promise<OriginalConversation> => {
-    return newDmWithIdentifierMutation.mutateAsync(identifier);
-  }, [newDmWithIdentifierMutation.mutateAsync]);
+  const newDmWithIdentifier = useCallback(
+    async (identifier: Identifier): Promise<OriginalConversation> => {
+      return newDmWithIdentifierMutation.mutateAsync(identifier);
+    },
+    [newDmWithIdentifierMutation.mutateAsync]
+  );
 
   // Stream conversations with proper cleanup
   const stream = useCallback(async (): Promise<() => void> => {
     if (!client) {
-      throw new Error("XMTP client is not initialized");
+      throw new Error('XMTP client is not initialized');
     }
 
     // Clean up existing stream
@@ -334,7 +403,6 @@ export const useConversations = () => {
           updateState({ error });
           return;
         }
-        console.log("Stream onConversation: ", conversation)
 
         if (conversation) {
           const shouldAdd =
@@ -347,15 +415,15 @@ export const useConversations = () => {
               conversationsKeys.list(),
               (oldConversations = []) => {
                 // Check for duplicates
-                const isDuplicate = oldConversations.some(c => c.id === conversation.id);
+                const isDuplicate = oldConversations.some(
+                  (c) => c.id === conversation.id
+                );
                 if (isDuplicate) return oldConversations;
 
                 // Add new conversation at the beginning
                 return [conversation, ...oldConversations];
               }
             );
-
-            console.log("Stream: After setQueryData: ", queryClient.getQueryData(conversationsKeys.list()))
           }
         }
       };
@@ -373,7 +441,10 @@ export const useConversations = () => {
       streamCleanupRef.current = cleanup;
       return cleanup;
     } catch (error) {
-      const err = error instanceof Error ? error : new Error('Failed to start conversation stream');
+      const err =
+        error instanceof Error
+          ? error
+          : new Error('Failed to start conversation stream');
       updateState({ error: err, isStreaming: false });
       throw err;
     }
@@ -454,7 +525,8 @@ export const useConversations = () => {
   }, []);
 
   // Combine all errors
-  const combinedError = state.error ||
+  const combinedError =
+    state.error ||
     conversationsQuery.error ||
     syncMutation.error ||
     syncAllMutation.error ||
@@ -466,7 +538,8 @@ export const useConversations = () => {
     newDmWithIdentifierMutation.error;
 
   // Check if any mutation is pending
-  const isAnyMutationPending = syncMutation.isPending ||
+  const isAnyMutationPending =
+    syncMutation.isPending ||
     syncAllMutation.isPending ||
     getConversationByIdMutation.isPending ||
     getMessageByIdMutation.isPending ||
@@ -488,7 +561,8 @@ export const useConversations = () => {
     error: combinedError,
 
     // Computed state
-    isEmpty: conversationsQuery.isSuccess && (conversationsQuery.data?.length === 0),
+    isEmpty:
+      conversationsQuery.isSuccess && conversationsQuery.data?.length === 0,
 
     // Core methods
     list,
