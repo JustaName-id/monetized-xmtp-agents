@@ -49,6 +49,9 @@
   ],
   "references": [
     {
+      "path": "../../libs/content-type-typing"
+    },
+    {
       "path": "../../libs/spend-permission"
     }
   ]

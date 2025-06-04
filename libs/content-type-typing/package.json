@@ -1,0 +1,41 @@
+{
+  "name": "@agenthub/xmtp-content-type-typing",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./dist/index.d.ts",
+      "browser": "./dist/browser/index.js",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "nx": {
+    "name": "xmtp-content-type-typing"
+  },
+  "scripts": {
+    "build:rollup": "rimraf dist && rollup -c"
+  },
+  "dependencies": {
+    "tslib": "^2.3.0",
+    "@xmtp/content-type-primitives": "^2.0.2",
+    "@xmtp/proto": "^3.78.0"
+  },
+  "devDependencies": {
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^12.1.2",
+    "@types/node": "^22.15.23",
+    "rimraf": "^6.0.1",
+    "rollup": "^4.41.1",
+    "rollup-plugin-dts": "^6.1.1",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5",
+    "vitest": "^3.1.4"
+  },
+  "license": "MIT"
+}

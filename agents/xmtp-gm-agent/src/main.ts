@@ -8,20 +8,20 @@ import {
 } from '@agenthub/xmtp-helpers';
 import { type XmtpEnv } from '@xmtp/node-sdk';
 import BasedClient from '@agenthub/xmtp-extended-client';
+import {
+  ContentTypeTyping,
+  TypingCodec,
+  type Typing,
+} from '@agenthub/xmtp-content-type-typing';
 
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db
  * that stores your agent's messages */
-const {
-  XMTP_ENV,
-  WALLET_KEY,
-  ENCRYPTION_KEY,
-  CHAIN
-} = validateEnvironment([
-  "XMTP_ENV",
-  "WALLET_KEY",
-  "ENCRYPTION_KEY",
-  "CHAIN"
+const { XMTP_ENV, WALLET_KEY, ENCRYPTION_KEY, CHAIN } = validateEnvironment([
+  'XMTP_ENV',
+  'WALLET_KEY',
+  'ENCRYPTION_KEY',
+  'CHAIN',
 ]);
 
 const main = async () => {
@@ -30,42 +30,66 @@ const main = async () => {
   const signer = await createSigner(WALLET_KEY);
 
   const dbEncryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
-  const avatar = fs.readFileSync(process.cwd() + "/agents/xmtp-gm-agent/src/nick.jpg");
+  const avatar = fs.readFileSync(
+    process.cwd() + '/agents/xmtp-gm-agent/src/nick.jpg'
+  );
   const client = await BasedClient.create(signer, {
     dbEncryptionKey,
     env: XMTP_ENV as XmtpEnv,
-    username: 'gm',
+    username: 'test',
     avatar,
     displayName: 'The GM Agent',
-    description: "Gm Agent",
+    description: 'Gm Agent',
     fees: 0.05,
+    codecs: [new TypingCodec()],
     tags: ['gm'],
-    chain: CHAIN ==="mainnet" ? "base" : 'baseSepolia'
+    chain: CHAIN === 'mainnet' ? 'base' : 'baseSepolia',
   });
 
   void logAgentDetails(client);
 
   /* Sync the conversations from the network to update the local db */
-  console.log("✓ Syncing conversations...");
+  console.log('✓ Syncing conversations...');
   await client.conversations.sync();
 
-  console.log("Waiting for messages...");
+  console.log('Waiting for messages...');
   const stream = await client.conversations.streamAllMessages();
 
   for await (const message of stream) {
+    if (!message) {
+      continue;
+    }
+    if (message.senderInboxId.toLowerCase() === client.inboxId.toLowerCase()) {
+      continue; // Ignore messages from self
+    }
+
+    // Check if the message content type is the typing indicator
     if (
-      message?.senderInboxId.toLowerCase() === client.inboxId.toLowerCase() ||
-      message?.contentType?.typeId !== "text"
+      message.contentType?.authorityId === ContentTypeTyping.authorityId &&
+      message.contentType?.typeId === ContentTypeTyping.typeId
     ) {
+      console.log(
+        `Ignoring typing indicator message from ${message.senderInboxId}`
+      );
+      continue; // Ignore typing indicator messages
+    }
+
+    // Ensure we only process text messages for replies
+    if (message.contentType?.typeId !== 'text') {
+      console.log(
+        `Ignoring non-text message of type: ${
+          message.contentType?.toString() ?? 'unknown type'
+        } from ${message.senderInboxId}`
+      );
       continue;
     }
 
     const conversation = await client.conversations.getConversationById(
-      message.conversationId,
+      message.conversationId
     );
 
     if (!conversation) {
-      console.log("Unable to find conversation, skipping");
+      console.log('Unable to find conversation, skipping');
       continue;
     }
 
@@ -73,16 +97,28 @@ const main = async () => {
       message.senderInboxId,
     ]);
     const addressFromInboxId = inboxState[0].identifiers[0].identifier;
-    const subname = await client.subnameByAddress(addressFromInboxId)
+    const subname = await client.subnameByAddress(addressFromInboxId);
 
     console.log(`Sending "gm" response to ${addressFromInboxId}...`);
-    if(subname){
-      await conversation.sendWithFees(`gm ${subname.ens}`, addressFromInboxId);
-    }else{
-      await conversation.sendWithFees("gm", addressFromInboxId);
+    // Send typing indicator first
+    try {
+      const typingContent: Typing = { isTyping: true };
+      await conversation.send(typingContent, ContentTypeTyping);
+      console.log(`Sent typing indicator to ${addressFromInboxId}`);
+    } catch (e) {
+      console.error(
+        `Error sending typing indicator to ${addressFromInboxId}:`,
+        e
+      );
     }
 
-    console.log("Waiting for messages...");
+    if (subname) {
+      await conversation.sendWithFees(`gm ${subname.ens}`, addressFromInboxId);
+    } else {
+      await conversation.sendWithFees('gm', addressFromInboxId);
+    }
+
+    console.log('Waiting for messages...');
   }
 };
 
