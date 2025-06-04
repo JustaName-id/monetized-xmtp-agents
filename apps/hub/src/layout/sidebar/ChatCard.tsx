@@ -1,4 +1,5 @@
 import { useAgentDetails } from '@/hooks/use-agent-details';
+import { useConversation } from "@/query/xmtp";
 import { useMembers } from '@/query/xmtp/useMembers';
 import { clientEnv } from '@/utils/config/clientEnv';
 import { useAddressSubnames } from '@justaname.id/react';
@@ -7,8 +8,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useMemo } from 'react';
 import { useAccount } from 'wagmi';
-import { Avatar, AvatarImage } from '../../components/ui/avatar';
-import { useConversation } from "../../query/xmtp";
+import { Avatar, AvatarImage } from '@/components/ui';
 
 export interface ChatCardProps {
   conversation: Conversation;

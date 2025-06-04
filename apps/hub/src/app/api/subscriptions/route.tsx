@@ -58,40 +58,6 @@ export async function GET(request: NextRequest) {
       error: result.status === 'failure' ? result.error : null,
     }));
 
-    // console.log(validationResults)
-    // let extraCheck = await Promise.all(
-    //   validationResults.map(async (result) => {
-    //
-    //     if (!result.isValid || result.error) {
-    //       return result;
-    //     }
-    //     const spenderAddress = result.spendPermission.spender
-    //     const subnames = await justanameInstance().subnames.getSubnamesByAddress({
-    //       address: spenderAddress
-    //     })
-    //
-    //     const subname = subnames.subnames.find(subname => subname.ens.endsWith(serverEnv.xmtpAgentEnsDomain))
-    //
-    //     if (subname) {
-    //
-    //       const xmtpFees = subname.records.texts.find(record => record.key === 'xmtp_fees')
-    //
-    //       console.log(xmtpFees, result.spendPermission.allowance)
-    //       if (xmtpFees && result.spendPermission.allowance === parseUnits(xmtpFees.value, 6).toString()) {
-    //         return {
-    //           ...result,
-    //           isValid: true
-    //         }
-    //       }
-    //     }
-    //
-    //     return {
-    //       ...result,
-    //       isValid: false
-    //     }
-    //   })
-    // )
-
     if(isValid==="true"){
       validationResults = validationResults.filter(({isValid}) => isValid)
     }

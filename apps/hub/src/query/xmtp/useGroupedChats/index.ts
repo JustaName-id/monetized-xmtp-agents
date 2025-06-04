@@ -195,6 +195,7 @@ export const useGroupedChats = () => {
     }
   }, [conversations, refetchGroupedChatsQuery]);
 
+  console.log(conversations)
   return {
     groupedChats: data || [],
     isLoading,
