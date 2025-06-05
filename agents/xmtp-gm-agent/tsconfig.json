@@ -10,9 +10,6 @@
       "path": "../../libs/xmtp-helpers"
     },
     {
-      "path": "../../libs/content-type-typing"
-    },
-    {
       "path": "./tsconfig.app.json"
     }
   ]

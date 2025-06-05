@@ -30,7 +30,10 @@
             "sourcemap": true,
             "outExtension": {
               ".js": ".js"
-            }
+            },
+            "external": [
+              "@agenthub/xmtp-content-type-typing"
+            ]
           }
         },
         "configurations": {
@@ -40,7 +43,10 @@
               "sourcemap": false,
               "outExtension": {
                 ".js": ".js"
-              }
+              },
+              "external": [
+                "@agenthub/xmtp-content-type-typing"
+              ]
             }
           }
         }

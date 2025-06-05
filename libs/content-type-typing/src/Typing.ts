@@ -6,7 +6,7 @@ import {
 
 // Unique identifier for the custom typing content type
 export const ContentTypeTyping = new ContentTypeId({
-  authorityId: 'agenthub.dev', // Using a custom authority ID for your application
+  authorityId: 'xmtp.org', // Using a custom authority ID for your application
   typeId: 'typing',
   versionMajor: 1,
   versionMinor: 0,

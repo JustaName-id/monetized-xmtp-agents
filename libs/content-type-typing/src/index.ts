@@ -1,1 +1,1 @@
-export * from './Typing';
+export * from './Typing.js';

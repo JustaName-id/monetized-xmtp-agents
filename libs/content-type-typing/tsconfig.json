@@ -1,6 +1,4 @@
 {
-  "extends": "../../tsconfig.base.json",
-  "files": [],
   "compilerOptions": {
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
@@ -11,12 +9,10 @@
     "skipLibCheck": true,
     "sourceMap": true,
     "strict": true,
-    "target": "ESNext"
+    "target": "ESNext",
+    "types": ["vitest/globals"],
+    "composite": false
   },
-  "references": [
-    {
-      "path": "./tsconfig.lib.json"
-    }
-  ],
-  "include": ["src", "rollup.config.js"]
+
+  "include": ["src", "rollup.config.js", "vitest.config.ts"]
 }
