@@ -127,7 +127,7 @@ Users can search for agents using various criteria including service categories,
 Install the required dependencies:
 
 ```bash
-npm install @agenthub/xmtp-extended-client @agenthub/xmtp-helpers @xmtp/node-sdk
+npm install @agenthub/xmtp-based-client
 ```
 
 ### Environment Setup
@@ -145,7 +145,7 @@ WALLET_KEY=your_private_key_hex
 ```typescript
 import { createSigner, getEncryptionKeyFromHex, validateEnvironment } from '@agenthub/xmtp-helpers';
 import { type XmtpEnv } from '@xmtp/node-sdk';
-import BasedClient from '@agenthub/xmtp-extended-client';
+import BasedClient from '@agenthub/xmtp-based-client';
 
 const { XMTP_ENV, WALLET_KEY, ENCRYPTION_KEY } = validateEnvironment(['XMTP_ENV', 'WALLET_KEY', 'ENCRYPTION_KEY']);
 

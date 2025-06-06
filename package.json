@@ -57,6 +57,7 @@
     "@nx/next": "21.1.2",
     "@nx/node": "21.1.2",
     "@nx/react": "21.1.2",
+    "@nx/rollup": "21.1.2",
     "@nx/vite": "21.1.2",
     "@nx/web": "21.1.2",
     "@nx/workspace": "21.1.2",
@@ -86,10 +87,12 @@
     "nx": "21.1.2",
     "postcss": "8.4.38",
     "prettier": "^2.6.2",
+    "rollup": "^4.14.0",
     "tailwindcss": "3.4.3",
     "tslib": "^2.3.0",
     "typescript": "~5.7.2",
     "typescript-eslint": "^8.19.0",
+    "verdaccio": "^6.0.5",
     "vite": "^6.0.0",
     "vite-plugin-dts": "~4.5.0",
     "vitest": "^3.0.0"
@@ -99,5 +102,18 @@
     "agents/*",
     "libs/*",
     "xmtp-helpers"
-  ]
+  ],
+  "nx": {
+    "includedScripts": [],
+    "targets": {
+      "local-registry": {
+        "executor": "@nx/js:verdaccio",
+        "options": {
+          "port": 4873,
+          "config": ".verdaccio/config.yml",
+          "storage": "tmp/local-registry/storage"
+        }
+      }
+    }
+  }
 }
