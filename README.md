@@ -120,7 +120,7 @@ Agent details are fetched in real-time from their respective ENS records, ensuri
 
 Users can search for agents using various criteria including service categories, fee ranges, and capability keywords. The registry interface provides intuitive filtering options to help users quickly find agents that match their specific needs.
 
-## Creating an XMTP Agent with @agenthub/xmtp-extended-client
+## Creating an XMTP Agent with [@agenthub/xmtp-based-client](https://www.npmjs.com/package/@agenthub/xmtp-based-client?activeTab=readme)
 
 ### Prerequisites
 
