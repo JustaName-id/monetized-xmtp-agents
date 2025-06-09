@@ -34,7 +34,7 @@ export const PenIcon = () => {
 export const ProfileIcon = () => {
     return (
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M1.33337 14C1.33345 13.1606 1.53164 12.3332 1.91181 11.5848C2.29199 10.8365 2.84342 10.1885 3.52126 9.69345C4.1991 9.19842 4.9842 8.87037 5.81273 8.73597C6.64126 8.60157 7.48981 8.66462 8.28937 8.92M13.0001 9.53337L12.7334 10.1334M11.2667 13.8667L11 14.4667M14.4667 13.0001L13.8667 12.7334M10.1334 11.2667L9.53341 11M14.4667 11L13.8667 11.2667M10.1334 12.7334L9.53341 13.0001M13.0001 14.4667L12.7334 13.8667M11.2667 10.1334L11 9.53337M10 5.33333C10 7.17428 8.50766 8.66667 6.66671 8.66667C4.82576 8.66667 3.33337 7.17428 3.33337 5.33333C3.33337 3.49238 4.82576 2 6.66671 2C8.50766 2 10 3.49238 10 5.33333ZM14 12C14 13.1046 13.1046 14 12 14C10.8955 14 10 13.1046 10 12C10 10.8954 10.8955 10 12 10C13.1046 10 14 10.8954 14 12Z" stroke="#3F3F46" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M1.33337 14C1.33345 13.1606 1.53164 12.3332 1.91181 11.5848C2.29199 10.8365 2.84342 10.1885 3.52126 9.69345C4.1991 9.19842 4.9842 8.87037 5.81273 8.73597C6.64126 8.60157 7.48981 8.66462 8.28937 8.92M13.0001 9.53337L12.7334 10.1334M11.2667 13.8667L11 14.4667M14.4667 13.0001L13.8667 12.7334M10.1334 11.2667L9.53341 11M14.4667 11L13.8667 11.2667M10.1334 12.7334L9.53341 13.0001M13.0001 14.4667L12.7334 13.8667M11.2667 10.1334L11 9.53337M10 5.33333C10 7.17428 8.50766 8.66667 6.66671 8.66667C4.82576 8.66667 3.33337 7.17428 3.33337 5.33333C3.33337 3.49238 4.82576 2 6.66671 2C8.50766 2 10 3.49238 10 5.33333ZM14 12C14 13.1046 13.1046 14 12 14C10.8955 14 10 13.1046 10 12C10 10.8954 10.8955 10 12 10C13.1046 10 14 10.8954 14 12Z" stroke="var(--popover-foreground)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
     )
 }
@@ -43,8 +43,8 @@ export const ExploreIcon = () => {
     return (
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
             <g clipPath="url(#clip0_245_5156)">
-                <path d="M10.8267 5.17333L9.62405 8.78067C9.55859 8.97706 9.44831 9.15551 9.30193 9.30188C9.15555 9.44826 8.9771 9.55855 8.78071 9.624L5.17338 10.8267L6.37605 7.21934C6.4415 7.02295 6.55179 6.8445 6.69816 6.69812C6.84454 6.55174 7.02299 6.44146 7.21938 6.376L10.8267 5.17333Z" stroke="#3F3F46" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M8.00004 14.6667C11.6819 14.6667 14.6667 11.6819 14.6667 8C14.6667 4.3181 11.6819 1.33333 8.00004 1.33333C4.31814 1.33333 1.33337 4.3181 1.33337 8C1.33337 11.6819 4.31814 14.6667 8.00004 14.6667Z" stroke="#3F3F46" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M10.8267 5.17333L9.62405 8.78067C9.55859 8.97706 9.44831 9.15551 9.30193 9.30188C9.15555 9.44826 8.9771 9.55855 8.78071 9.624L5.17338 10.8267L6.37605 7.21934C6.4415 7.02295 6.55179 6.8445 6.69816 6.69812C6.84454 6.55174 7.02299 6.44146 7.21938 6.376L10.8267 5.17333Z" stroke="var(--popover-foreground)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M8.00004 14.6667C11.6819 14.6667 14.6667 11.6819 14.6667 8C14.6667 4.3181 11.6819 1.33333 8.00004 1.33333C4.31814 1.33333 1.33337 4.3181 1.33337 8C1.33337 11.6819 4.31814 14.6667 8.00004 14.6667Z" stroke="var(--popover-foreground)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </g>
             <defs>
                 <clipPath id="clip0_245_5156">
@@ -105,5 +105,17 @@ export const FileAttachmentIcon: React.FC<React.SVGProps<SVGSVGElement>> = (prop
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" {...props}>
             <path d="M22,12 C22,12 19.0000009,15.0000004 13.0000004,21.0000004 C6.99999996,27.0000004 -2.00000007,18.0000004 3.99999994,12.0000004 C9.99999996,6.00000037 9,7.00000011 13,3.00000008 C17,-0.999999955 23,4.99999994 19,9.00000005 C15,13.0000002 12.0000004,16.0000007 9.99999995,18.0000004 C7.99999952,20 5,17 6.99999995,15.0000004 C8.99999991,13.0000007 16,6 16,6" stroke="var(--popover-foreground)" strokeWidth="1.33" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
+    )
+}
+
+export const PackageIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => {
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--popover-foreground)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z" /><path d="M12 22V12" /><polyline points="3.29 7 12 12 20.71 7" /><path d="m7.5 4.27 9 5.15" /></svg>
+    )
+}
+
+export const ExternalIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => {
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--popover-foreground)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M15 3h6v6" /><path d="M10 14 21 3" /><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /></svg>
     )
 }
