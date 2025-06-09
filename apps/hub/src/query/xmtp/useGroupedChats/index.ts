@@ -8,8 +8,8 @@ import {
   Conversation as XMTPConversation,
 } from '@xmtp/browser-sdk';
 import { format, isSameDay } from 'date-fns';
+import { useEffect } from 'react';
 import { useAccount } from 'wagmi';
-import {useEffect} from "react";
 
 const isValidAddress = (address: string): boolean => {
   if (typeof address !== 'string') return false;
@@ -56,7 +56,6 @@ export const useGroupedChats = () => {
     error: conversationsError,
     refetch: refetchConversations,
   } = useConversations();
-  console.log(conversations)
   const { data: agentEnsSubnames, isLoading: isLoadingAgentEnsSubnames } =
     useEnsSubnames({
       ensDomain: clientEnv.xmtpAgentEnsDomain,
@@ -74,6 +73,11 @@ export const useGroupedChats = () => {
       if (!conversations || conversations.length === 0 || !currentUserAddress) {
         return [];
       }
+
+      const allAgentAddresses =
+        agentEnsSubnames?.pages[0]?.data
+          ?.map((sub) => sub.sanitizedRecords.ethAddress.value.toLowerCase())
+          .filter(Boolean) || [];
 
       const agentChats: XMTPConversation[] = [];
 
@@ -93,7 +97,7 @@ export const useGroupedChats = () => {
 
         if (!membersFromSDK || membersFromSDK.length === 0) continue;
 
-        const processedPeerAddresses = new Set<string>();
+        let isAgentInConvo = false;
 
         for (const member of membersFromSDK) {
           const firstIdentifier =
@@ -106,23 +110,22 @@ export const useGroupedChats = () => {
             memberAddress &&
             isValidAddress(memberAddress) &&
             memberAddress.toLowerCase() !== currentUserAddress.toLowerCase() &&
-            agentEnsSubnames?.pages[0].data &&
-            agentEnsSubnames.pages[0].data.find((sub) =>
-              sub.sanitizedRecords.ethAddress.value
-                .toLowerCase()
-                .includes(currentUserAddress.toLowerCase())
-            )
+            allAgentAddresses.includes(memberAddress.toLowerCase())
           ) {
-            processedPeerAddresses.add(memberAddress.toLowerCase());
+            isAgentInConvo = true;
+            break;
           }
         }
 
-        agentChats.push(convo);
+        if (isAgentInConvo) {
+          agentChats.push(convo);
+        }
       }
 
       const groups: GroupedChat[] = [];
       if (agentChats.length === 0) return groups;
 
+      await agentChats[0].sync();
       const firstChatLastMessage = await agentChats[0].messages({
         direction: SortDirection.Descending,
         limit: BigInt(1),
@@ -134,9 +137,9 @@ export const useGroupedChats = () => {
         ),
         chats: [agentChats[0]],
       };
-
       for (let i = 1; i < agentChats.length; i++) {
         const chat = agentChats[i];
+        await chat.sync();
         const chatLastMessage = await chat.messages({
           direction: SortDirection.Descending,
           limit: BigInt(1),
@@ -150,17 +153,15 @@ export const useGroupedChats = () => {
             direction: SortDirection.Descending,
             limit: BigInt(1),
           });
-        const currentGroupFirstChatUpdatedAt = Number(currentGroupFirstChatLastMessage[0].sentAtNs) / 1_000_000;
+        const currentGroupFirstChatUpdatedAt =
+          Number(currentGroupFirstChatLastMessage[0].sentAtNs) / 1_000_000;
         if (typeof currentGroupFirstChatUpdatedAt !== 'number') {
           groups.push(currentGroup);
           currentGroup = { date: formatDate(chatDate), chats: [chat] };
           continue;
         }
-        const currentGroupDate = new Date(
-          currentGroupFirstChatUpdatedAt
-        );
+        const currentGroupDate = new Date(currentGroupFirstChatUpdatedAt);
 
-        console.log(chatDate, currentGroupDate, isSameDay(chatDate, currentGroupDate),)
         if (isSameDay(chatDate, currentGroupDate)) {
           currentGroup.chats.push(chat);
         } else {
@@ -191,7 +192,7 @@ export const useGroupedChats = () => {
   const error = conversationsError || errorGroupedChats;
 
   useEffect(() => {
-    if(conversations && conversations.length > 0){
+    if (conversations && conversations.length > 0) {
       refetchGroupedChatsQuery();
     }
   }, [conversations, refetchGroupedChatsQuery]);

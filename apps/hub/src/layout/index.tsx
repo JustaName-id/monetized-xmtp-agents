@@ -1,13 +1,13 @@
 'use client';
 
-import { ReactNode, useEffect } from 'react';
-import { Navbar } from './navbar';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { Inter } from 'next/font/google';
-import { AppSidebar } from './sidebar';
+import { useParams, usePathname, useRouter } from 'next/navigation';
+import { ReactNode, useEffect, useMemo } from 'react';
 import { useAccount } from 'wagmi';
 import { useIdentity } from "../query/xmtp";
-import { usePathname, useRouter } from 'next/navigation';
+import { Navbar } from './navbar';
+import { AppSidebar } from './sidebar';
 
 interface LayoutProps {
   children: ReactNode;
@@ -19,10 +19,19 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { isConnected, isConnecting } = useAccount();
   const pathname = usePathname();
   const router = useRouter();
+  const { slug } = useParams();
+  const isConversationId = useMemo(() => {
+    return slug ? slug?.toString()?.split('.').length > 2 ? false : true : false
+  }, [slug])
+
+  const isSpecificChat = useMemo(() => {
+    return isConversationId && pathname.includes('/chat')
+  }, [isConversationId])
+
   useIdentity()
 
   const CheckAccountStatus = () => {
-    if (!isConnected && !isConnecting && pathname !== '/') {
+    if (!isConnected && !isConnecting && isSpecificChat) {
       router.push('/');
     }
   }

@@ -9,18 +9,14 @@ import { type XmtpEnv } from '@xmtp/node-sdk';
 import BasedClient from '@agenthub/xmtp-extended-client';
 import { HoroscopeProcessor } from './horoscope-processor.js';
 
-
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db
  * that stores your agent's messages */
-const {
-  XMTP_ENV,
-  WALLET_KEY,
-  ENCRYPTION_KEY,
-} = validateEnvironment([
-  "XMTP_ENV",
-  "WALLET_KEY",
-  "ENCRYPTION_KEY",
+const { XMTP_ENV, WALLET_KEY, ENCRYPTION_KEY, CHAIN } = validateEnvironment([
+  'XMTP_ENV',
+  'WALLET_KEY',
+  'ENCRYPTION_KEY',
+  'CHAIN',
 ]);
 
 const main = async () => {
@@ -41,8 +37,7 @@ const main = async () => {
       "Your personal astrology companion on XMTP! Get authentic daily horoscope readings powered by professional astrologers. Simply tell the agent your zodiac sign or birthday, and receive personalized cosmic insights including your mood, lucky numbers, colors, and compatibility. Ask for today's reading, peek into tomorrow, or check yesterday's stars. Works with all 12 zodiac signs and delivers real-time astrological guidance straight to your XMTP messages.",
     fees: 0.01, // 0.01 USDC
     tags: ['astrology'],
-    hubUrl: 'http://localhost:3000/api',
-    chain: 'baseSepolia',
+    chain: CHAIN === 'mainnet' ? 'base' : 'baseSepolia',
   });
 
   void logAgentDetails(client);

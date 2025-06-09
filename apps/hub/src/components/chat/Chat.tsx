@@ -4,24 +4,24 @@ import { AgentCard } from '@/components/chat/AgentCard';
 import { ClaimIdentity } from '@/components/chat/ClaimIdentity';
 import { ConnectWallet } from '@/components/chat/ConnectWallet';
 import { ConnectXmtp } from '@/components/chat/ConnectXmtp';
+import { Messages } from '@/components/chat/Messages';
 import { Subscribe } from '@/components/chat/Subscribe';
 import { useXMTP } from '@/context/XMTPContext';
 import { useAgentDetails } from '@/hooks/use-agent-details';
-import { useConversation, useConversations, useIdentity } from '../../query/xmtp';
 import { LoadingIcon } from '@/lib/icons';
+import { useSubscription } from '@/query/subscription';
+import { useMembers } from '@/query/xmtp/useMembers';
 import { clientEnv } from '@/utils/config/clientEnv';
 import {
   useAccountSubnames,
   useAddressSubnames,
   useSubname,
 } from '@justaname.id/react';
+import { useRouter } from 'next/navigation';
 import React, { useMemo } from 'react';
 import { useAccount } from 'wagmi';
 import { mainnet } from 'wagmi/chains';
-import { useSubscription } from '@/query/subscription';
-import { Messages } from '@/components/chat/Messages';
-import { useMembers } from '@/query/xmtp/useMembers';
-import { useRouter } from 'next/navigation';
+import { useConversation, useConversations, useIdentity } from '../../query/xmtp';
 
 export interface ChatProps {
   conversationId?: string;
@@ -64,9 +64,9 @@ export const Chat: React.FC<ChatProps> = ({ conversationId, agentName }) => {
   }, [subname, addressSubnames]);
   const { description, tags, avatar, spender, fees } =
     useAgentDetails(agentSubname);
-  const { accountSubnames, isAccountSubnamesLoading } = useAccountSubnames();
+  const { accountSubnames, isAccountSubnamesFetching } = useAccountSubnames();
   const { isConnected, isInitializing } = useXMTP();
-  const { validSubscriptions, isSubscriptionsPending } = useSubscription();
+  const { validSubscriptions, isSubscriptionsLoading } = useSubscription();
 
   const isSubscribed = useMemo(() => {
     return (
@@ -88,7 +88,7 @@ export const Chat: React.FC<ChatProps> = ({ conversationId, agentName }) => {
       ),
     [accountSubnames]
   );
-  const { isIdentityPending } = useIdentity();
+  const { isSyncing } = useIdentity();
   const { newGroupWithIdentifiers, isLoading, syncAll } = useConversations();
   const router = useRouter();
 
@@ -110,14 +110,13 @@ export const Chat: React.FC<ChatProps> = ({ conversationId, agentName }) => {
     router.push(`/chat/${group?.id}`);
   };
 
-
   if (
     isConversationPending ||
     isMembersLoading ||
     (isAddressSubnamesPending && isAddressSubnamesFetching) ||
-    isAccountSubnamesLoading ||
-    isSubscriptionsPending ||
-    isIdentityPending ||
+    isAccountSubnamesFetching ||
+    isSubscriptionsLoading ||
+    isSyncing ||
     isInitializing
   ) {
     return (

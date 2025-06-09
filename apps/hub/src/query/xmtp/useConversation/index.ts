@@ -379,9 +379,10 @@ export const useConversation = (conversationParam?: Conversation | string) => {
 
   const getLastStringMessage = useCallback((): DecodedMessage<string> | null => {
     if (!messagesQuery.data || messagesQuery.data.length === 0) return null;
-    return messagesQuery.data.reduce((latest, current) =>
+    const lastMessage = messagesQuery.data.reduce((latest, current) =>
       typeof current.content === 'string' ? current : latest
     ) as DecodedMessage<string>;
+    return typeof lastMessage.content === 'string' ? lastMessage : null;
   }, [messagesQuery.data]);
 
   const getMessageCount = useCallback(() => {
