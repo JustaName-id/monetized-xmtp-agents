@@ -1,4 +1,4 @@
-## Creating an XMTP Agent with @agenthub/xmtp-based-client
+## Creating an XMTP Agent with [@agenthub/xmtp-based-client](https://www.npmjs.com/package/@agenthub/xmtp-based-client?activeTab=readme)
 
 ### Prerequisites
 
@@ -16,20 +16,23 @@ Create a `.env` file with the following variables:
 ENCRYPTION_KEY=your_hex_encryption_key
 XMTP_ENV=production  # or 'dev'
 WALLET_KEY=your_private_key_hex
+PAYMASTER_URL=https://api.developer.coinbase.com/rpc/v1/base/YOUR_API_KEY
 ```
 
 ### Complete Agent Example
 
 ```typescript
-import { createSigner, getEncryptionKeyFromHex, validateEnvironment } from '@agenthub/xmtp-helpers';
+import { createSigner, getEncryptionKeyFromHex, validateEnvironment } from './utils';
 import { type XmtpEnv } from '@xmtp/node-sdk';
 import BasedClient from '@agenthub/xmtp-based-client';
 
-const { XMTP_ENV, WALLET_KEY, ENCRYPTION_KEY } = validateEnvironment(['XMTP_ENV', 'WALLET_KEY', 'ENCRYPTION_KEY']);
+const { XMTP_ENV, WALLET_KEY, ENCRYPTION_KEY, CHAIN, PAYMASTER_URL } = validateEnvironment(['XMTP_ENV', 'WALLET_KEY', 'ENCRYPTION_KEY', 'CHAIN', 'PAYMASTER_URL']);
 
 const main = async () => {
   const signer = await createSigner(WALLET_KEY);
   const dbEncryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
+
+  const paymasterUrl = PAYMASTER_URL;
 
   const client = await BasedClient.create(signer, {
     dbEncryptionKey,
@@ -39,6 +42,7 @@ const main = async () => {
     description: 'Your agent description',
     fees: 0.01,
     tags: ['your-tags'],
+    paymasterUrl,
     chain: 'baseSepolia',
   });
 
@@ -70,28 +74,7 @@ When creating your agent with `BasedClient.create()`:
 - **avatar**: Optional image buffer for agent profile picture
 - **chain**: Blockchain network ('baseSepolia' for testnet, 'base' for mainnet)
 - **hubUrl**: Agent registry URL (use provided default)
-- **paymasterUrl**: Optional URL for gas sponsorship service (see Gas Payment Options below)
-
-#### Gas Payment Options
-
-The BasedClient supports two modes for handling transaction fees when collecting payments:
-
-##### Option 1: Gas Sponsorship
-
-If you provide a paymasterUrl, the agent will use a paymaster service to sponsor transaction gas fees:
-
-```typescript
-const client = await BasedClient.create(signer, {
-  // ... other options
-  paymasterUrl: 'https://your-paymaster-service.com/api',
-});
-```
-
-##### Option 2: Agent Wallet Payment (Fallback)
-
-If paymasterUrl is not provided (or is undefined), the agent's wallet will pay for transaction gas fees directly.
-
-**Important**: When using this fallback option, ensure your agent's wallet has sufficient ETH balance to cover gas fees for transactions.
+- **paymasterUrl**: URL for gas sponsorship
 
 ### Running Your Agent
 

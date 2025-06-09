@@ -72,7 +72,11 @@ async function getTokenBalance(
 ): Promise<bigint> {
   const client = createPublicClient({
     chain: basedClient.chain === 'base' ? base : baseSepolia,
-    transport: http(basedClient.chain === "base" ? "https://base.drpc.org" : "https://base-sepolia.drpc.org"),
+    transport: http(
+      basedClient.chain === 'base'
+        ? 'https://base.drpc.org'
+        : 'https://base-sepolia.drpc.org'
+    ),
   });
 
   const balance = await client.readContract({
@@ -101,7 +105,7 @@ async function collectFees(
 
   const client = createPublicClient({
     chain: basedClient.chain === 'base' ? base : baseSepolia,
-    transport: http(basedClient.chain === "base" ? "https://base.drpc.org" : "https://base-sepolia.drpc.org"),
+    transport: http(),
   });
 
   if (!basedClient.signer) {
@@ -142,54 +146,27 @@ async function collectFees(
   ];
 
   try {
-    let userOpHash: string;
+    const paymasterClient = createPaymasterClient({
+      transport: http(basedClient.paymasterUrl),
+    });
 
-    if (basedClient.paymasterUrl) {
-      // Use paymaster if paymasterUrl is provided
-      console.log('💰 Using paymaster for transaction...');
+    const spenderBundlerClient = createBundlerClient({
+      account: spenderAccount,
+      client,
+      paymaster: paymasterClient,
+      transport: http(basedClient.paymasterUrl),
+    });
 
-      const paymasterClient = createPaymasterClient({
-        transport: http(basedClient.paymasterUrl),
+    const userOpHash = await spenderBundlerClient.sendUserOperation({
+      calls,
+    });
+
+    const userOpReceipt =
+      await spenderBundlerClient.waitForUserOperationReceipt({
+        hash: userOpHash,
       });
 
-      const spenderBundlerClient = createBundlerClient({
-        account: spenderAccount,
-        client,
-        paymaster: paymasterClient,
-        transport: http(basedClient.paymasterUrl),
-      });
-
-      userOpHash = await spenderBundlerClient.sendUserOperation({
-        calls,
-      });
-
-      const userOpReceipt =
-        await spenderBundlerClient.waitForUserOperationReceipt({
-          hash: userOpHash as `0x${string}`,
-        });
-
-      return userOpReceipt.receipt.transactionHash;
-    } else {
-      // Fall back to regular transaction paid by agent's wallet
-      console.log('💳 Using agent wallet for transaction...');
-
-      const spenderBundlerClient = createBundlerClient({
-        account: spenderAccount,
-        client,
-        transport: http(),
-      });
-
-      userOpHash = await spenderBundlerClient.sendUserOperation({
-        calls,
-      });
-
-      const userOpReceipt =
-        await spenderBundlerClient.waitForUserOperationReceipt({
-          hash: userOpHash as `0x${string}`,
-        });
-
-      return userOpReceipt.receipt.transactionHash;
-    }
+    return userOpReceipt.receipt.transactionHash;
   } catch (e) {
     console.error('❌ Transaction failed:', e);
     return '';
