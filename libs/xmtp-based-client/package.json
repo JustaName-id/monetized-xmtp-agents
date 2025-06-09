@@ -41,7 +41,7 @@
     }
   },
   "dependencies": {
-    "@xmtp/node-sdk": ">=2.0.9",
+    "@xmtp/node-sdk": ">=2.1.0",
     "@justaname.id/sdk": "^0.2.192",
     "axios": "^1.9.0",
     "viem": "^2.30.1",

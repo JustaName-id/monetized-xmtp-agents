@@ -72,7 +72,7 @@ async function getTokenBalance(
 ): Promise<bigint> {
   const client = createPublicClient({
     chain: basedClient.chain === 'base' ? base : baseSepolia,
-    transport: http(),
+    transport: http(basedClient.chain === "base" ? "https://base.drpc.org" : "https://base-sepolia.drpc.org"),
   });
 
   const balance = await client.readContract({
@@ -101,7 +101,7 @@ async function collectFees(
 
   const client = createPublicClient({
     chain: basedClient.chain === 'base' ? base : baseSepolia,
-    transport: http(),
+    transport: http(basedClient.chain === "base" ? "https://base.drpc.org" : "https://base-sepolia.drpc.org"),
   });
 
   if (!basedClient.signer) {
@@ -619,6 +619,7 @@ export class BasedClient extends Client {
     if (!this._basedConversations) {
       this._basedConversations = new BasedConversations(
         this,
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         super.conversations
       ) as BasedConversations & {

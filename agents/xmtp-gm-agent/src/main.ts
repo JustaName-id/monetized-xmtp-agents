@@ -11,7 +11,7 @@ import BasedClient from '@agenthub/xmtp-based-client';
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db
  * that stores your agent's messages */
-const { XMTP_ENV, WALLET_KEY, ENCRYPTION_KEY, CHAIN, PAYMASTER_URL } =
+const { XMTP_ENV, WALLET_KEY, ENCRYPTION_KEY, CHAIN } =
   validateEnvironment([
     'XMTP_ENV',
     'WALLET_KEY',
@@ -30,18 +30,18 @@ const main = async () => {
     process.cwd() + '/agents/xmtp-gm-agent/src/gm.gif'
   );
 
-  const paymasterUrl = PAYMASTER_URL;
+  // const paymasterUrl = PAYMASTER_URL;
 
   const client = await BasedClient.create(signer, {
     dbEncryptionKey,
     env: XMTP_ENV as XmtpEnv,
-    username: 'gm',
+    username: 'gm2',
     avatar,
     displayName: 'The GM Agent',
     description: 'Gm Agent',
     fees: 0.05,
     tags: ['gm'],
-    paymasterUrl,
+    // paymasterUrl,
     chain: CHAIN === 'mainnet' ? 'base' : 'baseSepolia',
   });
 
