@@ -1,14 +1,14 @@
-import { getRandomValues } from "node:crypto";
-import fs from "node:fs";
-import path from "node:path";
-import { IdentifierKind, type Client, type Signer } from "@xmtp/node-sdk";
-import { fromString, toString } from "uint8arrays";
-import {createPublicClient, createWalletClient, http, toBytes} from "viem";
-import { privateKeyToAccount } from "viem/accounts";
-import { sepolia } from "viem/chains";
-import {BasedClient} from "@agenthub/xmtp-extended-client";
-import {base} from "wagmi/chains";
-import {toCoinbaseSmartAccount} from "viem/account-abstraction";
+import { getRandomValues } from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
+import { IdentifierKind, type Client, type Signer } from '@xmtp/node-sdk';
+import { fromString, toString } from 'uint8arrays';
+import { createPublicClient, createWalletClient, http, toBytes } from 'viem';
+import { privateKeyToAccount } from 'viem/accounts';
+import { sepolia } from 'viem/chains';
+import { BasedClient } from '@agenthub/xmtp-based-client';
+import { base } from 'wagmi/chains';
+import { toCoinbaseSmartAccount } from 'viem/account-abstraction';
 
 interface User {
   key: `0x${string}`;
@@ -30,7 +30,9 @@ export const createUser = (key: string): User => {
 };
 
 export const createSigner = async (key: string): Promise<Signer> => {
-  const sanitizedKey = (key.startsWith("0x") ? key : `0x${key}`) as `0x${string}`;
+  const sanitizedKey = (
+    key.startsWith('0x') ? key : `0x${key}`
+  ) as `0x${string}`;
 
   const publicClient = createPublicClient({
     chain: base,
@@ -42,7 +44,7 @@ export const createSigner = async (key: string): Promise<Signer> => {
     owners: [privateKeyToAccount(sanitizedKey)],
   });
   return {
-    type: "SCW",
+    type: 'SCW',
     getIdentifier: () => ({
       identifierKind: IdentifierKind.Ethereum,
       identifier: spenderAccount.address.toLowerCase(),
@@ -66,7 +68,7 @@ export const generateEncryptionKeyHex = () => {
   /* Generate a random encryption key */
   const uint8Array = getRandomValues(new Uint8Array(32));
   /* Convert the encryption key to a hex string */
-  return toString(uint8Array, "hex");
+  return toString(uint8Array, 'hex');
 };
 
 /**
@@ -76,12 +78,12 @@ export const generateEncryptionKeyHex = () => {
  */
 export const getEncryptionKeyFromHex = (hex: string) => {
   /* Convert the hex string to an encryption key */
-  return fromString(hex, "hex");
+  return fromString(hex, 'hex');
 };
 
-export const getDbPath = (description = "xmtp") => {
+export const getDbPath = (description = 'xmtp') => {
   //Checks if the environment is a Railway deployment
-  const volumePath = process.env.RAILWAY_VOLUME_MOUNT_PATH ?? ".data/xmtp";
+  const volumePath = process.env.RAILWAY_VOLUME_MOUNT_PATH ?? '.data/xmtp';
   // Create database directory if it doesn't exist
   if (!fs.existsSync(volumePath)) {
     fs.mkdirSync(volumePath, { recursive: true });
@@ -93,15 +95,18 @@ export const logAgentDetails = async (
   clients: (Client | BasedClient) | (Client | BasedClient)[]
 ): Promise<void> => {
   const clientsByAddress = Array.isArray(clients)
-    ? clients.reduce<Record<string, (Client | BasedClient)[]>>((acc, client) => {
-      const address = client.accountIdentifier?.identifier ?? "";
-      acc[address] = acc[address] ?? [];
-      acc[address].push(client);
-      return acc;
-    }, {})
+    ? clients.reduce<Record<string, (Client | BasedClient)[]>>(
+        (acc, client) => {
+          const address = client.accountIdentifier?.identifier ?? '';
+          acc[address] = acc[address] ?? [];
+          acc[address].push(client);
+          return acc;
+        },
+        {}
+      )
     : {
-      [clients.accountIdentifier?.identifier ?? ""]: [clients],
-    };
+        [clients.accountIdentifier?.identifier ?? '']: [clients],
+      };
 
   for (const [address, clientGroup] of Object.entries(clientsByAddress)) {
     const firstClient = clientGroup[0];
@@ -112,8 +117,8 @@ export const logAgentDetails = async (
     }
 
     const environments = clientGroup
-      .map((c) => c.options?.env ?? "dev")
-      .join(", ");
+      .map((c) => c.options?.env ?? 'dev')
+      .join(', ');
     console.log(`\x1b[38;2;252;76;52m
         ██╗  ██╗███╗   ███╗████████╗██████╗
         ╚██╗██╔╝████╗ ████║╚══██╔══╝██╔══██╗
@@ -129,11 +134,11 @@ export const logAgentDetails = async (
 
     console.log(`
     ✓ XMTP Client:
-    • Address: ${address} ${subname ? `\n    • Subname: ${subname}` : ""}
+    • Address: ${address} ${subname ? `\n    • Subname: ${subname}` : ''}
     • Conversations: ${conversations.length}
     • InboxId: ${inboxId}
     • Networks: ${environments}
-    ${urls.map((url) => `• URL: ${url}`).join("\n")}`);
+    ${urls.map((url) => `• URL: ${url}`).join('\n')}`);
   }
 };
 export function validateEnvironment(vars: string[]): Record<string, string> {
@@ -141,15 +146,15 @@ export function validateEnvironment(vars: string[]): Record<string, string> {
 
   if (missing.length) {
     try {
-      const envPath = path.resolve(process.cwd(), ".env");
+      const envPath = path.resolve(process.cwd(), '.env');
       if (fs.existsSync(envPath)) {
         const envVars = fs
-          .readFileSync(envPath, "utf-8")
-          .split("\n")
-          .filter((line) => line.trim() && !line.startsWith("#"))
+          .readFileSync(envPath, 'utf-8')
+          .split('\n')
+          .filter((line) => line.trim() && !line.startsWith('#'))
           .reduce<Record<string, string>>((acc, line) => {
-            const [key, ...val] = line.split("=");
-            if (key && val.length) acc[key.trim()] = val.join("=").trim();
+            const [key, ...val] = line.split('=');
+            if (key && val.length) acc[key.trim()] = val.join('=').trim();
             return acc;
           }, {});
 
@@ -164,7 +169,7 @@ export function validateEnvironment(vars: string[]): Record<string, string> {
 
     const stillMissing = vars.filter((v) => !process.env[v]);
     if (stillMissing.length) {
-      console.error("Missing env vars:", stillMissing.join(", "));
+      console.error('Missing env vars:', stillMissing.join(', '));
       process.exit(1);
     }
   }

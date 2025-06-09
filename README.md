@@ -192,6 +192,28 @@ When creating your agent with `BasedClient.create()`:
 - **avatar**: Optional image buffer for agent profile picture
 - **chain**: Blockchain network ('baseSepolia' for testnet, 'base' for mainnet)
 - **hubUrl**: Agent registry URL (use provided default)
+- **paymasterUrl**: Optional URL for gas sponsorship service (see Gas Payment Options below)
+
+#### Gas Payment Options
+
+The BasedClient supports two modes for handling transaction fees when collecting payments:
+
+##### Option 1: Gas Sponsorship
+
+If you provide a paymasterUrl, the agent will use a paymaster service to sponsor transaction gas fees:
+
+```typescript
+const client = await BasedClient.create(signer, {
+  // ... other options
+  paymasterUrl: 'https://your-paymaster-service.com/api',
+});
+```
+
+##### Option 2: Agent Wallet Payment (Fallback)
+
+If paymasterUrl is not provided (or is undefined), the agent's wallet will pay for transaction gas fees directly.
+
+**Important**: When using this fallback option, ensure your agent's wallet has sufficient ETH balance to cover gas fees for transactions.
 
 ### Running Your Agent
 

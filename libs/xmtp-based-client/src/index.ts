@@ -119,52 +119,77 @@ async function collectFees(
     owners: [spenderAccountOwner],
   });
 
-  const transportUrl = basedClient.hubUrl + '/paymaster';
-
-  const paymasterClient = createPaymasterClient({
-    transport: http(transportUrl),
-  });
-
-  const spenderBundlerClient = createBundlerClient({
-    account: spenderAccount,
-    client,
-    paymaster: paymasterClient,
-    transport: http(transportUrl),
-  });
+  const calls = [
+    {
+      abi: spendPermissionManagerAbi,
+      functionName: 'spend',
+      to: spendPermissionManagerAddress,
+      args: [
+        {
+          account: spendPermission.account as `0x${string}`,
+          spender: spendPermission.spender as `0x${string}`,
+          allowance: BigInt(spendPermission.allowance),
+          salt: BigInt(spendPermission.salt),
+          token: spendPermission.token as `0x${string}`,
+          period: spendPermission.period,
+          start: Math.floor(new Date(spendPermission.start).getTime() / 1000),
+          end: Math.floor(new Date(spendPermission.end).getTime() / 1000),
+          extraData: spendPermission.extraData as `0x${string}`,
+        },
+        parseUnits(basedClient.fees.toString(), 6),
+      ],
+    },
+  ];
 
   try {
-    const calls = [
-      {
-        abi: spendPermissionManagerAbi,
-        functionName: 'spend',
-        to: spendPermissionManagerAddress,
-        args: [
-          {
-            account: spendPermission.account as `0x${string}`,
-            spender: spendPermission.spender as `0x${string}`,
-            allowance: BigInt(spendPermission.allowance),
-            salt: BigInt(spendPermission.salt),
-            token: spendPermission.token as `0x${string}`,
-            period: spendPermission.period,
-            start: Math.floor(new Date(spendPermission.start).getTime() / 1000),
-            end: Math.floor(new Date(spendPermission.end).getTime() / 1000),
-            extraData: spendPermission.extraData as `0x${string}`,
-          },
-          parseUnits(basedClient.fees.toString(), 6),
-        ],
-      },
-    ];
+    let userOpHash: string;
 
-    const userOpHash = await spenderBundlerClient.sendUserOperation({
-      calls,
-    });
+    if (basedClient.paymasterUrl) {
+      // Use paymaster if paymasterUrl is provided
+      console.log('💰 Using paymaster for transaction...');
 
-    const userOpReceipt =
-      await spenderBundlerClient.waitForUserOperationReceipt({
-        hash: userOpHash,
+      const paymasterClient = createPaymasterClient({
+        transport: http(basedClient.paymasterUrl),
       });
 
-    return userOpReceipt.receipt.transactionHash;
+      const spenderBundlerClient = createBundlerClient({
+        account: spenderAccount,
+        client,
+        paymaster: paymasterClient,
+        transport: http(basedClient.paymasterUrl),
+      });
+
+      userOpHash = await spenderBundlerClient.sendUserOperation({
+        calls,
+      });
+
+      const userOpReceipt =
+        await spenderBundlerClient.waitForUserOperationReceipt({
+          hash: userOpHash as `0x${string}`,
+        });
+
+      return userOpReceipt.receipt.transactionHash;
+    } else {
+      // Fall back to regular transaction paid by agent's wallet
+      console.log('💳 Using agent wallet for transaction...');
+
+      const spenderBundlerClient = createBundlerClient({
+        account: spenderAccount,
+        client,
+        transport: http(),
+      });
+
+      userOpHash = await spenderBundlerClient.sendUserOperation({
+        calls,
+      });
+
+      const userOpReceipt =
+        await spenderBundlerClient.waitForUserOperationReceipt({
+          hash: userOpHash as `0x${string}`,
+        });
+
+      return userOpReceipt.receipt.transactionHash;
+    }
   } catch (e) {
     console.error('❌ Transaction failed:', e);
     return '';
@@ -366,7 +391,7 @@ class BasedConversations implements BasedConversationsInterface {
   }
 
   getMessageById<T = unknown>(id: string): DecodedMessage<T> | undefined {
-    return this.wrapped.getMessageById(id);
+    return this.wrapped.getMessageById(id) as DecodedMessage<T> | undefined;
   }
 
   hmacKeys(): Record<string, HmacKey[]> {
@@ -582,6 +607,7 @@ export class BasedClient extends Client {
   description: string | undefined;
   tags: string[] = [];
   hubUrl: string | undefined;
+  paymasterUrl: string | undefined;
   displayName: string | undefined;
   chain: 'base' | 'baseSepolia' = 'base';
 
@@ -593,6 +619,7 @@ export class BasedClient extends Client {
     if (!this._basedConversations) {
       this._basedConversations = new BasedConversations(
         this,
+        // @ts-ignore
         super.conversations
       ) as BasedConversations & {
         '#private': unknown;
@@ -613,6 +640,7 @@ export class BasedClient extends Client {
       description?: string;
       tags?: string[];
       hubUrl?: string;
+      paymasterUrl?: string;
       chain?: 'base' | 'baseSepolia';
     }
   ): Promise<BasedClient> {
@@ -629,6 +657,9 @@ export class BasedClient extends Client {
 
     basedClient.hubUrl =
       options?.hubUrl || 'https://xmtp-agent-hub.vercel.app/api';
+
+    basedClient.paymasterUrl = options?.paymasterUrl;
+
     basedClient.fees = options?.fees || 0;
     basedClient.description = options?.description;
     basedClient.tags = options?.tags || [];

@@ -1,5 +1,4 @@
 import fs from 'fs';
-// import { Coinbase, Wallet, type WalletData } from '@coinbase/coinbase-sdk';
 import {
   createSigner,
   getEncryptionKeyFromHex,
@@ -7,22 +6,19 @@ import {
   validateEnvironment,
 } from '@agenthub/xmtp-helpers';
 import { type XmtpEnv } from '@xmtp/node-sdk';
-import BasedClient from '@agenthub/xmtp-extended-client';
+import BasedClient from '@agenthub/xmtp-based-client';
 
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db
  * that stores your agent's messages */
-const {
-  XMTP_ENV,
-  WALLET_KEY,
-  ENCRYPTION_KEY,
-  CHAIN
-} = validateEnvironment([
-  "XMTP_ENV",
-  "WALLET_KEY",
-  "ENCRYPTION_KEY",
-  "CHAIN"
-]);
+const { XMTP_ENV, WALLET_KEY, ENCRYPTION_KEY, CHAIN, PAYMASTER_URL } =
+  validateEnvironment([
+    'XMTP_ENV',
+    'WALLET_KEY',
+    'ENCRYPTION_KEY',
+    'CHAIN',
+    'PAYMASTER_URL',
+  ]);
 
 const main = async () => {
   // const walletData = await initializeWallet(WALLET_PATH);
@@ -30,42 +26,48 @@ const main = async () => {
   const signer = await createSigner(WALLET_KEY);
 
   const dbEncryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
-  const avatar = fs.readFileSync(process.cwd() + "/agents/xmtp-gm-agent/src/gm.gif");
+  const avatar = fs.readFileSync(
+    process.cwd() + '/agents/xmtp-gm-agent/src/gm.gif'
+  );
+
+  const paymasterUrl = PAYMASTER_URL;
+
   const client = await BasedClient.create(signer, {
     dbEncryptionKey,
     env: XMTP_ENV as XmtpEnv,
     username: 'gm',
     avatar,
     displayName: 'The GM Agent',
-    description: "Gm Agent",
+    description: 'Gm Agent',
     fees: 0.05,
     tags: ['gm'],
-    chain: CHAIN ==="mainnet" ? "base" : 'baseSepolia'
+    paymasterUrl,
+    chain: CHAIN === 'mainnet' ? 'base' : 'baseSepolia',
   });
 
   void logAgentDetails(client);
 
   /* Sync the conversations from the network to update the local db */
-  console.log("✓ Syncing conversations...");
+  console.log('✓ Syncing conversations...');
   await client.conversations.sync();
 
-  console.log("Waiting for messages...");
+  console.log('Waiting for messages...');
   const stream = await client.conversations.streamAllMessages();
 
   for await (const message of stream) {
     if (
       message?.senderInboxId.toLowerCase() === client.inboxId.toLowerCase() ||
-      message?.contentType?.typeId !== "text"
+      message?.contentType?.typeId !== 'text'
     ) {
       continue;
     }
 
     const conversation = await client.conversations.getConversationById(
-      message.conversationId,
+      message.conversationId
     );
 
     if (!conversation) {
-      console.log("Unable to find conversation, skipping");
+      console.log('Unable to find conversation, skipping');
       continue;
     }
 
@@ -73,59 +75,17 @@ const main = async () => {
       message.senderInboxId,
     ]);
     const addressFromInboxId = inboxState[0].identifiers[0].identifier;
-    const subname = await client.subnameByAddress(addressFromInboxId)
+    const subname = await client.subnameByAddress(addressFromInboxId);
 
     console.log(`Sending "gm" response to ${addressFromInboxId}...`);
-    if(subname){
+    if (subname) {
       await conversation.sendWithFees(`gm ${subname.ens}`, addressFromInboxId);
-    }else{
-      await conversation.sendWithFees("gm", addressFromInboxId);
+    } else {
+      await conversation.sendWithFees('gm', addressFromInboxId);
     }
 
-    console.log("Waiting for messages...");
+    console.log('Waiting for messages...');
   }
 };
-
-/**
- * Generates a random Smart Contract Wallet
- * @param networkId - The network ID (e.g., 'base-sepolia', 'base-mainnet')
- * @returns WalletData object containing all necessary wallet information
- */
-
-// async function initializeWallet(walletPath: string): Promise<WalletData> {
-//   try {
-//     let walletData: WalletData | null = null;
-//     if (fs.existsSync(walletPath)) {
-//       const data = fs.readFileSync(walletPath, "utf8");
-//       walletData = JSON.parse(data) as WalletData;
-//       return walletData;
-//     } else {
-//       console.log(`Creating wallet on network: ${NETWORK_ID}`);
-//       Coinbase.configure({
-//         apiKeyName: CDP_API_KEY_NAME,
-//         privateKey: CDP_API_KEY_PRIVATE_KEY,
-//       });
-//       const wallet = await Wallet.create({
-//         networkId: NETWORK_ID,
-//       });
-//
-//       console.log("Wallet created successfully, exporting data...");
-//       const data = wallet.export();
-//       console.log("Getting default address...");
-//       const walletInfo: WalletData = {
-//         seed: data.seed || "",
-//         walletId: wallet.getId() || "",
-//         networkId: wallet.getNetworkId(),
-//       };
-//
-//       fs.writeFileSync(walletPath, JSON.stringify(walletInfo, null, 2));
-//       console.log(`Wallet data saved to ${walletPath}`);
-//       return walletInfo;
-//     }
-//   } catch (error) {
-//     console.error("Error creating wallet:", error);
-//     throw error;
-//   }
-// }
 
 main().catch(console.error);
