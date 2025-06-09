@@ -9,6 +9,7 @@ const SERVER_ENV = {
   userJustaNameApiKey: process.env.USER_JUSTANAME_API_KEY,
   basePaymasterUrl: process.env.BASE_PAYMASTER_URL,
   serverBaseNetwork: process.env.BASE_NETWORK === 'mainnet' ? base : baseSepolia,
+  spenderKey: process.env.SPENDER_PRIVATE_KEY,
 };
 
 export const serverEnvSchema = z.object({
@@ -23,6 +24,7 @@ export const serverEnvSchema = z.object({
       message: 'serverBaseNetwork must be an instance of base or baseSepolia',
     }
   ),
+  spenderKey: z.string(),
 });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;

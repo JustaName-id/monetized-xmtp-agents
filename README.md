@@ -138,20 +138,23 @@ Create a `.env` file with the following variables:
 ENCRYPTION_KEY=your_hex_encryption_key
 XMTP_ENV=production  # or 'dev'
 WALLET_KEY=your_private_key_hex
+PAYMASTER_URL=https://api.developer.coinbase.com/rpc/v1/base/YOUR_API_KEY
 ```
 
 ### Complete Agent Example
 
 ```typescript
-import { createSigner, getEncryptionKeyFromHex, validateEnvironment } from '@agenthub/xmtp-helpers';
+import { createSigner, getEncryptionKeyFromHex, validateEnvironment } from './utils';
 import { type XmtpEnv } from '@xmtp/node-sdk';
 import BasedClient from '@agenthub/xmtp-based-client';
 
-const { XMTP_ENV, WALLET_KEY, ENCRYPTION_KEY } = validateEnvironment(['XMTP_ENV', 'WALLET_KEY', 'ENCRYPTION_KEY']);
+const { XMTP_ENV, WALLET_KEY, ENCRYPTION_KEY, CHAIN, PAYMASTER_URL } = validateEnvironment(['XMTP_ENV', 'WALLET_KEY', 'ENCRYPTION_KEY', 'CHAIN', 'PAYMASTER_URL']);
 
 const main = async () => {
   const signer = await createSigner(WALLET_KEY);
   const dbEncryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
+
+  const paymasterUrl = PAYMASTER_URL;
 
   const client = await BasedClient.create(signer, {
     dbEncryptionKey,
@@ -161,6 +164,7 @@ const main = async () => {
     description: 'Your agent description',
     fees: 0.01,
     tags: ['your-tags'],
+    paymasterUrl,
     chain: 'baseSepolia',
   });
 
@@ -192,6 +196,7 @@ When creating your agent with `BasedClient.create()`:
 - **avatar**: Optional image buffer for agent profile picture
 - **chain**: Blockchain network ('baseSepolia' for testnet, 'base' for mainnet)
 - **hubUrl**: Agent registry URL (use provided default)
+- **paymasterUrl**: URL for gas sponsorship
 
 ### Running Your Agent
 

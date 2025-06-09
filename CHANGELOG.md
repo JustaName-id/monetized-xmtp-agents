@@ -1,3 +1,23 @@
+## 0.2.9 (2025-06-09)
+
+### 🚀 Features
+
+- new way of grouping chats ([5ad1ef6](https://github.com/JustaName-id/monetized-xmtp-agents/commit/5ad1ef6))
+- new image for gm agent ([7810fc7](https://github.com/JustaName-id/monetized-xmtp-agents/commit/7810fc7))
+- xmtp-based-client lib ([dec0573](https://github.com/JustaName-id/monetized-xmtp-agents/commit/dec0573))
+- update README.md ([dc6d646](https://github.com/JustaName-id/monetized-xmtp-agents/commit/dc6d646))
+- refactoring paymaster logic to lib ([1796949](https://github.com/JustaName-id/monetized-xmtp-agents/commit/1796949))
+
+### 🩹 Fixes
+
+- last message in ChatCard ([9b6f641](https://github.com/JustaName-id/monetized-xmtp-agents/commit/9b6f641))
+- build error and paymaster client url in hub ([b83bd65](https://github.com/JustaName-id/monetized-xmtp-agents/commit/b83bd65))
+
+### ❤️ Thank You
+
+- Ghadi Mhawej
+- HadiKhai
+
 ## 0.2.8 (2025-06-06)
 
 This was a version bump only, there were no code changes.

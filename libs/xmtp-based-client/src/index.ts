@@ -72,7 +72,11 @@ async function getTokenBalance(
 ): Promise<bigint> {
   const client = createPublicClient({
     chain: basedClient.chain === 'base' ? base : baseSepolia,
-    transport: http(),
+    transport: http(
+      basedClient.chain === 'base'
+        ? 'https://base.drpc.org'
+        : 'https://base-sepolia.drpc.org'
+    ),
   });
 
   const balance = await client.readContract({
@@ -119,41 +123,39 @@ async function collectFees(
     owners: [spenderAccountOwner],
   });
 
-  const transportUrl = basedClient.hubUrl + '/paymaster';
-
-  const paymasterClient = createPaymasterClient({
-    transport: http(transportUrl),
-  });
-
-  const spenderBundlerClient = createBundlerClient({
-    account: spenderAccount,
-    client,
-    paymaster: paymasterClient,
-    transport: http(transportUrl),
-  });
+  const calls = [
+    {
+      abi: spendPermissionManagerAbi,
+      functionName: 'spend',
+      to: spendPermissionManagerAddress,
+      args: [
+        {
+          account: spendPermission.account as `0x${string}`,
+          spender: spendPermission.spender as `0x${string}`,
+          allowance: BigInt(spendPermission.allowance),
+          salt: BigInt(spendPermission.salt),
+          token: spendPermission.token as `0x${string}`,
+          period: spendPermission.period,
+          start: Math.floor(new Date(spendPermission.start).getTime() / 1000),
+          end: Math.floor(new Date(spendPermission.end).getTime() / 1000),
+          extraData: spendPermission.extraData as `0x${string}`,
+        },
+        parseUnits(basedClient.fees.toString(), 6),
+      ],
+    },
+  ];
 
   try {
-    const calls = [
-      {
-        abi: spendPermissionManagerAbi,
-        functionName: 'spend',
-        to: spendPermissionManagerAddress,
-        args: [
-          {
-            account: spendPermission.account as `0x${string}`,
-            spender: spendPermission.spender as `0x${string}`,
-            allowance: BigInt(spendPermission.allowance),
-            salt: BigInt(spendPermission.salt),
-            token: spendPermission.token as `0x${string}`,
-            period: spendPermission.period,
-            start: Math.floor(new Date(spendPermission.start).getTime() / 1000),
-            end: Math.floor(new Date(spendPermission.end).getTime() / 1000),
-            extraData: spendPermission.extraData as `0x${string}`,
-          },
-          parseUnits(basedClient.fees.toString(), 6),
-        ],
-      },
-    ];
+    const paymasterClient = createPaymasterClient({
+      transport: http(basedClient.paymasterUrl),
+    });
+
+    const spenderBundlerClient = createBundlerClient({
+      account: spenderAccount,
+      client,
+      paymaster: paymasterClient,
+      transport: http(basedClient.paymasterUrl),
+    });
 
     const userOpHash = await spenderBundlerClient.sendUserOperation({
       calls,
@@ -366,7 +368,7 @@ class BasedConversations implements BasedConversationsInterface {
   }
 
   getMessageById<T = unknown>(id: string): DecodedMessage<T> | undefined {
-    return this.wrapped.getMessageById(id);
+    return this.wrapped.getMessageById(id) as DecodedMessage<T> | undefined;
   }
 
   hmacKeys(): Record<string, HmacKey[]> {
@@ -582,6 +584,7 @@ export class BasedClient extends Client {
   description: string | undefined;
   tags: string[] = [];
   hubUrl: string | undefined;
+  paymasterUrl: string | undefined;
   displayName: string | undefined;
   chain: 'base' | 'baseSepolia' = 'base';
 
@@ -593,6 +596,8 @@ export class BasedClient extends Client {
     if (!this._basedConversations) {
       this._basedConversations = new BasedConversations(
         this,
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
         super.conversations
       ) as BasedConversations & {
         '#private': unknown;
@@ -613,6 +618,7 @@ export class BasedClient extends Client {
       description?: string;
       tags?: string[];
       hubUrl?: string;
+      paymasterUrl?: string;
       chain?: 'base' | 'baseSepolia';
     }
   ): Promise<BasedClient> {
@@ -629,6 +635,9 @@ export class BasedClient extends Client {
 
     basedClient.hubUrl =
       options?.hubUrl || 'https://xmtp-agent-hub.vercel.app/api';
+
+    basedClient.paymasterUrl = options?.paymasterUrl;
+
     basedClient.fees = options?.fees || 0;
     basedClient.description = options?.description;
     basedClient.tags = options?.tags || [];
