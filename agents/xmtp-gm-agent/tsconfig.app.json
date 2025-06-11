@@ -12,7 +12,7 @@
   "exclude": [],
   "references": [
     {
-      "path": "../../libs/xmtp-extended-client/tsconfig.lib.json"
+      "path": "../../libs/xmtp-based-client/tsconfig.lib.json"
     },
     {
       "path": "../../libs/xmtp-helpers/tsconfig.lib.json"

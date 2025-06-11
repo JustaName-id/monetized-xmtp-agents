@@ -6,18 +6,20 @@ import {
   validateEnvironment,
 } from '@agenthub/xmtp-helpers';
 import { type XmtpEnv } from '@xmtp/node-sdk';
-import BasedClient from '@agenthub/xmtp-extended-client';
+import BasedClient from '@agenthub/xmtp-based-client';
 import { HoroscopeProcessor } from './horoscope-processor.js';
 
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db
  * that stores your agent's messages */
-const { XMTP_ENV, WALLET_KEY, ENCRYPTION_KEY, CHAIN } = validateEnvironment([
-  'XMTP_ENV',
-  'WALLET_KEY',
-  'ENCRYPTION_KEY',
-  'CHAIN',
-]);
+const { XMTP_ENV, WALLET_KEY, ENCRYPTION_KEY, CHAIN, PAYMASTER_URL } =
+  validateEnvironment([
+    'XMTP_ENV',
+    'WALLET_KEY',
+    'ENCRYPTION_KEY',
+    'CHAIN',
+    'PAYMASTER_URL',
+  ]);
 
 const main = async () => {
   /* Create the signer using viem and parse the encryption key for the local db */
@@ -27,6 +29,9 @@ const main = async () => {
   const avatar = fs.readFileSync(
     process.cwd() + '/agents/xmtp-horoscope-agent/src/horoscope.jpg'
   );
+
+  const paymasterUrl = PAYMASTER_URL;
+
   const client = await BasedClient.create(signer, {
     dbEncryptionKey,
     env: XMTP_ENV as XmtpEnv,
@@ -37,6 +42,7 @@ const main = async () => {
       "Your personal astrology companion on XMTP! Get authentic daily horoscope readings powered by professional astrologers. Simply tell the agent your zodiac sign or birthday, and receive personalized cosmic insights including your mood, lucky numbers, colors, and compatibility. Ask for today's reading, peek into tomorrow, or check yesterday's stars. Works with all 12 zodiac signs and delivers real-time astrological guidance straight to your XMTP messages.",
     fees: 0.01, // 0.01 USDC
     tags: ['astrology'],
+    paymasterUrl,
     chain: CHAIN === 'mainnet' ? 'base' : 'baseSepolia',
   });
 

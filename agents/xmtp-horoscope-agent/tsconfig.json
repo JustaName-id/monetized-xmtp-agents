@@ -4,7 +4,7 @@
   "include": [],
   "references": [
     {
-      "path": "../../libs/xmtp-extended-client"
+      "path": "../../libs/xmtp-based-client"
     },
     {
       "path": "../../libs/xmtp-helpers"

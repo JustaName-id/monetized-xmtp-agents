@@ -17,7 +17,7 @@ import {
 } from '@xmtp/node-sdk';
 import type { ContentTypeId } from '@xmtp/content-type-primitives';
 import { JustaName, SubnameResponse } from '@justaname.id/sdk';
-import { createPublicClient, getAddress, http } from 'viem';
+import { createPublicClient, getAddress, http, parseUnits } from 'viem';
 import axios from 'axios';
 import {
   spendPermissionManagerAbi,
@@ -26,7 +26,7 @@ import {
   SubscriptionsResponse,
 } from '@agenthub/spend-permission';
 import * as _xmtp_node_bindings from '@xmtp/node-bindings';
-import { baseSepolia, mainnet, base } from 'wagmi/chains';
+import { baseSepolia, mainnet, base } from 'viem/chains';
 import {
   createBundlerClient,
   createPaymasterClient,
@@ -37,10 +37,7 @@ import {
   TransactionReferenceCodec,
 } from '@xmtp/content-type-transaction-reference';
 import FormData from 'form-data';
-import { parseUnits } from 'ethers';
-import {
-  privateKeyToAccount,
-} from 'viem/accounts';
+import { privateKeyToAccount } from 'viem/accounts';
 
 type MonetizedMsgReturn = Promise<{
   messageId: string;
@@ -53,7 +50,6 @@ type MonetizedMsgFunction = (
   address: string,
   contentType?: ContentTypeId
 ) => MonetizedMsgReturn;
-
 
 async function getSubscription(basedClient: BasedClient, address: string) {
   const response = await axios.get<SubscriptionsResponse>(
@@ -76,7 +72,11 @@ async function getTokenBalance(
 ): Promise<bigint> {
   const client = createPublicClient({
     chain: basedClient.chain === 'base' ? base : baseSepolia,
-    transport: http(),
+    transport: http(
+      basedClient.chain === 'base'
+        ? 'https://base.drpc.org'
+        : 'https://base-sepolia.drpc.org'
+    ),
   });
 
   const balance = await client.readContract({
@@ -99,7 +99,7 @@ async function getTokenBalance(
 
 async function collectFees(
   basedClient: BasedClient,
-  spendPermission: SpendPermissionResponse,
+  spendPermission: SpendPermissionResponse
 ): Promise<string> {
   console.log('🚀 Starting fee collection...');
 
@@ -108,12 +108,14 @@ async function collectFees(
     transport: http(),
   });
 
-  if(!basedClient.signer){
+  if (!basedClient.signer) {
     throw new Error('Signer is not set');
   }
 
   const key = process.env.WALLET_KEY as string;
-  const sanitizedKey = (key.startsWith("0x") ? key : `0x${key}`) as `0x${string}`;
+  const sanitizedKey = (
+    key.startsWith('0x') ? key : `0x${key}`
+  ) as `0x${string}`;
   const spenderAccountOwner = privateKeyToAccount(sanitizedKey);
 
   const spenderAccount = await toCoinbaseSmartAccount({
@@ -121,41 +123,39 @@ async function collectFees(
     owners: [spenderAccountOwner],
   });
 
-  const transportUrl = basedClient.hubUrl + '/paymaster';
-
-  const paymasterClient = createPaymasterClient({
-    transport: http(transportUrl),
-  });
-
-  const spenderBundlerClient = createBundlerClient({
-    account: spenderAccount,
-    client,
-    paymaster: paymasterClient,
-    transport: http(transportUrl),
-  });
+  const calls = [
+    {
+      abi: spendPermissionManagerAbi,
+      functionName: 'spend',
+      to: spendPermissionManagerAddress,
+      args: [
+        {
+          account: spendPermission.account as `0x${string}`,
+          spender: spendPermission.spender as `0x${string}`,
+          allowance: BigInt(spendPermission.allowance),
+          salt: BigInt(spendPermission.salt),
+          token: spendPermission.token as `0x${string}`,
+          period: spendPermission.period,
+          start: Math.floor(new Date(spendPermission.start).getTime() / 1000),
+          end: Math.floor(new Date(spendPermission.end).getTime() / 1000),
+          extraData: spendPermission.extraData as `0x${string}`,
+        },
+        parseUnits(basedClient.fees.toString(), 6),
+      ],
+    },
+  ];
 
   try {
-    const calls = [
-      {
-        abi: spendPermissionManagerAbi,
-        functionName: 'spend',
-        to: spendPermissionManagerAddress,
-        args: [
-          {
-            account: spendPermission.account as `0x${string}`,
-            spender: spendPermission.spender as `0x${string}`,
-            allowance: BigInt(spendPermission.allowance),
-            salt: BigInt(spendPermission.salt),
-            token: spendPermission.token as `0x${string}`,
-            period: spendPermission.period,
-            start: Math.floor(new Date(spendPermission.start).getTime() / 1000),
-            end: Math.floor(new Date(spendPermission.end).getTime() / 1000),
-            extraData: spendPermission.extraData as `0x${string}`,
-          },
-          parseUnits(basedClient.fees.toString(), 6),
-        ],
-      },
-    ];
+    const paymasterClient = createPaymasterClient({
+      transport: http(basedClient.paymasterUrl),
+    });
+
+    const spenderBundlerClient = createBundlerClient({
+      account: spenderAccount,
+      client,
+      paymaster: paymasterClient,
+      transport: http(basedClient.paymasterUrl),
+    });
 
     const userOpHash = await spenderBundlerClient.sendUserOperation({
       calls,
@@ -173,10 +173,7 @@ async function collectFees(
   }
 }
 
-function createSendWithFees(
-  instance: Group | Dm,
-  basedClient: BasedClient,
-) {
+function createSendWithFees(instance: Group | Dm, basedClient: BasedClient) {
   return async function sendWithFees(
     content: unknown,
     address: string,
@@ -207,10 +204,7 @@ function createSendWithFees(
       };
     }
 
-    const txHash = await collectFees(
-      basedClient,
-      subscription.spendPermission,
-    );
+    const txHash = await collectFees(basedClient, subscription.spendPermission);
 
     if (txHash === '') {
       const messageId = await instance.send('Payment Failed');
@@ -266,7 +260,7 @@ function createSendOptimisticWithFees(
 
 function addFeeMethods<T extends Group | Dm>(
   instance: T,
-  basedClient: BasedClient,
+  basedClient: BasedClient
 ): T & {
   sendWithFees: ReturnType<typeof createSendWithFees>;
   sendOptimisticWithFees: ReturnType<typeof createSendOptimisticWithFees>;
@@ -358,7 +352,7 @@ interface BasedConversationsInterface extends Conversations {
 class BasedConversations implements BasedConversationsInterface {
   constructor(
     private readonly basedClient: BasedClient,
-    private readonly wrapped: Conversations,
+    private readonly wrapped: Conversations
   ) {}
 
   async getConversationById(id: string) {
@@ -374,7 +368,7 @@ class BasedConversations implements BasedConversationsInterface {
   }
 
   getMessageById<T = unknown>(id: string): DecodedMessage<T> | undefined {
-    return this.wrapped.getMessageById(id);
+    return this.wrapped.getMessageById(id) as DecodedMessage<T> | undefined;
   }
 
   hmacKeys(): Record<string, HmacKey[]> {
@@ -568,10 +562,7 @@ class BasedConversations implements BasedConversationsInterface {
   private mapToBased<T extends Dm | Group>(
     conversation: T
   ): T extends Dm ? BasedDm : BasedGroup {
-    return addFeeMethods(
-      conversation,
-      this.basedClient,
-    ) as any;
+    return addFeeMethods(conversation, this.basedClient) as any;
   }
 
   private mapArrayToBased<T extends Dm[] | Group[] | (Dm | Group)[]>(
@@ -593,6 +584,7 @@ export class BasedClient extends Client {
   description: string | undefined;
   tags: string[] = [];
   hubUrl: string | undefined;
+  paymasterUrl: string | undefined;
   displayName: string | undefined;
   chain: 'base' | 'baseSepolia' = 'base';
 
@@ -604,7 +596,9 @@ export class BasedClient extends Client {
     if (!this._basedConversations) {
       this._basedConversations = new BasedConversations(
         this,
-        super.conversations,
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        super.conversations
       ) as BasedConversations & {
         '#private': unknown;
       };
@@ -624,6 +618,7 @@ export class BasedClient extends Client {
       description?: string;
       tags?: string[];
       hubUrl?: string;
+      paymasterUrl?: string;
       chain?: 'base' | 'baseSepolia';
     }
   ): Promise<BasedClient> {
@@ -640,6 +635,9 @@ export class BasedClient extends Client {
 
     basedClient.hubUrl =
       options?.hubUrl || 'https://xmtp-agent-hub.vercel.app/api';
+
+    basedClient.paymasterUrl = options?.paymasterUrl;
+
     basedClient.fees = options?.fees || 0;
     basedClient.description = options?.description;
     basedClient.tags = options?.tags || [];
@@ -667,7 +665,9 @@ export class BasedClient extends Client {
     });
 
     const key = process.env.WALLET_KEY as string;
-    const sanitizedKey = (key.startsWith("0x") ? key : `0x${key}`) as `0x${string}`;
+    const sanitizedKey = (
+      key.startsWith('0x') ? key : `0x${key}`
+    ) as `0x${string}`;
     const account = privateKeyToAccount(sanitizedKey);
 
     const publicClient = createPublicClient({
@@ -679,7 +679,6 @@ export class BasedClient extends Client {
       client: publicClient,
       owners: [account],
     });
-
 
     const signature = await spenderAccount.signMessage({
       message: challenge.challenge,

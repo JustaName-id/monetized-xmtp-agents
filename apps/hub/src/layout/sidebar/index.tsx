@@ -13,7 +13,7 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { useXMTP } from '@/context/XMTPContext';
-import { ExploreIcon, LoadingIcon, PenIcon, ProfileIcon } from '@/lib/icons';
+import { ExploreIcon, ExternalIcon, LoadingIcon, PackageIcon, PenIcon, ProfileIcon } from '@/lib/icons';
 import { useSubscription } from "@/query/subscription";
 import Link from 'next/link';
 import { useConversation, useConversations } from "@/query/xmtp";
@@ -122,6 +122,15 @@ export function AppSidebar() {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link target="_blank" href="https://www.npmjs.com/package/@agenthub/xmtp-based-client">
+                    <PackageIcon />
+                    <span>Based Client</span>
+                    <ExternalIcon />
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -174,9 +183,9 @@ export interface OrderMessagesProps {
 }
 
 const OrderMessages: React.FC<OrderMessagesProps> = React.memo(({
-                                                                  conversation,
-                                                                  handleConversationOrder,
-                                                                }) => {
+  conversation,
+  handleConversationOrder,
+}) => {
   const { latestStringMessage } = useConversation(conversation);
 
   useEffect(() => {

@@ -10,9 +10,6 @@
       "path": "./agents/xmtp-gm-agent"
     },
     {
-      "path": "./libs/xmtp-extended-client"
-    },
-    {
       "path": "./libs/xmtp-helpers"
     },
     {
@@ -26,6 +23,9 @@
     },
     {
       "path": "./libs/content-type-typing"
+    },
+    {
+      "path": "./libs/xmtp-based-client"
     }
   ]
 }

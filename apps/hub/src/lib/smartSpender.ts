@@ -10,7 +10,7 @@ import { privateKeyToAccount } from 'viem/accounts';
 
 export const publicClient = createPublicClient({
   chain: serverEnv.serverBaseNetwork,
-  transport: http(),
+  transport: http("https://base.drpc.org"),
 });
 
 export const paymasterClient = createPaymasterClient({
@@ -19,7 +19,7 @@ export const paymasterClient = createPaymasterClient({
 
 export async function getSpenderBundlerClient(): Promise<BundlerClient> {
   const spenderAccountOwner = privateKeyToAccount(
-    process.env.SPENDER_PRIVATE_KEY! as Hex
+    serverEnv.spenderKey! as Hex
   );
 
   const spenderAccount = await toCoinbaseSmartAccount({
