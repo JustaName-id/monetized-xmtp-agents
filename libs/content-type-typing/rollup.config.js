@@ -5,9 +5,10 @@ import { dts } from 'rollup-plugin-dts';
 
 const plugins = [
   typescript({
-    tsconfig: './tsconfig.json',
+    tsconfig: './tsconfig.lib.json',
     declaration: false,
     declarationMap: false,
+    noEmitOnError: false,
   }),
 ];
 

@@ -3,9 +3,6 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
-  "dependencies": {
-    "@agenthub/xmtp-content-type-typing": "*"
-  },
   "nx": {
     "targets": {
       "build": {
@@ -30,10 +27,7 @@
             "sourcemap": true,
             "outExtension": {
               ".js": ".js"
-            },
-            "external": [
-              "@agenthub/xmtp-content-type-typing"
-            ]
+            }
           }
         },
         "configurations": {
@@ -43,10 +37,7 @@
               "sourcemap": false,
               "outExtension": {
                 ".js": ".js"
-              },
-              "external": [
-                "@agenthub/xmtp-content-type-typing"
-              ]
+              }
             }
           }
         }

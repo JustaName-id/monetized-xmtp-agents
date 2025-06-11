@@ -1,8 +1,8 @@
 import { MessageCard } from "@/components/MessageCard";
-import { Conversation, DecodedMessage } from "@xmtp/browser-sdk";
-import { ContentTypeTyping, Typing } from "@agenthub/xmtp-content-type-typing";
-import React, { useEffect, useRef, useState } from "react";
 import { useConversation, useIdentity } from "@/query/xmtp";
+import { ContentTypeTyping, Typing } from "@agenthub/xmtp-content-type-typing";
+import { Conversation } from "@xmtp/browser-sdk";
+import React, { useEffect, useRef, useState } from "react";
 
 interface MessagesProps {
   conversation?: Conversation;

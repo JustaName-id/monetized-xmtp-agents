@@ -1,17 +1,17 @@
 import { useXMTP } from '@/context/XMTPContext';
+import {
+  useMutation,
+  UseMutationResult,
+  useQuery,
+  useQueryClient,
+  UseQueryResult,
+} from '@tanstack/react-query';
 import type {
   Conversation,
   DecodedMessage,
   SafeListMessagesOptions,
 } from '@xmtp/browser-sdk';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  useQuery,
-  useMutation,
-  useQueryClient,
-  UseQueryResult,
-  UseMutationResult
-} from '@tanstack/react-query';
 
 type ConversationState = {
   isStreaming: boolean;
@@ -27,7 +27,8 @@ const CACHE_TIME = 5 * 60 * 1000; // Keep in cache for 5 minutes
 const conversationKeys = {
   all: ['conversations'] as const,
   conversation: (id: string) => [...conversationKeys.all, id] as const,
-  messages: (id: string) => [...conversationKeys.conversation(id), 'messages'] as const,
+  messages: (id: string) =>
+    [...conversationKeys.conversation(id), 'messages'] as const,
   messagesWithOptions: (id: string, options?: SafeListMessagesOptions) =>
     [...conversationKeys.messages(id), options] as const,
 };
@@ -48,43 +49,51 @@ export const useConversation = (conversationParam?: Conversation | string) => {
   const conversationIdRef = useRef<string | null>(null);
 
   // Determine conversation ID and object based on input type
-  const conversationId = typeof conversationParam === 'string'
-    ? conversationParam
-    : conversationParam?.id;
+  const conversationId =
+    typeof conversationParam === 'string'
+      ? conversationParam
+      : conversationParam?.id;
 
-  const conversation = typeof conversationParam === 'string'
-    ? undefined
-    : conversationParam;
+  const conversation =
+    typeof conversationParam === 'string' ? undefined : conversationParam;
 
   const hasConversation = !!conversationParam;
 
   // Helper to update local state
   const updateState = useCallback((updates: Partial<ConversationState>) => {
-    setState(prev => ({ ...prev, ...updates }));
+    setState((prev) => ({ ...prev, ...updates }));
   }, []);
 
   // Check if sync is on cooldown
   const isSyncOnCooldown = useCallback(() => {
-    return state.lastSync && (Date.now() - state.lastSync) < SYNC_COOLDOWN;
+    return state.lastSync && Date.now() - state.lastSync < SYNC_COOLDOWN;
   }, [state.lastSync]);
 
   // Query to get conversation object when only ID is provided
-  const conversationQuery: UseQueryResult<Conversation | undefined, Error> = useQuery({
-    queryKey: conversationKeys.conversation(conversationId || ''),
-    queryFn: async (): Promise<Conversation | undefined> => {
-      if (!client || !conversationId || typeof conversationParam !== 'string') {
-        return undefined;
-      }
+  const conversationQuery: UseQueryResult<Conversation | undefined, Error> =
+    useQuery({
+      queryKey: conversationKeys.conversation(conversationId || ''),
+      queryFn: async (): Promise<Conversation | undefined> => {
+        if (
+          !client ||
+          !conversationId ||
+          typeof conversationParam !== 'string'
+        ) {
+          return undefined;
+        }
 
-      // Get conversation from client's conversation list
-      const conversations = await client.conversations.list();
-      return conversations.find(conv => conv.id === conversationId);
-    },
-    enabled: !!client && !!conversationId && typeof conversationParam === 'string',
-    staleTime: STALE_TIME,
-    gcTime: CACHE_TIME,
-    refetchOnWindowFocus: false,
-  });
+        // Get conversation from client's conversation list
+        const conversations = await client.conversations.list();
+        return conversations.find(
+          (conv) => conv.id === conversationId
+        ) as Conversation;
+      },
+      enabled:
+        !!client && !!conversationId && typeof conversationParam === 'string',
+      staleTime: STALE_TIME,
+      gcTime: CACHE_TIME,
+      refetchOnWindowFocus: false,
+    });
 
   // Get the actual conversation object to use
   const activeConversation = conversation || conversationQuery.data;
@@ -94,7 +103,7 @@ export const useConversation = (conversationParam?: Conversation | string) => {
     queryKey: conversationKeys.messages(conversationId || ''),
     queryFn: async (): Promise<DecodedMessage[]> => {
       if (!client || !activeConversation) {
-        throw new Error("XMTP client or conversation is not available");
+        throw new Error('XMTP client or conversation is not available');
       }
       return await activeConversation.messages();
     },
@@ -111,10 +120,16 @@ export const useConversation = (conversationParam?: Conversation | string) => {
   });
 
   // Sync mutation
-  const syncMutation: UseMutationResult<void, Error, { force?: boolean } | undefined> = useMutation({
-    mutationFn: async ({ force = false }: { force?: boolean } = {}): Promise<void> => {
+  const syncMutation: UseMutationResult<
+    void,
+    Error,
+    { force?: boolean } | undefined
+  > = useMutation({
+    mutationFn: async ({
+      force = false,
+    }: { force?: boolean } = {}): Promise<void> => {
       if (!client || !activeConversation) {
-        throw new Error("XMTP client or conversation is not available");
+        throw new Error('XMTP client or conversation is not available');
       }
 
       // Respect cooldown unless forced
@@ -132,7 +147,7 @@ export const useConversation = (conversationParam?: Conversation | string) => {
       // Invalidate messages after successful sync
       if (conversationId) {
         queryClient.invalidateQueries({
-          queryKey: conversationKeys.messages(conversationId)
+          queryKey: conversationKeys.messages(conversationId),
         });
       }
     },
@@ -142,11 +157,11 @@ export const useConversation = (conversationParam?: Conversation | string) => {
   const sendMutation: UseMutationResult<void, Error, string> = useMutation({
     mutationFn: async (message: string): Promise<void> => {
       if (!client || !activeConversation) {
-        throw new Error("XMTP client or conversation is not available");
+        throw new Error('XMTP client or conversation is not available');
       }
 
       if (!message.trim()) {
-        throw new Error("Message cannot be empty");
+        throw new Error('Message cannot be empty');
       }
 
       await activeConversation.send(message);
@@ -158,67 +173,81 @@ export const useConversation = (conversationParam?: Conversation | string) => {
       // Refetch messages after successful send
       if (conversationId) {
         queryClient.invalidateQueries({
-          queryKey: conversationKeys.messages(conversationId)
+          queryKey: conversationKeys.messages(conversationId),
         });
       }
     },
   });
 
   // Get messages with options (separate query for different options)
-  const getMessages = useCallback(async (
-    options?: SafeListMessagesOptions,
-    syncFromNetwork = false,
-    forceRefresh = false
-  ): Promise<DecodedMessage[]> => {
-    if (!client || !activeConversation || !conversationId) {
-      throw new Error("XMTP client or conversation is not available");
-    }
+  const getMessages = useCallback(
+    async (
+      options?: SafeListMessagesOptions,
+      syncFromNetwork = false,
+      forceRefresh = false
+    ): Promise<DecodedMessage[]> => {
+      if (!client || !activeConversation || !conversationId) {
+        throw new Error('XMTP client or conversation is not available');
+      }
 
-    // Sync first if requested
-    if (syncFromNetwork) {
-      await syncMutation.mutateAsync({ force: forceRefresh });
-    }
+      // Sync first if requested
+      if (syncFromNetwork) {
+        await syncMutation.mutateAsync({ force: forceRefresh });
+      }
 
-    // If we have options, use a separate query
-    if (options) {
-      return queryClient.fetchQuery({
-        queryKey: conversationKeys.messagesWithOptions(conversationId, options),
-        queryFn: async () => await activeConversation.messages(options),
-        staleTime: forceRefresh ? 0 : STALE_TIME,
-      });
-    }
+      // If we have options, use a separate query
+      if (options) {
+        return queryClient.fetchQuery({
+          queryKey: conversationKeys.messagesWithOptions(
+            conversationId,
+            options
+          ),
+          queryFn: async () => await activeConversation.messages(options),
+          staleTime: forceRefresh ? 0 : STALE_TIME,
+        });
+      }
 
-    // Use main query, force refetch if needed
-    if (forceRefresh) {
-      await queryClient.refetchQueries({
-        queryKey: conversationKeys.messages(conversationId)
-      });
-      return messagesQuery.data || [];
-    }
+      // Use main query, force refetch if needed
+      if (forceRefresh) {
+        await queryClient.refetchQueries({
+          queryKey: conversationKeys.messages(conversationId),
+        });
+        return messagesQuery.data || [];
+      }
 
-    // Return cached data or trigger fetch
-    return messagesQuery.data ||
-      await queryClient.fetchQuery({
-        queryKey: conversationKeys.messages(conversationId),
-        queryFn: async () => await activeConversation.messages(),
-        staleTime: 0,
-      });
-  }, [client, activeConversation, conversationId, queryClient, syncMutation]);
+      // Return cached data or trigger fetch
+      return (
+        messagesQuery.data ||
+        (await queryClient.fetchQuery({
+          queryKey: conversationKeys.messages(conversationId),
+          queryFn: async () => await activeConversation.messages(),
+          staleTime: 0,
+        }))
+      );
+    },
+    [client, activeConversation, conversationId, queryClient, syncMutation]
+  );
 
   // Sync wrapper - memoized to prevent recreations
-  const sync = useCallback(async (force = false): Promise<void> => {
-    return syncMutation.mutateAsync({ force });
-  }, [syncMutation.mutateAsync]);
+  const sync = useCallback(
+    async (force = false): Promise<void> => {
+      return syncMutation.mutateAsync({ force });
+    },
+    [syncMutation.mutateAsync]
+  );
 
   // Send wrapper - memoized to prevent recreations
-  const send = useCallback(async (message: string): Promise<void> => {
-    return sendMutation.mutateAsync(message);
-  }, [sendMutation.mutateAsync]);
+  const send = useCallback(
+    async (message: string): Promise<void> => {
+      return sendMutation.mutateAsync(message);
+    },
+    [sendMutation.mutateAsync]
+  );
 
   // Stream messages with proper cleanup and deduplication
   const streamMessages = useCallback(async (): Promise<() => void> => {
     if (!client || !activeConversation || !conversationId) {
-      throw new Error("XMTP client or conversation is not available");
+      throw new Error('XMTP client or conversation is not available');
     }
 
     // Clean up existing stream
@@ -244,12 +273,12 @@ export const useConversation = (conversationParam?: Conversation | string) => {
             conversationKeys.messages(conversationId),
             (oldMessages = []) => {
               // Check for duplicates
-              const isDuplicate = oldMessages.some(m => m.id === message.id);
+              const isDuplicate = oldMessages.some((m) => m.id === message.id);
               if (isDuplicate) return oldMessages;
 
               // Add message in chronological order
-              const newMessages = [...oldMessages, message].sort(
-                (a, b) => Number(a.sentAtNs - b.sentAtNs)
+              const newMessages = [...oldMessages, message].sort((a, b) =>
+                Number(a.sentAtNs - b.sentAtNs)
               );
 
               return newMessages;
@@ -271,7 +300,10 @@ export const useConversation = (conversationParam?: Conversation | string) => {
       streamCleanupRef.current = cleanup;
       return cleanup;
     } catch (error) {
-      const err = error instanceof Error ? error : new Error('Failed to start message stream');
+      const err =
+        error instanceof Error
+          ? error
+          : new Error('Failed to start message stream');
       updateState({ error: err, isStreaming: false });
       throw err;
     }
@@ -279,11 +311,11 @@ export const useConversation = (conversationParam?: Conversation | string) => {
 
   // Reset cache and state when conversation changes
   useEffect(() => {
-    const newConversationId = conversationParam ?
-      typeof conversationParam === 'string'
-      ? conversationParam
-      : (conversationParam)?.id
-      :null;
+    const newConversationId = conversationParam
+      ? typeof conversationParam === 'string'
+        ? conversationParam
+        : conversationParam?.id
+      : null;
 
     if (conversationIdRef.current !== newConversationId) {
       // Clean up previous stream
@@ -306,7 +338,7 @@ export const useConversation = (conversationParam?: Conversation | string) => {
       // Remove queries for old conversation
       if (conversationIdRef.current) {
         queryClient.removeQueries({
-          queryKey: conversationKeys.conversation(conversationIdRef.current)
+          queryKey: conversationKeys.conversation(conversationIdRef.current),
         });
       }
 
@@ -319,8 +351,13 @@ export const useConversation = (conversationParam?: Conversation | string) => {
     let mounted = true;
 
     const startStreaming = async () => {
-      await getMessages(undefined, true, true)
-      if (!activeConversation || !client || !conversationId || state.isStreaming) {
+      await getMessages(undefined, true, true);
+      if (
+        !activeConversation ||
+        !client ||
+        !conversationId ||
+        state.isStreaming
+      ) {
         return;
       }
 
@@ -366,9 +403,12 @@ export const useConversation = (conversationParam?: Conversation | string) => {
     sendMutation.reset();
   }, [syncMutation.reset, sendMutation.reset]);
 
-  const getMessageById = useCallback((messageId: string) => {
-    return messagesQuery.data?.find(msg => msg.id === messageId);
-  }, [messagesQuery.data]);
+  const getMessageById = useCallback(
+    (messageId: string) => {
+      return messagesQuery.data?.find((msg) => msg.id === messageId);
+    },
+    [messagesQuery.data]
+  );
 
   const getLatestMessage = useCallback(() => {
     if (!messagesQuery.data || messagesQuery.data.length === 0) return null;
@@ -377,13 +417,14 @@ export const useConversation = (conversationParam?: Conversation | string) => {
     );
   }, [messagesQuery.data]);
 
-  const getLastStringMessage = useCallback((): DecodedMessage<string> | null => {
-    if (!messagesQuery.data || messagesQuery.data.length === 0) return null;
-    const lastMessage = messagesQuery.data.reduce((latest, current) =>
-      typeof current.content === 'string' ? current : latest
-    ) as DecodedMessage<string>;
-    return typeof lastMessage.content === 'string' ? lastMessage : null;
-  }, [messagesQuery.data]);
+  const getLastStringMessage =
+    useCallback((): DecodedMessage<string> | null => {
+      if (!messagesQuery.data || messagesQuery.data.length === 0) return null;
+      const lastMessage = messagesQuery.data.reduce((latest, current) =>
+        typeof current.content === 'string' ? current : latest
+      ) as DecodedMessage<string>;
+      return typeof lastMessage.content === 'string' ? lastMessage : null;
+    }, [messagesQuery.data]);
 
   const getMessageCount = useCallback(() => {
     return messagesQuery.data?.length || 0;
@@ -399,14 +440,21 @@ export const useConversation = (conversationParam?: Conversation | string) => {
   }, []);
 
   // Combine all errors
-  const combinedError = state.error || messagesQuery.error || conversationQuery.error || syncMutation.error || sendMutation.error;
+  const combinedError =
+    state.error ||
+    messagesQuery.error ||
+    conversationQuery.error ||
+    syncMutation.error ||
+    sendMutation.error;
 
   return {
     // Data
     messages: messagesQuery.data || [],
 
     // State flags - combining query and mutation states
-    isMessagePending: messagesQuery.isPending || (typeof conversationParam === 'string' && conversationQuery.isPending),
+    isMessagePending:
+      messagesQuery.isPending ||
+      (typeof conversationParam === 'string' && conversationQuery.isPending),
     isLoaded: messagesQuery.isSuccess,
     isSyncing: syncMutation.isPending,
     isSending: sendMutation.isPending,
@@ -414,7 +462,7 @@ export const useConversation = (conversationParam?: Conversation | string) => {
     error: combinedError,
 
     // Computed state
-    isEmpty: messagesQuery.isSuccess && (messagesQuery.data?.length === 0),
+    isEmpty: messagesQuery.isSuccess && messagesQuery.data?.length === 0,
     hasMessages: (messagesQuery.data?.length || 0) > 0,
     messageCount: messagesQuery.data?.length || 0,
     latestMessage: getLatestMessage(),
@@ -439,12 +487,15 @@ export const useConversation = (conversationParam?: Conversation | string) => {
     conversationId: conversationId || null,
     hasConversation,
     conversation: activeConversation,
-    isConversationPending: typeof conversationParam === 'string' && conversationQuery.isPending,
+    isConversationPending:
+      typeof conversationParam === 'string' && conversationQuery.isPending,
 
     // Additional TanStack Query specific utilities
     refetch: messagesQuery.refetch,
     isRefetching: messagesQuery.isRefetching,
-    isFetching: messagesQuery.isFetching || (typeof conversationParam === 'string' && conversationQuery.isFetching),
+    isFetching:
+      messagesQuery.isFetching ||
+      (typeof conversationParam === 'string' && conversationQuery.isFetching),
     isStale: messagesQuery.isStale,
 
     // Access to underlying query/mutation objects if needed

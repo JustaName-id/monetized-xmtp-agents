@@ -12,13 +12,13 @@
   "exclude": [],
   "references": [
     {
+      "path": "../../libs/content-type-typing/tsconfig.lib.json"
+    },
+    {
       "path": "../../libs/xmtp-based-client/tsconfig.lib.json"
     },
     {
       "path": "../../libs/xmtp-helpers/tsconfig.lib.json"
-    },
-    {
-      "path": "../../libs/content-type-typing"
     }
   ]
 }

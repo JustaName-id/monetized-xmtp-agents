@@ -8,6 +8,11 @@ import {
 import { type XmtpEnv } from '@xmtp/node-sdk';
 import BasedClient from '@agenthub/xmtp-based-client';
 import { HoroscopeProcessor } from './horoscope-processor.js';
+import {
+  ContentTypeTyping,
+  TypingCodec,
+  type Typing,
+} from '@agenthub/xmtp-content-type-typing';
 
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db
@@ -41,6 +46,7 @@ const main = async () => {
     description:
       "Your personal astrology companion on XMTP! Get authentic daily horoscope readings powered by professional astrologers. Simply tell the agent your zodiac sign or birthday, and receive personalized cosmic insights including your mood, lucky numbers, colors, and compatibility. Ask for today's reading, peek into tomorrow, or check yesterday's stars. Works with all 12 zodiac signs and delivers real-time astrological guidance straight to your XMTP messages.",
     fees: 0.01, // 0.01 USDC
+    codecs: [new TypingCodec()],
     tags: ['astrology'],
     paymasterUrl,
     chain: CHAIN === 'mainnet' ? 'base' : 'baseSepolia',
@@ -83,6 +89,17 @@ const main = async () => {
     console.log(
       `📨 Received message from ${addressFromInboxId}: ${message.content}`
     );
+
+    // Send typing indicator first
+    try {
+      const typingContent: Typing = { isTyping: true };
+      await conversation.send(typingContent, ContentTypeTyping);
+    } catch (e) {
+      console.error(
+        `Error sending typing indicator to ${message.senderInboxId}:`,
+        e
+      );
+    }
 
     try {
       // Ensure message content is a string

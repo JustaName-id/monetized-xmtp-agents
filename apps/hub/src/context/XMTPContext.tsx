@@ -108,7 +108,7 @@ export const XMTPProvider: React.FC<XMTPProviderProps> = ({
             loggingLevel,
             dbEncryptionKey,
             codecs: [new TypingCodec()],
-          });
+          }) as unknown as Client;
           setClient(xmtpClient);
         } catch (e) {
           console.log('e', e)

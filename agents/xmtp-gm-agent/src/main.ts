@@ -40,7 +40,7 @@ const main = async () => {
   const client = await BasedClient.create(signer, {
     dbEncryptionKey,
     env: XMTP_ENV as XmtpEnv,
-    username: 'test',
+    username: 'gm',
     avatar,
     displayName: 'The GM Agent',
     description: 'Gm Agent',
