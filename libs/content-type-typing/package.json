@@ -1,0 +1,72 @@
+{
+  "name": "@agenthub/xmtp-content-type-typing",
+  "version": "0.0.1",
+  "description": "An XMTP content type to support typing indicators",
+  "keywords": [
+    "xmtp",
+    "messaging",
+    "web3",
+    "js",
+    "ts",
+    "javascript",
+    "typescript",
+    "content-types",
+    "typing"
+  ],
+  "license": "MIT",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "browser": "./dist/browser/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "dist/index.js",
+  "browser": "dist/browser/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "src",
+    "!src/**/*.test.*"
+  ],
+  "nx": {
+    "name": "xmtp-content-type-typing"
+  },
+  "scripts": {
+    "build": "yarn clean:dist && yarn rollup -c",
+    "clean": "yarn clean:dist && rimraf .turbo node_modules",
+    "clean:dist": "rimraf dist",
+    "dev": "yarn clean:dist && yarn rollup -c --watch",
+    "test": "vitest run --environment node",
+    "typecheck": "tsc"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 3 chrome versions",
+      "last 3 firefox versions",
+      "last 3 safari versions"
+    ]
+  },
+  "dependencies": {
+    "@xmtp/content-type-primitives": "^2.0.2"
+  },
+  "devDependencies": {
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^12.1.2",
+    "@types/node": "^22.15.23",
+    "rimraf": "^6.0.1",
+    "rollup": "^4.41.1",
+    "rollup-plugin-dts": "^6.1.1",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5",
+    "vitest": "^3.1.4"
+  }
+}

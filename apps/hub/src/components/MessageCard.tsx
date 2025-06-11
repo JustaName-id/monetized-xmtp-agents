@@ -11,6 +11,7 @@ import {
 import { EncodedContent } from '@xmtp/content-type-primitives';
 import { ContentTypeText } from '@xmtp/content-type-text';
 import { ContentTypeGroupUpdated } from '@xmtp/content-type-group-updated';
+import { ContentTypeTyping } from '@agenthub/xmtp-content-type-typing';
 import Link from 'next/link';
 import { clientEnv } from '@/utils/config/clientEnv';
 
@@ -40,20 +41,18 @@ const createMarkdownComponents = (isSender: boolean): Components => ({
     <em className="italic">{children}</em>
   ),
   code: ({ children }: { children?: ReactNode }) => (
-    <code className={`px-1 py-0.5 rounded text-xs font-mono ${
-      isSender
+    <code className={`px-1 py-0.5 rounded text-xs font-mono ${isSender
         ? 'bg-primary-foreground/20 text-primary-foreground'
         : 'bg-secondary-foreground/20'
-    }`}>
+      }`}>
       {children}
     </code>
   ),
   pre: ({ children }: { children?: ReactNode }) => (
-    <pre className={`p-2 rounded text-xs font-mono overflow-x-auto ${
-      isSender
+    <pre className={`p-2 rounded text-xs font-mono overflow-x-auto ${isSender
         ? 'bg-primary-foreground/20 text-primary-foreground'
         : 'bg-secondary-foreground/20'
-    }`}>
+      }`}>
       {children}
     </pre>
   ),
@@ -67,18 +66,16 @@ const createMarkdownComponents = (isSender: boolean): Components => ({
     <li className="mb-1">{children}</li>
   ),
   blockquote: ({ children }: { children?: ReactNode }) => (
-    <blockquote className={`border-l-2 pl-3 italic ${
-      isSender ? 'border-primary-foreground/50' : 'border-secondary-foreground/50'
-    }`}>
+    <blockquote className={`border-l-2 pl-3 italic ${isSender ? 'border-primary-foreground/50' : 'border-secondary-foreground/50'
+      }`}>
       {children}
     </blockquote>
   ),
   a: ({ href, children }: { href?: string; children?: ReactNode }) => (
     <a
       href={href}
-      className={`underline underline-offset-2 hover:no-underline ${
-        isSender ? 'text-primary-foreground' : 'text-blue-600'
-      }`}
+      className={`underline underline-offset-2 hover:no-underline ${isSender ? 'text-primary-foreground' : 'text-blue-600'
+        }`}
       target="_blank"
       rel="noopener noreferrer"
     >
@@ -88,27 +85,27 @@ const createMarkdownComponents = (isSender: boolean): Components => ({
 });
 
 export const MessageCard: React.FC<MessageCardProps> = ({
-                                                          message,
-                                                          isSender,
-                                                        }) => {
+  message,
+  isSender,
+}) => {
+  if (message.contentType.sameAs(ContentTypeTyping)) {
+    return null;
+  }
   if (message.contentType.sameAs(ContentTypeText)) {
     return (
       <div
-        className={`flex flex-row w-full ${
-          isSender ? 'justify-end' : 'justify-start'
-        }`}
+        className={`flex flex-row w-full ${isSender ? 'justify-end' : 'justify-start'
+          }`}
       >
         <div
-          className={`flex px-3 py-3 rounded-md max-w-[80%] min-w-0 ${
-            isSender
+          className={`flex px-3 py-3 rounded-md max-w-[80%] min-w-0 ${isSender
               ? 'bg-primary rounded-br-none'
               : 'bg-secondary rounded-bl-none'
-          }`}
+            }`}
         >
           <div
-            className={`text-sm w-full break-words overflow-wrap-anywhere ${
-              isSender ? 'text-primary-foreground' : 'text-base-foreground'
-            }`}
+            className={`text-sm w-full break-words overflow-wrap-anywhere ${isSender ? 'text-primary-foreground' : 'text-base-foreground'
+              }`}
           >
             <ReactMarkdown components={createMarkdownComponents(isSender)}>
               {message.content as string}
@@ -131,15 +128,13 @@ export const MessageCard: React.FC<MessageCardProps> = ({
         href={`${clientEnv.baseNetwork.blockExplorers?.default.url}/tx/${tx.reference}`}
       >
         <div
-          className={`flex flex-row w-full ${
-            isSender ? 'justify-end' : 'justify-start'
-          }`}
+          className={`flex flex-row w-full ${isSender ? 'justify-end' : 'justify-start'
+            }`}
         >
           <div className={`flex px-2 py-1 rounded-lg bg-blue-500 max-w-[80%] min-w-0`}>
             <span
-              className={`text-sm break-words ${
-                isSender ? 'text-primary-foreground' : 'text-base-foreground'
-              }`}
+              className={`text-sm break-words ${isSender ? 'text-primary-foreground' : 'text-base-foreground'
+                }`}
             >
               You can find your tx here
             </span>
@@ -156,21 +151,18 @@ export const MessageCard: React.FC<MessageCardProps> = ({
   if (typeof message.fallback === 'string') {
     return (
       <div
-        className={`flex flex-row w-full ${
-          isSender ? 'justify-end' : 'justify-start'
-        }`}
+        className={`flex flex-row w-full ${isSender ? 'justify-end' : 'justify-start'
+          }`}
       >
         <div
-          className={`flex px-3 py-3 rounded-md max-w-[80%] min-w-0 ${
-            isSender
+          className={`flex px-3 py-3 rounded-md max-w-[80%] min-w-0 ${isSender
               ? 'bg-primary rounded-br-none'
               : 'bg-secondary rounded-bl-none'
-          }`}
+            }`}
         >
           <div
-            className={`text-sm w-full break-words overflow-wrap-anywhere ${
-              isSender ? 'text-primary-foreground' : 'text-base-foreground'
-            }`}
+            className={`text-sm w-full break-words overflow-wrap-anywhere ${isSender ? 'text-primary-foreground' : 'text-base-foreground'
+              }`}
           >
             <ReactMarkdown components={createMarkdownComponents(isSender)}>
               {message.fallback}
@@ -183,21 +175,18 @@ export const MessageCard: React.FC<MessageCardProps> = ({
 
   return (
     <div
-      className={`flex flex-row w-full ${
-        isSender ? 'justify-end' : 'justify-start'
-      }`}
+      className={`flex flex-row w-full ${isSender ? 'justify-end' : 'justify-start'
+        }`}
     >
       <div
-        className={`flex px-3 py-3 rounded-md max-w-[80%] min-w-0 ${
-          isSender
+        className={`flex px-3 py-3 rounded-md max-w-[80%] min-w-0 ${isSender
             ? 'bg-primary rounded-br-none'
             : 'bg-secondary rounded-bl-none'
-        }`}
+          }`}
       >
         <pre
-          className={`text-sm w-full break-words whitespace-pre-wrap overflow-wrap-anywhere ${
-            isSender ? 'text-primary-foreground' : 'text-base-foreground'
-          }`}
+          className={`text-sm w-full break-words whitespace-pre-wrap overflow-wrap-anywhere ${isSender ? 'text-primary-foreground' : 'text-base-foreground'
+            }`}
         >
           {JSON.stringify(message.content ?? message.fallback, null, 2)}
         </pre>

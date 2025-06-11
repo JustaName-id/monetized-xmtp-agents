@@ -2,6 +2,7 @@ import { useLocalVariables } from "@/hooks/use-local";
 import { createSCWSigner } from "@/utils/helpers/createSigner";
 import { Client, type ClientOptions, type Signer } from "@xmtp/browser-sdk";
 import type { GroupUpdated } from "@xmtp/content-type-group-updated";
+import { TypingCodec } from "@agenthub/xmtp-content-type-typing";
 import {
   createContext,
   useCallback,
@@ -106,9 +107,8 @@ export const XMTPProvider: React.FC<XMTPProviderProps> = ({
             env,
             loggingLevel,
             dbEncryptionKey,
-
-            codecs: [],
-          });
+            codecs: [new TypingCodec()],
+          }) as unknown as Client;
           setClient(xmtpClient);
         } catch (e) {
           console.log('e', e)

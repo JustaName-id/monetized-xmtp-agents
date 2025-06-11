@@ -22,6 +22,9 @@
       "path": "./agents/xmtp-horoscope-agent"
     },
     {
+      "path": "./libs/content-type-typing"
+    },
+    {
       "path": "./libs/xmtp-based-client"
     }
   ]

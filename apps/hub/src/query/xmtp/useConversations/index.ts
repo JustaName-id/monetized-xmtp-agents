@@ -6,6 +6,8 @@ import {
   Identifier,
   SafeCreateGroupOptions,
   SafeListConversationsOptions,
+  Dm,
+  StreamCallback,
 } from '@xmtp/browser-sdk';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -15,6 +17,7 @@ import {
   UseQueryResult,
   UseMutationResult,
 } from '@tanstack/react-query';
+import type { GroupUpdated } from '@xmtp/content-type-group-updated';
 
 type ConversationsState = {
   isStreaming: boolean;
@@ -64,7 +67,7 @@ export const useConversations = () => {
         if (!client) {
           throw new Error('XMTP client is not initialized');
         }
-        return await client.conversations.list();
+        return (await client.conversations.list()) as OriginalConversation[];
       },
       enabled: !!client && !!clientInboxId,
       staleTime: STALE_TIME,
@@ -131,7 +134,7 @@ export const useConversations = () => {
       const result = await client.conversations.getConversationById(
         conversationId
       );
-      return result || null;
+      return result as OriginalConversation | null;
     },
     onError: (error: Error) => {
       updateState({ error });
@@ -172,7 +175,10 @@ export const useConversations = () => {
       if (!client) {
         throw new Error('XMTP client is not initialized');
       }
-      return await client.conversations.newGroup(inboxIds, options);
+      return (await client.conversations.newGroup(
+        inboxIds,
+        options
+      )) as OriginalConversation;
     },
     onError: (error: Error) => {
       updateState({ error });
@@ -202,10 +208,10 @@ export const useConversations = () => {
       if (!client) {
         throw new Error('XMTP client is not initialized');
       }
-      return await client.conversations.newGroupWithIdentifiers(
+      return (await client.conversations.newGroupWithIdentifiers(
         identifiers,
         options
-      );
+      )) as Group;
     },
     onError: (error: Error) => {
       updateState({ error });
@@ -235,7 +241,9 @@ export const useConversations = () => {
         if (!client) {
           throw new Error('XMTP client is not initialized');
         }
-        return await client.conversations.newDm(inboxId);
+        return (await client.conversations.newDm(
+          inboxId
+        )) as OriginalConversation;
       },
       onError: (error: Error) => {
         updateState({ error });
@@ -261,7 +269,9 @@ export const useConversations = () => {
       if (!client) {
         throw new Error('XMTP client is not initialized');
       }
-      return await client.conversations.newDmWithIdentifier(identifier);
+      return (await client.conversations.newDmWithIdentifier(
+        identifier
+      )) as OriginalConversation;
     },
     onError: (error: Error) => {
       updateState({ error });
@@ -428,7 +438,13 @@ export const useConversations = () => {
         }
       };
 
-      const stream = await client.conversations.stream(onConversation);
+      const stream = await client.conversations.stream(
+        onConversation as
+          | StreamCallback<
+              Group<string | GroupUpdated> | Dm<string | GroupUpdated>
+            >
+          | undefined
+      );
 
       const cleanup = () => {
         updateState({ isStreaming: false });

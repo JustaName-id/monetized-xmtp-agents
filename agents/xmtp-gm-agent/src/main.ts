@@ -7,6 +7,11 @@ import {
 } from '@agenthub/xmtp-helpers';
 import { type XmtpEnv } from '@xmtp/node-sdk';
 import BasedClient from '@agenthub/xmtp-based-client';
+import {
+  ContentTypeTyping,
+  TypingCodec,
+  type Typing,
+} from '@agenthub/xmtp-content-type-typing';
 
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db
@@ -40,6 +45,7 @@ const main = async () => {
     displayName: 'The GM Agent',
     description: 'Gm Agent',
     fees: 0.05,
+    codecs: [new TypingCodec()],
     tags: ['gm'],
     paymasterUrl,
     chain: CHAIN === 'mainnet' ? 'base' : 'baseSepolia',
@@ -56,6 +62,7 @@ const main = async () => {
 
   for await (const message of stream) {
     if (
+      !message ||
       message?.senderInboxId.toLowerCase() === client.inboxId.toLowerCase() ||
       message?.contentType?.typeId !== 'text'
     ) {
@@ -71,6 +78,17 @@ const main = async () => {
       continue;
     }
 
+    // Send typing indicator first
+    try {
+      const typingContent: Typing = { isTyping: true };
+      await conversation.send(typingContent, ContentTypeTyping);
+    } catch (e) {
+      console.error(
+        `Error sending typing indicator to ${message.senderInboxId}:`,
+        e
+      );
+    }
+
     const inboxState = await client.preferences.inboxStateFromInboxIds([
       message.senderInboxId,
     ]);
@@ -78,6 +96,7 @@ const main = async () => {
     const subname = await client.subnameByAddress(addressFromInboxId);
 
     console.log(`Sending "gm" response to ${addressFromInboxId}...`);
+
     if (subname) {
       await conversation.sendWithFees(`gm ${subname.ens}`, addressFromInboxId);
     } else {

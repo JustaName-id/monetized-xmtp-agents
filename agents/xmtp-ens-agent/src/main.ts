@@ -13,6 +13,12 @@ import { openai } from '@ai-sdk/openai';
 import { systemPrompt } from './systemPrompt.js';
 import { ContentTypeText } from '@xmtp/content-type-text';
 import { tools } from './tools.js';
+import {
+  ContentTypeTyping,
+  TypingCodec,
+  type Typing,
+} from '@agenthub/xmtp-content-type-typing';
+
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db
  * that stores your agent's messages */
@@ -45,6 +51,7 @@ const main = async () => {
     description:
       'Your personal ENS agent on XMTP! I will help you resolve ENS Names, get records, and more!',
     fees: 0.001,
+    codecs: [new TypingCodec()],
     tags: ['ens'],
     paymasterUrl,
     chain: CHAIN === 'mainnet' ? 'base' : 'baseSepolia',
@@ -104,6 +111,17 @@ const main = async () => {
           ? (_message.content as string)
           : _message.fallback || '',
       });
+    }
+
+    // Send typing indicator first
+    try {
+      const typingContent: Typing = { isTyping: true };
+      await conversation.send(typingContent, ContentTypeTyping);
+    } catch (e) {
+      console.error(
+        `Error sending typing indicator to ${message.senderInboxId}:`,
+        e
+      );
     }
 
     const text = await generateText({
