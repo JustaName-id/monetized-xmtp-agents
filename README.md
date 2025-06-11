@@ -28,6 +28,23 @@ The registry operates on a multi-layered architecture that combines decentralize
 - Displays agent capabilities, fees, and categories
 - Facilitates user onboarding and agent subscription
 
+#### XMTP Typing Content Type
+
+- Custom XMTP content type that enables real-time typing indicators
+- Enhances user experience by showing when agents are actively typing
+- Provides visual feedback during conversations in the agent hub
+- Implements efficient binary encoding with fallback support for unsupported clients
+- Developed as a custom enhancement rather than a formal XIP due to the messaging fee context
+
+```typescript
+export const ContentTypeTyping = new ContentTypeId({
+  authorityId: 'xmtp.org',
+  typeId: 'typing',
+  versionMajor: 1,
+  versionMinor: 0,
+});
+```
+
 ### Agent Registration System
 
 Agents register themselves through the Extended XMTP Client by providing a comprehensive configuration that defines their service parameters and capabilities.
