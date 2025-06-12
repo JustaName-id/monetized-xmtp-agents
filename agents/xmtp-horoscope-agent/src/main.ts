@@ -26,6 +26,12 @@ const { XMTP_ENV, WALLET_KEY, ENCRYPTION_KEY, CHAIN, PAYMASTER_URL } =
     'PAYMASTER_URL',
   ]);
 
+const MAX_RETRIES = 6; // 6 times
+const RETRY_DELAY_MS = 10000; // 10 seconds
+
+// Helper function to pause execution
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 const main = async () => {
   /* Create the signer using viem and parse the encryption key for the local db */
   const signer = await createSigner(WALLET_KEY);
@@ -58,80 +64,107 @@ const main = async () => {
   console.log('✓ Syncing conversations...');
   await client.conversations.sync();
 
-  console.log('Waiting for messages...');
-  const stream = await client.conversations.streamAllMessages();
+  // Start stream with limited retries
+  let retryCount = 0;
 
-  const horoscopeProcessor = new HoroscopeProcessor();
-
-  for await (const message of stream) {
-    if (
-      message?.senderInboxId.toLowerCase() === client.inboxId.toLowerCase() ||
-      message?.contentType?.typeId !== 'text'
-    ) {
-      continue;
-    }
-
-    const conversation = await client.conversations.getConversationById(
-      message.conversationId
-    );
-
-    if (!conversation) {
-      console.log('Unable to find conversation, skipping');
-      continue;
-    }
-
-    const inboxState = await client.preferences.inboxStateFromInboxIds([
-      message.senderInboxId,
-    ]);
-    const addressFromInboxId = inboxState[0].identifiers[0].identifier;
-    const subname = await client.subnameByAddress(addressFromInboxId);
-
-    console.log(
-      `📨 Received message from ${addressFromInboxId}: ${message.content}`
-    );
-
-    // Send typing indicator first
+  while (retryCount < MAX_RETRIES) {
     try {
-      const typingContent: Typing = { isTyping: true };
-      await conversation.send(typingContent, ContentTypeTyping);
-    } catch (e) {
-      console.error(
-        `Error sending typing indicator to ${message.senderInboxId}:`,
-        e
+      console.log(
+        `Starting message stream... (attempt ${retryCount + 1}/${MAX_RETRIES})`
       );
-    }
+      const streamPromise = client.conversations.streamAllMessages();
+      const stream = await streamPromise;
 
-    try {
-      // Ensure message content is a string
-      const messageContent =
-        typeof message.content === 'string'
-          ? message.content
-          : String(message.content);
+      console.log('Waiting for messages...');
+      const horoscopeProcessor = new HoroscopeProcessor();
 
-      // Process the message with horoscope logic
-      const response = await horoscopeProcessor.processMessage(
-        messageContent,
-        addressFromInboxId
-      );
+      for await (const message of stream) {
+        if (
+          !message ||
+          message?.senderInboxId.toLowerCase() ===
+            client.inboxId.toLowerCase() ||
+          message?.contentType?.typeId !== 'text'
+        ) {
+          continue;
+        }
 
-      // Send the horoscope response
-      if (subname) {
-        await conversation.sendWithFees(`${response}`, addressFromInboxId);
-        console.log(`📤 Sent horoscope response to ${subname.ens}`);
-      } else {
-        await conversation.sendWithFees(response, addressFromInboxId);
-        console.log(`📤 Sent horoscope response to ${addressFromInboxId}`);
+        const conversation = await client.conversations.getConversationById(
+          message.conversationId
+        );
+
+        if (!conversation) {
+          console.log('Unable to find conversation, skipping');
+          continue;
+        }
+
+        const inboxState = await client.preferences.inboxStateFromInboxIds([
+          message.senderInboxId,
+        ]);
+        const addressFromInboxId = inboxState[0].identifiers[0].identifier;
+        const subname = await client.subnameByAddress(addressFromInboxId);
+
+        console.log(
+          `📨 Received message from ${addressFromInboxId}: ${message.content}`
+        );
+
+        // Send typing indicator first
+        try {
+          const typingContent: Typing = { isTyping: true };
+          await conversation.send(typingContent, ContentTypeTyping);
+        } catch (e) {
+          console.error(
+            `Error sending typing indicator to ${message.senderInboxId}:`,
+            e
+          );
+        }
+
+        try {
+          // Ensure message content is a string
+          const messageContent =
+            typeof message.content === 'string'
+              ? message.content
+              : String(message.content);
+
+          // Process the message with horoscope logic
+          const response = await horoscopeProcessor.processMessage(
+            messageContent,
+            addressFromInboxId
+          );
+
+          // Send the horoscope response
+          if (subname) {
+            await conversation.sendWithFees(`${response}`, addressFromInboxId);
+            console.log(`📤 Sent horoscope response to ${subname.ens}`);
+          } else {
+            await conversation.sendWithFees(response, addressFromInboxId);
+            console.log(`📤 Sent horoscope response to ${addressFromInboxId}`);
+          }
+        } catch (error) {
+          console.error('Error processing horoscope message:', error);
+          await conversation.sendWithFees(
+            'Sorry, I encountered an error reading the stars. Please try again! 🌟',
+            addressFromInboxId
+          );
+        }
+
+        console.log('Waiting for messages...');
       }
-    } catch (error) {
-      console.error('Error processing horoscope message:', error);
-      await conversation.sendWithFees(
-        'Sorry, I encountered an error reading the stars. Please try again! 🌟',
-        addressFromInboxId
-      );
-    }
 
-    console.log('Waiting for messages...');
+      // If we get here without an error, reset the retry count
+      retryCount = 0;
+    } catch (error) {
+      retryCount++;
+      console.debug(error);
+      if (retryCount < MAX_RETRIES) {
+        console.log(`Waiting ${RETRY_DELAY_MS / 1000} seconds before retry...`);
+        await sleep(RETRY_DELAY_MS);
+      } else {
+        console.log('Maximum retry attempts reached. Exiting.');
+      }
+    }
   }
+
+  console.log('Stream processing ended after maximum retries.');
 };
 
 main().catch(console.error);

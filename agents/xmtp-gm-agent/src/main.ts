@@ -25,6 +25,12 @@ const { XMTP_ENV, WALLET_KEY, ENCRYPTION_KEY, CHAIN, PAYMASTER_URL } =
     'PAYMASTER_URL',
   ]);
 
+const MAX_RETRIES = 6; // 6 times
+const RETRY_DELAY_MS = 10000; // 10 seconds
+
+// Helper function to pause execution
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 const main = async () => {
   // const walletData = await initializeWallet(WALLET_PATH);
   /* Create the signer using viem and parse the encryption key for the local db */
@@ -57,54 +63,83 @@ const main = async () => {
   console.log('✓ Syncing conversations...');
   await client.conversations.sync();
 
-  console.log('Waiting for messages...');
-  const stream = await client.conversations.streamAllMessages();
+  // Start stream with limited retries
+  let retryCount = 0;
 
-  for await (const message of stream) {
-    if (
-      !message ||
-      message?.senderInboxId.toLowerCase() === client.inboxId.toLowerCase() ||
-      message?.contentType?.typeId !== 'text'
-    ) {
-      continue;
-    }
-
-    const conversation = await client.conversations.getConversationById(
-      message.conversationId
-    );
-
-    if (!conversation) {
-      console.log('Unable to find conversation, skipping');
-      continue;
-    }
-
-    // Send typing indicator first
+  while (retryCount < MAX_RETRIES) {
     try {
-      const typingContent: Typing = { isTyping: true };
-      await conversation.send(typingContent, ContentTypeTyping);
-    } catch (e) {
-      console.error(
-        `Error sending typing indicator to ${message.senderInboxId}:`,
-        e
+      console.log(
+        `Starting message stream... (attempt ${retryCount + 1}/${MAX_RETRIES})`
       );
+      const streamPromise = client.conversations.streamAllMessages();
+      const stream = await streamPromise;
+
+      console.log('Waiting for messages...');
+      for await (const message of stream) {
+        if (
+          !message ||
+          message?.senderInboxId.toLowerCase() ===
+            client.inboxId.toLowerCase() ||
+          message?.contentType?.typeId !== 'text'
+        ) {
+          continue;
+        }
+
+        const conversation = await client.conversations.getConversationById(
+          message.conversationId
+        );
+
+        if (!conversation) {
+          console.log('Unable to find conversation, skipping');
+          continue;
+        }
+
+        // Send typing indicator first
+        try {
+          const typingContent: Typing = { isTyping: true };
+          await conversation.send(typingContent, ContentTypeTyping);
+        } catch (e) {
+          console.error(
+            `Error sending typing indicator to ${message.senderInboxId}:`,
+            e
+          );
+        }
+
+        const inboxState = await client.preferences.inboxStateFromInboxIds([
+          message.senderInboxId,
+        ]);
+        const addressFromInboxId = inboxState[0].identifiers[0].identifier;
+        const subname = await client.subnameByAddress(addressFromInboxId);
+
+        console.log(`Sending "gm" response to ${addressFromInboxId}...`);
+
+        if (subname) {
+          await conversation.sendWithFees(
+            `gm ${subname.ens}`,
+            addressFromInboxId
+          );
+        } else {
+          await conversation.sendWithFees('gm', addressFromInboxId);
+        }
+
+        console.log('Waiting for more messages...');
+      }
+
+      // If we get here without an error, reset the retry count
+      retryCount = 0;
+    } catch (error) {
+      retryCount++;
+      console.debug(error);
+      if (retryCount < MAX_RETRIES) {
+        console.log(`Waiting ${RETRY_DELAY_MS / 1000} seconds before retry...`);
+        await sleep(RETRY_DELAY_MS);
+      } else {
+        console.log('Maximum retry attempts reached. Exiting.');
+      }
     }
-
-    const inboxState = await client.preferences.inboxStateFromInboxIds([
-      message.senderInboxId,
-    ]);
-    const addressFromInboxId = inboxState[0].identifiers[0].identifier;
-    const subname = await client.subnameByAddress(addressFromInboxId);
-
-    console.log(`Sending "gm" response to ${addressFromInboxId}...`);
-
-    if (subname) {
-      await conversation.sendWithFees(`gm ${subname.ens}`, addressFromInboxId);
-    } else {
-      await conversation.sendWithFees('gm', addressFromInboxId);
-    }
-
-    console.log('Waiting for messages...');
   }
+
+  console.log('Stream processing ended after maximum retries.');
 };
 
 main().catch(console.error);
