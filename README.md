@@ -156,6 +156,7 @@ ENCRYPTION_KEY=your_hex_encryption_key
 XMTP_ENV=production  # or 'dev'
 WALLET_KEY=your_private_key_hex
 PAYMASTER_URL=https://api.developer.coinbase.com/rpc/v1/base/YOUR_API_KEY
+CHAIN=mainnet # or sepolia
 ```
 
 ### Complete Agent Example
