@@ -54,7 +54,7 @@ export const Messages: React.FC<MessagesProps> = ({
         clearTimeout(typingTimeoutRef.current);
       }
     };
-  }, [messages, inboxId]);
+  }, [messages, inboxId, isAgentTyping]);
 
   return (
     <div className="flex flex-col gap-4 flex-1 overflow-y-scroll my-3 pr-1">
