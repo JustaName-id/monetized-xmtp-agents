@@ -133,8 +133,7 @@ export const MessageCard: React.FC<MessageCardProps> = ({
         >
           <div className={`flex px-2 py-1 rounded-lg bg-blue-500 max-w-[80%] min-w-0`}>
             <span
-              className={`text-sm break-words ${isSender ? 'text-primary-foreground' : 'text-primary'
-                }`}
+              className={`text-sm break-words text-white`}
             >
               You can find your tx here
             </span>
