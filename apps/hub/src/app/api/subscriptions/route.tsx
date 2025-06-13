@@ -82,9 +82,6 @@ export async function GET(request: NextRequest) {
       }),
     });
 
-    console.log(isValidResults);
-    console.log(currentPeriodsResult);
-
     let validations = isValidResults.map((currentIsValid, index) => {
       const currentPeriod = currentPeriodsResult[index];
       const error = currentIsValid.error || currentPeriod.error || null;

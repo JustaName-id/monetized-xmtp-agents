@@ -92,7 +92,6 @@ export function AppSidebar() {
     });
   }, [groupedConversations]);
 
-  console.log(sortedDateKeys, groupedConversations);
   return (
     <Sidebar>
       <SidebarHeader className='max-md:pb-8'>XMTP Agents</SidebarHeader>
@@ -100,6 +99,15 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
+
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link href="/docs">
+                    <ProfileIcon />
+                    <span>Docs</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
               {(validSubscriptions && validSubscriptions.length > 0) &&
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild>

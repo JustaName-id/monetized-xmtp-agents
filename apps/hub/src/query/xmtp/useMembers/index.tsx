@@ -19,7 +19,12 @@ export const useMembers = (conversation?: Conversation) => {
   } = useQuery({
     queryKey: membersKeys.conversation(conversation?.id || ""),
     queryFn: async () => {
-      return conversation?.members();
+      const members = await conversation?.members();
+      if(members?.length !==2){
+        throw new Error("Invalid conversation")
+      }
+
+      return members;
     },
     enabled: !!conversation
   })
