@@ -42,16 +42,16 @@ const createMarkdownComponents = (isSender: boolean): Components => ({
   ),
   code: ({ children }: { children?: ReactNode }) => (
     <code className={`px-1 py-0.5 rounded text-xs font-mono ${isSender
-        ? 'bg-primary-foreground/20 text-primary-foreground'
-        : 'bg-secondary-foreground/20'
+      ? 'bg-primary-foreground/20 text-primary-foreground'
+      : 'bg-secondary-foreground/20'
       }`}>
       {children}
     </code>
   ),
   pre: ({ children }: { children?: ReactNode }) => (
     <pre className={`p-2 rounded text-xs font-mono overflow-x-auto ${isSender
-        ? 'bg-primary-foreground/20 text-primary-foreground'
-        : 'bg-secondary-foreground/20'
+      ? 'bg-primary-foreground/20 text-primary-foreground'
+      : 'bg-secondary-foreground/20'
       }`}>
       {children}
     </pre>
@@ -99,12 +99,12 @@ export const MessageCard: React.FC<MessageCardProps> = ({
       >
         <div
           className={`flex px-3 py-3 rounded-md max-w-[80%] min-w-0 ${isSender
-              ? 'bg-primary rounded-br-none'
-              : 'bg-secondary rounded-bl-none'
+            ? 'bg-primary rounded-br-none'
+            : 'bg-secondary rounded-bl-none'
             }`}
         >
           <div
-            className={`text-sm w-full break-words overflow-wrap-anywhere ${isSender ? 'text-primary-foreground' : 'text-base-foreground'
+            className={`text-sm w-full break-words overflow-wrap-anywhere ${isSender ? 'text-primary-foreground' : 'text-primary'
               }`}
           >
             <ReactMarkdown components={createMarkdownComponents(isSender)}>
@@ -133,7 +133,7 @@ export const MessageCard: React.FC<MessageCardProps> = ({
         >
           <div className={`flex px-2 py-1 rounded-lg bg-blue-500 max-w-[80%] min-w-0`}>
             <span
-              className={`text-sm break-words ${isSender ? 'text-primary-foreground' : 'text-base-foreground'
+              className={`text-sm break-words ${isSender ? 'text-primary-foreground' : 'text-primary'
                 }`}
             >
               You can find your tx here
@@ -156,12 +156,12 @@ export const MessageCard: React.FC<MessageCardProps> = ({
       >
         <div
           className={`flex px-3 py-3 rounded-md max-w-[80%] min-w-0 ${isSender
-              ? 'bg-primary rounded-br-none'
-              : 'bg-secondary rounded-bl-none'
+            ? 'bg-primary rounded-br-none'
+            : 'bg-secondary rounded-bl-none'
             }`}
         >
           <div
-            className={`text-sm w-full break-words overflow-wrap-anywhere ${isSender ? 'text-primary-foreground' : 'text-base-foreground'
+            className={`text-sm w-full break-words overflow-wrap-anywhere ${isSender ? 'text-primary-foreground' : 'text-primary'
               }`}
           >
             <ReactMarkdown components={createMarkdownComponents(isSender)}>
@@ -180,12 +180,12 @@ export const MessageCard: React.FC<MessageCardProps> = ({
     >
       <div
         className={`flex px-3 py-3 rounded-md max-w-[80%] min-w-0 ${isSender
-            ? 'bg-primary rounded-br-none'
-            : 'bg-secondary rounded-bl-none'
+          ? 'bg-primary rounded-br-none'
+          : 'bg-secondary rounded-bl-none'
           }`}
       >
         <pre
-          className={`text-sm w-full break-words whitespace-pre-wrap overflow-wrap-anywhere ${isSender ? 'text-primary-foreground' : 'text-base-foreground'
+          className={`text-sm w-full break-words whitespace-pre-wrap overflow-wrap-anywhere ${isSender ? 'text-primary-foreground' : 'text-primary'
             }`}
         >
           {JSON.stringify(message.content ?? message.fallback, null, 2)}

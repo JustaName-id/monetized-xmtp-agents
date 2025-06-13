@@ -68,7 +68,7 @@ export const Messages: React.FC<MessagesProps> = ({
       {isAgentTyping && (
         <div className="flex flex-row w-full justify-start">
           <div className="flex px-3 py-2 rounded-md bg-secondary rounded-bl-none">
-            <p className="text-sm text-base-foreground">
+            <p className="text-sm text-primary">
               <span className="animate-pulse">●</span>
               <span className="animate-pulse delay-75">●</span>
               <span className="animate-pulse delay-150">●</span>

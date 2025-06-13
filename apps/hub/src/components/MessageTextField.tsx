@@ -38,7 +38,7 @@ export const MessageTextField: React.FC<MessageTextFieldProps> = ({ onNewMessage
       <div className="border rounded-lg bg-background">
         <Textarea
           placeholder="Type a message..."
-          className="w-full border-0 resize-none focus-visible:ring-0 focus-visible:ring-offset-0"
+          className="w-full border-0 resize-none text-primary focus-visible:ring-0 focus-visible:ring-offset-0"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={(e) => {
@@ -57,13 +57,13 @@ export const MessageTextField: React.FC<MessageTextFieldProps> = ({ onNewMessage
         />
         <div className="flex justify-between items-center px-3 py-2 border-t">
           <div className="flex items-center gap-2">
-            <Button
+            {/* <Button
               variant="secondary"
               size="icon"
               disabled={true}
             >
               <FileAttachmentIcon />
-            </Button>
+            </Button> */}
             {/* Add any additional controls here like file upload, etc. */}
           </div>
           <Button
