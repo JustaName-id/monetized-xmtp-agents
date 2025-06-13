@@ -19,6 +19,10 @@ import Link from 'next/link';
 import { useConversation, useConversations } from "@/query/xmtp";
 import React, { useEffect, useMemo, useCallback } from "react";
 import { Conversation } from "@xmtp/browser-sdk";
+import {useAccount} from "wagmi";
+import {useMembers} from "@/query/xmtp/useMembers";
+import {useAddressSubnames} from "@justaname.id/react";
+import {clientEnv} from "@/utils/config/clientEnv";
 
 interface ConversationWithDate {
   conversation: Conversation;
@@ -88,6 +92,7 @@ export function AppSidebar() {
     });
   }, [groupedConversations]);
 
+  console.log(sortedDateKeys, groupedConversations);
   return (
     <Sidebar>
       <SidebarHeader className='max-md:pb-8'>XMTP Agents</SidebarHeader>
@@ -186,7 +191,32 @@ const OrderMessages: React.FC<OrderMessagesProps> = React.memo(({
   conversation,
   handleConversationOrder,
 }) => {
-  const { latestStringMessage } = useConversation(conversation);
+  const { address } = useAccount();
+
+  const { members } = useMembers(conversation);
+  const agentMember = useMemo(() => {
+    if (!members) return;
+
+    return members.find(
+      (member) =>
+        member.accountIdentifiers[0].identifier.toLowerCase() !==
+        address?.toLowerCase()
+    );
+  }, [address, members]);
+  const { addressSubnames } = useAddressSubnames({
+    address: agentMember?.accountIdentifiers[0].identifier,
+    chainId: 1,
+    enabled: !!agentMember?.accountIdentifiers[0].identifier,
+    isClaimed: true
+  });
+  const subname = useMemo(() => {
+    if (!addressSubnames) return;
+    return addressSubnames.find((subname) =>
+      subname.ens.endsWith(clientEnv.xmtpAgentEnsDomain)
+    );
+  }, [addressSubnames]);
+
+  const { latestStringMessage } = useConversation(subname ? conversation : undefined)
 
   useEffect(() => {
     if (latestStringMessage) {

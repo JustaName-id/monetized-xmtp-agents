@@ -67,7 +67,6 @@ export function Providers(props: {
                 </ChatBasedProvider>
               </XMTPProvider>
             </OnchainKitProvider>
-                    {/*<ReactQueryDevtools />*/}
           </JustWeb3Provider>
         </QueryClientProvider>
       </WagmiProvider>
