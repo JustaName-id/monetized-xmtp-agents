@@ -2,6 +2,7 @@ import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import remarkGfm from "remark-gfm"; // 👈
 
 // Type fix for SyntaxHighlighter
 const CodeBlock = SyntaxHighlighter as any;
@@ -139,6 +140,7 @@ Your agent will be discoverable by users once deployed and can start earning fee
             <div className="p-8 md:p-12">
               <div className="prose prose-slate dark:prose-invert max-w-none">
                 <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
                   components={{
                     code({ node, className, children, ...props }) {
                       const match = /language-(\w+)/.exec(className || '');
@@ -161,6 +163,17 @@ Your agent will be discoverable by users once deployed and can start earning fee
                         </code>
                       );
                     },
+                    table: ({ children }) => (
+                      <div className="overflow-x-auto mb-6 border border-slate-200 dark:border-slate-700 rounded-lg">
+                        <table className="min-w-full border-collapse">{children}</table>
+                      </div>
+                    ),
+                    th: ({ children }) => (
+                      <th className="px-4 py-2 text-slate-900 dark:text-slate-100 font-semibold bg-slate-100 dark:bg-slate-800 border">{children}</th>
+                    ),
+                    td: ({ children }) => (
+                      <td className="px-4 py-2 text-slate-700 dark:text-slate-300 border">{children}</td>
+                    ),
                     h1: ({ children }) => (
                       <h1 className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-slate-100 mb-6">
                         {children}
@@ -197,13 +210,6 @@ Your agent will be discoverable by users once deployed and can start earning fee
                         {children}
                       </strong>
                     ),
-                    table: ({ children }) => (
-                      <div className="overflow-x-auto mb-6 border border-slate-200 dark:border-slate-700 rounded-lg">
-                        <table className="w-full border-collapse bg-white dark:bg-slate-900">
-                          {children}
-                        </table>
-                      </div>
-                    ),
                     thead: ({ children }) => (
                       <thead className="bg-slate-50 dark:bg-slate-800">
                       {children}
@@ -218,16 +224,6 @@ Your agent will be discoverable by users once deployed and can start earning fee
                       <tr className="border-b border-slate-200 dark:border-slate-700 last:border-b-0">
                         {children}
                       </tr>
-                    ),
-                    th: ({ children }) => (
-                      <th className="text-left p-3 text-slate-900 dark:text-slate-100 font-semibold text-sm">
-                        {children}
-                      </th>
-                    ),
-                    td: ({ children }) => (
-                      <td className="p-3 text-slate-700 dark:text-slate-300 text-sm">
-                        {children}
-                      </td>
                     ),
                     blockquote: ({ children }) => (
                       <blockquote className="border-l-4 border-slate-300 dark:border-slate-600 pl-4 my-4 text-slate-600 dark:text-slate-400 italic">

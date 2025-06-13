@@ -13,7 +13,15 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { useXMTP } from '@/context/XMTPContext';
-import { ExploreIcon, ExternalIcon, LoadingIcon, PackageIcon, PenIcon, ProfileIcon } from '@/lib/icons';
+import {
+  AgentIcon,
+  DocsIcon,
+  ExploreIcon,
+  ExternalIcon,
+  LoadingIcon,
+  PackageIcon,
+  PenIcon,
+} from '@/lib/icons';
 import { useSubscription } from "@/query/subscription";
 import Link from 'next/link';
 import { useConversation, useConversations } from "@/query/xmtp";
@@ -103,7 +111,7 @@ export function AppSidebar() {
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <Link href="/docs">
-                    <ProfileIcon />
+                    <DocsIcon />
                     <span>Docs</span>
                   </Link>
                 </SidebarMenuButton>
@@ -122,7 +130,7 @@ export function AppSidebar() {
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <Link href="/my-agents">
-                    <ProfileIcon />
+                    <AgentIcon />
                     <span>My Agents</span>
                   </Link>
                 </SidebarMenuButton>
