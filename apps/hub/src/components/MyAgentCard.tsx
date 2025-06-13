@@ -31,6 +31,9 @@ export const MyAgentCard: React.FC<AgentProps> = ({ address }) => {
     )
     const onUnsubscribe = () => {
     }
+
+    if(!agentSubname) return null
+
     return (
         <Accordion type="single" collapsible className="p-5 rounded-lg bg-background border-border border-[1px] ">
             <AccordionItem value="item-1" >

@@ -5,7 +5,7 @@ export interface SubscriptionsResponse {
   subscriptions: {
     spendPermission: SpendPermissionResponse;
     isValid: boolean;
-    error: Error | null;
+    error: string | null;
   }[]
 }
 

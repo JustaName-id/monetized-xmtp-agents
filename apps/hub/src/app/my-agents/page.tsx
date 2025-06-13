@@ -7,17 +7,17 @@ import {useAccount} from "wagmi";
 
 export default function Index() {
   const { isConnected} = useAccount()
-  const { subscriptions, isSubscriptionsPending } = useSubscription();
+  const { validSubscriptions, isSubscriptionsPending } = useSubscription();
   const agentAddresses = useMemo(() => {
-    if (!subscriptions) return [];
+    if (!validSubscriptions) return [];
     return Array.from(
       new Set(
-        subscriptions.subscriptions.map(
+        validSubscriptions.map(
           (subscription) => subscription.spendPermission.spender
         )
       )
     );
-  }, [subscriptions]);
+  }, [validSubscriptions]);
 
   return (
     <div className="wrapper">
